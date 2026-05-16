@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Centriku.ViewModels"
+             x:Class="Centriku.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <Grid RowDefinitions="Auto, *">
+        
+        <StackPanel Grid.Row="0" Spacing="20">
+            <TextBlock Text="Welcome back, Teacher!" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+            
+            <Grid ColumnDefinitions="*, *, *" Margin="0,10,0,30">
+                
+                <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="0,0,10,0"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="📚 Active Classes" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ActiveClasses}" Foreground="{DynamicResource PrimaryBrush}" FontSize="36" FontWeight="Bold" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="10,0,10,0"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="👥 Total Students" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalStudents}" Foreground="{DynamicResource TextMainBrush}" FontSize="36" FontWeight="Bold" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="10,0,0,0"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="⚠️ Needs Attention" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding NeedsAttention}" Foreground="#EF4444" FontSize="36" FontWeight="Bold" Margin="0,5,0,0"/>
+                        <TextBlock Text="Students at risk of failing" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" 
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="Quick Access" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                
+                <TextBlock Text="Your class list will appear here once the database is connected." 
+                           Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,40,0,0"/>
+            </StackPanel>
+        </Border>
+        
+    </Grid>
+</UserControl>

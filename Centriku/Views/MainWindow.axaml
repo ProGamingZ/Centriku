@@ -1,20 +1,61 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Centriku.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Centriku.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Centriku">
+        Title="Centriku"
+        MinWidth="{Binding MinWidth}" 
+        MinHeight="{Binding MinHeight}"
+        WindowState="{Binding CurrentWindowState}"
+        Background="{DynamicResource AppBackground}" 
+        Foreground="{DynamicResource TextMainBrush}">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <SplitView IsPaneOpen="{Binding IsSidebarOpen}"
+               DisplayMode="CompactInline"
+               CompactPaneLength="65"
+               OpenPaneLength="250"
+               Background="{DynamicResource AppBackground}"
+               PaneBackground="{DynamicResource SurfaceBrush}">
+        
+        <SplitView.Pane>
+            <Grid RowDefinitions="Auto, *, Auto">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="20,20,0,30">
+                    <TextBlock Text="C" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                    <TextBlock Text="Centriku" FontSize="20" FontWeight="Bold" Margin="15,2,0,0" IsVisible="{Binding IsSidebarOpen}"/>
+                </StackPanel>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="1" Spacing="10" Margin="10,0">
+                    <Button Content="📊   Dashboard" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>
+                    <Button Content="📚   My Classes" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>
+                    <Button Content="⚙️   Policies" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>
+                    <Button Content="👥   Directory" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>     
+                </StackPanel>
+ 
+                <Button Grid.Row="2" Command="{Binding ToggleThemeCommand}" 
+                        Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,20" Margin="10,0,10,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🌓" Width="30"/>
+                        <TextBlock Text="Toggle Theme" IsVisible="{Binding IsSidebarOpen}"/>
+                    </StackPanel>
+                </Button>
 
+            </Grid>
+        </SplitView.Pane>
+
+        <SplitView.Content>
+            <Grid RowDefinitions="70, *">
+                <Border Grid.Row="0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="Auto, *, Auto" Margin="20,0">
+                        <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}" 
+                                Background="Transparent" FontSize="20" Foreground="{DynamicResource TextMainBrush}"
+                                Content="≡" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
+            </Grid>
+        </SplitView.Content>
+    </SplitView>
 </Window>
