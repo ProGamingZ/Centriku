@@ -10,8 +10,14 @@
 
     <Application.Styles>
         <FluentTheme />
-        
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        
+        <Style Selector="TextBlock.Icon">
+            <Setter Property="FontFamily" Value="{DynamicResource FluentIcons}"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        
         <Style Selector="DataGridColumnHeader">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
@@ -20,12 +26,33 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,2"/>
         </Style>
-        
-        <Style Selector="TextBlock.Icon">
-            <Setter Property="FontFamily" Value="{DynamicResource FluentIcons}"/>
-            <Setter Property="FontSize" Value="24"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+        <Style Selector="DataGridColumnHeader:pointerover /template/ Grid#PART_ColumnHeaderRoot">
+            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
         </Style>
+        <Style Selector="DataGridColumnHeader:pressed /template/ Grid#PART_ColumnHeaderRoot">
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+        </Style>
+
+        <Style Selector="DataGridRow:nth-child(odd)">
+            <Setter Property="Background" Value="{DynamicResource DataGridAltRowBrush}"/> 
+        </Style>
+        <Style Selector="DataGridRow:pointerover, DataGridRow:selected">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource DataGridHoverBrush}"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle, 
+                         DataGridRow:selected:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource DataGridSelectedBrush}"/>
+            <Setter Property="Opacity" Value="1"/> 
+        </Style>
+        <Style Selector="DataGridCell:selected, DataGridCell:pointerover, DataGridCell:selected:pointerover">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+
     </Application.Styles>
 
     <Application.Resources>
@@ -39,6 +66,11 @@
                     <SolidColorBrush x:Key="TextMutedBrush">#8A94A6</SolidColorBrush>
                     <SolidColorBrush x:Key="BorderBrush">#2A2A35</SolidColorBrush>
                     <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush> 
+
+                    <SolidColorBrush x:Key="SurfaceVariantBrush">#1E2538</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#0D1324</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridHoverBrush">#1E2538</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridSelectedBrush">#2B214D</SolidColorBrush>
                 </ResourceDictionary> 
 
                 <ResourceDictionary x:Key="Light">
@@ -47,7 +79,12 @@
                     <SolidColorBrush x:Key="TextMainBrush">#1A1A1A</SolidColorBrush>   
                     <SolidColorBrush x:Key="TextMutedBrush">#666666</SolidColorBrush>   
                     <SolidColorBrush x:Key="BorderBrush">#E5E7EB</SolidColorBrush>   
-                    <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush>     
+                    <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush>  
+                    
+                    <SolidColorBrush x:Key="SurfaceVariantBrush">#F3F4F6</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#FAFAFA</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridHoverBrush">#F3F4F6</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridSelectedBrush">#EDE9FE</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries> 
 
