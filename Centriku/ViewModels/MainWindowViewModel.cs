@@ -20,13 +20,7 @@ namespace Centriku.ViewModels
         public IRelayCommand NavigateToDashboardCommand { get; }
         public IRelayCommand NavigateToMyClassesCommand { get; }
         public IRelayCommand NavigateToPoliciesCommand { get; }
-
-        [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
-        partial void OnSearchQueryChanged(string value)
-        {
-            // We will eventually put our SQLite global search logic here.
-            // e.g., var results = DatabaseService.SearchStudents(value);
-        }
+        public IRelayCommand NavigateToDirectoryCommand { get; }
 
         public MainWindowViewModel()
         {
@@ -39,6 +33,7 @@ namespace Centriku.ViewModels
             NavigateToDashboardCommand = new RelayCommand(() => Navigate(new DashboardViewModel()));
             NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel(Navigate)));
             NavigateToPoliciesCommand = new RelayCommand(() => Navigate(new PoliciesViewModel()));
+            NavigateToDirectoryCommand = new RelayCommand(() => Navigate(new DirectoryViewModel()));
             Navigate(new DashboardViewModel());
             StartGlobalSecuritySweep();
         }

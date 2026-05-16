@@ -47,7 +47,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToDirectoryCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
                             <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -75,16 +75,6 @@
                         <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}" 
                                 Background="Transparent" FontSize="20" Foreground="{DynamicResource TextMainBrush}"
                                 Content="≡" VerticalAlignment="Center"/>
-                        
-                        <TextBox Grid.Column="1" 
-                                 Text="{Binding SearchQuery}"
-                                 PlaceholderText="Search for a student (LRN or Name)..." 
-                                 Width="400" HorizontalAlignment="Left" Margin="20,0,0,0"
-                                 Background="{DynamicResource SurfaceBrush}" 
-                                 Foreground="{DynamicResource TextMainBrush}" 
-                                 BorderBrush="{DynamicResource BorderBrush}"
-                                 BorderThickness="1" CornerRadius="8"
-                                 VerticalAlignment="Center" Padding="12,8"/>
                         
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                             

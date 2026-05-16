@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Centriku.ViewModels"
+             x:Class="Centriku.Views.DirectoryView"
+             x:DataType="vm:DirectoryViewModel"
+             x:Name="RootControl">
+
+    <Grid RowDefinitions="Auto, Auto, *">
+        
+        <StackPanel Grid.Row="0" Margin="40,30,40,20">
+            <TextBlock Text="Student Directory" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+            <TextBlock Text="Master roster of all students across all classes and academic years." 
+                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
+            
+            <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
+                     PlaceholderText="Search by LRN, Last Name, or First Name..." 
+                     Background="{DynamicResource SurfaceBrush}" 
+                     BorderBrush="{DynamicResource BorderBrush}" 
+                     CornerRadius="8" Padding="15,10" Width="400" HorizontalAlignment="Left"/>
+            
+            <Button Grid.Column="1" Content="+ Add New Student" 
+                    Background="{DynamicResource PrimaryBrush}" 
+                    Foreground="White" FontWeight="Bold" 
+                    CornerRadius="8" Padding="20,10"/>
+        </Grid>
+
+        <DataGrid Grid.Row="2" Margin="40,0,40,30"
+                  ItemsSource="{Binding Students}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="1"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  CornerRadius="8">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="LRN" Binding="{Binding Lrn}" Width="150"/>
+                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*"/>
+                <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*"/>
+                <DataGridTextColumn Header="Grade Level" Binding="{Binding GradeLevel}" Width="120"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+                
+                <DataGridTemplateColumn Header="Profile" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding #RootControl.((vm:DirectoryViewModel)DataContext).ViewProfileCommand}"
+                                    CommandParameter="{Binding}"
+                                    Content="View →" 
+                                    Background="Transparent" 
+                                    Foreground="{DynamicResource PrimaryBrush}" 
+                                    FontWeight="Bold"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+            
+        </DataGrid>
+    </Grid>
+</UserControl>
