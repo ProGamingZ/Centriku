@@ -40,7 +40,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToPoliciesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconPolicies}"/>
                             <TextBlock Text="Policies" VerticalAlignment="Center" FontWeight="SemiBold"/>

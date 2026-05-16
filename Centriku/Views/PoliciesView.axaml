@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Centriku.ViewModels"
+             x:Class="Centriku.Views.PoliciesView"
+             x:DataType="vm:PoliciesViewModel"
+             x:Name="RootControl">
+
+    <Grid RowDefinitions="Auto, *">
+        
+        <StackPanel Grid.Row="0" Margin="40,30,40,20">
+            <TextBlock Text="Grading Policies" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+            <TextBlock Text="Build and manage your custom grading rubrics." 
+                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="2*, 1*" Margin="40,10,40,30">
+            
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25" Margin="0,0,25,0">
+                <Grid RowDefinitions="Auto, *, Auto">
+                    
+                    <Grid Grid.Row="0" ColumnDefinitions="*, 120, 100" Margin="0,0,0,15">
+                        <TextBlock Grid.Column="0" Text="CATEGORY NAME" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="12"/>
+                        <TextBlock Grid.Column="1" Text="WEIGHT (%)" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="12"/>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl ItemsSource="{Binding Categories}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*, 120, 100" Margin="0,0,0,15">
+                                        <TextBox Grid.Column="0" Text="{Binding Name}" Margin="0,0,15,0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
+                                        
+                                        <NumericUpDown Grid.Column="1" Value="{Binding Weight}" Minimum="0" Maximum="100" Margin="0,0,15,0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
+                                        
+                                        <Button Grid.Column="2" 
+                                                Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).RemoveCategoryCommand}"
+                                                CommandParameter="{Binding}"
+                                                Content="Remove" 
+                                                Foreground="#EF4444" 
+                                                Background="Transparent" 
+                                                HorizontalAlignment="Left"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Button Grid.Row="2" Command="{Binding AddCategoryCommand}" Content="+ Add Category" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Margin="0,15,0,0"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="Template Details" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
+                    
+                    <TextBlock Text="Template Name" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
+                    <TextBox Text="Standard High School" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" Margin="0,0,0,30"/>
+                    
+                    <Button Content="Save Policy" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="15"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

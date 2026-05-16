@@ -19,6 +19,7 @@ namespace Centriku.ViewModels
         public IRelayCommand ToggleThemeCommand { get; }
         public IRelayCommand NavigateToDashboardCommand { get; }
         public IRelayCommand NavigateToMyClassesCommand { get; }
+        public IRelayCommand NavigateToPoliciesCommand { get; }
 
         [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
         partial void OnSearchQueryChanged(string value)
@@ -37,6 +38,7 @@ namespace Centriku.ViewModels
             });
             NavigateToDashboardCommand = new RelayCommand(() => Navigate(new DashboardViewModel()));
             NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel(Navigate)));
+            NavigateToPoliciesCommand = new RelayCommand(() => Navigate(new PoliciesViewModel()));
             Navigate(new DashboardViewModel());
             StartGlobalSecuritySweep();
         }
