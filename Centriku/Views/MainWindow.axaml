@@ -26,14 +26,14 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="10" Margin="10,0">
-                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDashboard}"/>
                             <TextBlock Text="Dashboard" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToMyClassesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconClasses}"/>
                             <TextBlock Text="My Classes" VerticalAlignment="Center" FontWeight="SemiBold"/>

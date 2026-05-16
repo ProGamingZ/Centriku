@@ -17,6 +17,9 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsDarkTheme { get; set; } = true;
         public IRelayCommand ToggleSidebarCommand { get; }
         public IRelayCommand ToggleThemeCommand { get; }
+        public IRelayCommand NavigateToDashboardCommand { get; }
+        public IRelayCommand NavigateToMyClassesCommand { get; }
+
         [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
         partial void OnSearchQueryChanged(string value)
         {
@@ -30,12 +33,10 @@ namespace Centriku.ViewModels
             ToggleThemeCommand = new RelayCommand(() => 
             {
                 IsDarkTheme = !IsDarkTheme;
-                if (Application.Current != null)
-                {
-                    Application.Current.RequestedThemeVariant = IsDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light;
-                }
+                Application.Current?.RequestedThemeVariant = IsDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light;
             });
-            
+            NavigateToDashboardCommand = new RelayCommand(() => Navigate(new DashboardViewModel()));
+            NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel()));
             Navigate(new DashboardViewModel());
             StartGlobalSecuritySweep();
         }
