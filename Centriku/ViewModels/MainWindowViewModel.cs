@@ -17,6 +17,12 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsDarkTheme { get; set; } = true;
         public IRelayCommand ToggleSidebarCommand { get; }
         public IRelayCommand ToggleThemeCommand { get; }
+        [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
+        partial void OnSearchQueryChanged(string value)
+        {
+            // We will eventually put our SQLite global search logic here.
+            // e.g., var results = DatabaseService.SearchStudents(value);
+        }
 
         public MainWindowViewModel()
         {
@@ -33,8 +39,6 @@ namespace Centriku.ViewModels
             Navigate(new DashboardViewModel());
             StartGlobalSecuritySweep();
         }
-
-
 
         public void Navigate(ViewModelBase viewModel)
         {

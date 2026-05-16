@@ -20,12 +20,18 @@
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,2"/>
         </Style>
+        
+        <Style Selector="TextBlock.Icon">
+            <Setter Property="FontFamily" Value="{DynamicResource FluentIcons}"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </Application.Styles>
 
     <Application.Resources>
         <ResourceDictionary>
+            <FontFamily x:Key="FluentIcons">avares://Centriku/Assets/Fonts/FluentSystemIcons-Regular.ttf#FluentSystemIcons-Regular</FontFamily>
             <ResourceDictionary.ThemeDictionaries>
-                
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="AppBackground">#0A0F1C</SolidColorBrush>
                     <SolidColorBrush x:Key="SurfaceBrush">#151A28</SolidColorBrush>
@@ -43,8 +49,18 @@
                     <SolidColorBrush x:Key="BorderBrush">#E5E7EB</SolidColorBrush>   
                     <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush>     
                 </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries> 
 
-            </ResourceDictionary.ThemeDictionaries>   
+            
+            <x:String x:Key="IconDashboard">&#62563;</x:String>
+            <x:String x:Key="IconClasses">&#62154;</x:String>
+            <x:String x:Key="IconPolicies">&#983182;</x:String>
+            <x:String x:Key="IconDirectory">&#62901;</x:String>
+            <x:String x:Key="IconSearch">&#63120;</x:String>
+            <x:String x:Key="IconExport">&#58599;</x:String>
+            <x:String x:Key="IconTheme">&#58450;</x:String>
+
         </ResourceDictionary>
     </Application.Resources>
+
 </Application>

@@ -26,18 +26,41 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="10" Margin="10,0">
-                    <Button Content="📊   Dashboard" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>
-                    <Button Content="📚   My Classes" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>
-                    <Button Content="⚙️   Policies" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>
-                    <Button Content="👥   Directory" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10"/>     
+                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBlock Classes="Icon" Text="{DynamicResource IconDashboard}"/>
+                            <TextBlock Text="Dashboard" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBlock Classes="Icon" Text="{DynamicResource IconClasses}"/>
+                            <TextBlock Text="My Classes" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBlock Classes="Icon" Text="{DynamicResource IconPolicies}"/>
+                            <TextBlock Text="Policies" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
+                            <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>     
                 </StackPanel>
  
                 <Button Grid.Row="2" Command="{Binding ToggleThemeCommand}" 
                         Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,20" Margin="10,0,10,10">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🌓" Width="30"/>
-                        <TextBlock Text="Toggle Theme" IsVisible="{Binding IsSidebarOpen}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <TextBlock Classes="Icon" Text="{DynamicResource IconTheme}"/>
+                        <TextBlock Text="Toggle Theme" VerticalAlignment="Center" IsVisible="{Binding IsSidebarOpen}"/>
                     </StackPanel>
                 </Button>
 
@@ -48,14 +71,43 @@
             <Grid RowDefinitions="70, *">
                 <Border Grid.Row="0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                     <Grid ColumnDefinitions="Auto, *, Auto" Margin="20,0">
+                        
                         <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}" 
                                 Background="Transparent" FontSize="20" Foreground="{DynamicResource TextMainBrush}"
                                 Content="≡" VerticalAlignment="Center"/>
+                        
+                        <TextBox Grid.Column="1" 
+                                 Text="{Binding SearchQuery}"
+                                 PlaceholderText="Search for a student (LRN or Name)..." 
+                                 Width="400" HorizontalAlignment="Left" Margin="20,0,0,0"
+                                 Background="{DynamicResource SurfaceBrush}" 
+                                 Foreground="{DynamicResource TextMainBrush}" 
+                                 BorderBrush="{DynamicResource BorderBrush}"
+                                 BorderThickness="1" CornerRadius="8"
+                                 VerticalAlignment="Center" Padding="12,8"/>
+                        
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            
+                            <Button Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                    CornerRadius="6" Padding="15,8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Classes="Icon" Text="{DynamicResource IconExport}"/>
+                                    <TextBlock Text="Export CSV" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Content="+ Add Class" 
+                                    Background="{DynamicResource PrimaryBrush}" 
+                                    Foreground="White" 
+                                    CornerRadius="6" Padding="15,8" FontWeight="Bold"/>
+                        </StackPanel>
                     </Grid>
                 </Border>
 
                 <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
             </Grid>
         </SplitView.Content>
+
     </SplitView>
 </Window>
