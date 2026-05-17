@@ -1,26 +1,23 @@
-using SQLite;
 using System;
 using System.IO;
+using System.Threading.Tasks;
+using SQLite;
 using Centriku.Models;
 
 namespace Centriku.Services
 {
     public class DatabaseService
     {
-        private readonly SQLiteAsyncConnection _database;
+        private SQLiteAsyncConnection _database;
 
         public DatabaseService()
         {
-            // Cross-platform safe path 
-            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Centriku.db3");
-            
+            string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "centriku.db");
             _database = new SQLiteAsyncConnection(dbPath);
-
-            // Create tables if they don't exist
-            InitializeDatabaseAsync();
         }
 
-        private async void InitializeDatabaseAsync()
+        // 3. This method builds all 8 of your tables
+        public async Task InitializeDatabaseAsync()
         {
             await _database.CreateTableAsync<Student>();
             await _database.CreateTableAsync<TeacherClass>();
@@ -28,9 +25,11 @@ namespace Centriku.Services
             await _database.CreateTableAsync<Assessment>();
             await _database.CreateTableAsync<Score>();
             await _database.CreateTableAsync<ScoreHistory>();
-        }
+            await _database.CreateTableAsync<GradingTemplate>();
+            await _database.CreateTableAsync<GradingCategory>();
 
-        // Expose the connection for your ViewModels to use
+            Console.WriteLine("Database initialized successfully at: " + _database.DatabasePath);
+        }
         public SQLiteAsyncConnection GetConnection() => _database;
     }
 }
