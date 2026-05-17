@@ -1,61 +1,125 @@
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Centriku.Models;
+using Centriku.Services;
 
 namespace Centriku.ViewModels
 {
     public partial class GradebookViewModel : ViewModelBase
     {
-        // This is the title at the top of the screen (e.g., "Advanced Mathematics")
-        [ObservableProperty]
-        public partial string ClassTitle { get; set; } = "Loading Class...";
+        [ObservableProperty] public partial int ClassId { get; set; }
+        [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;
+        [ObservableProperty] public partial ObservableCollection<Student> EnrolledStudents { get; set; } = new();        
+        [ObservableProperty] public partial bool IsEnrolling { get; set; } = false;
+        [ObservableProperty] public partial ObservableCollection<EnrollmentItemViewModel> AvailableStudents { get; set; } = new();
 
-        // This is the actual list of students that will feed into the DataGrid
-        [ObservableProperty]
-        public partial ObservableCollection<StudentGradeRow> Students { get; set; }
+        public IRelayCommand ToggleEnrollmentCommand { get; }
+        public IRelayCommand SaveEnrollmentCommand { get; }
+        public IRelayCommand<Student> RemoveStudentCommand { get; }
 
         public GradebookViewModel()
         {
-            // We will inject dummy data for now so we have something to look at when we build the UI
-            Students =
-            [
-                new StudentGradeRow { Lrn = "102938475612", FullName = "Dela Cruz, Juan", Quiz1 = 15, Quiz2 = 18, FinalExam = 85 },
-                new StudentGradeRow { Lrn = "192837465521", FullName = "Rizal, Jose", Quiz1 = 20, Quiz2 = 19, FinalExam = 92 },
-                new StudentGradeRow { Lrn = "112233445566", FullName = "Bonifacio, Andres", Quiz1 = 12, Quiz2 = 14, FinalExam = 78 },
-                new StudentGradeRow { Lrn = "998877665544", FullName = "Silang, Gabriela", Quiz1 = 20, Quiz2 = 20, FinalExam = 98 }
-            ];
+            ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
+            SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
+            RemoveStudentCommand = new RelayCommand<Student>(RemoveStudent!);
+        }
+
+        public async void Initialize(int classId, string classTitle)
+        {
+            ClassId = classId;
+            ClassTitle = classTitle;
+            await LoadEnrolledStudents();
+        }
+
+        private async Task LoadEnrolledStudents()
+        {
+            var db = new DatabaseService().GetConnection();
+
+            // 1. Get all roster entries for THIS specific class (Table 3)
+            var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+            var studentIds = roster.Select(r => r.StudentID).ToList();
+
+            // 2. Fetch the actual student details from the Master Directory (Table 1)
+            var allStudents = await db.Table<Student>().ToListAsync();
+            
+            // 3. Filter down to just the enrolled ones
+            var enrolled = allStudents.Where(s => studentIds.Contains(s.StudentID)).ToList();
+
+            EnrolledStudents = new ObservableCollection<Student>(enrolled);
+        }
+
+        private async void ToggleEnrollment()
+        {
+            IsEnrolling = !IsEnrolling;
+            
+            if (IsEnrolling)
+            {
+                var db = new DatabaseService().GetConnection();
+                var allStudents = await db.Table<Student>().ToListAsync();
+                var enrolledIds = EnrolledStudents.Select(s => s.StudentID).ToList();
+
+                AvailableStudents.Clear();
+                foreach (var s in allStudents)
+                {
+                    // Only show students who are NOT already enrolled in this class
+                    if (s.StudentID != null && !enrolledIds.Contains(s.StudentID))
+                    {
+                        AvailableStudents.Add(new EnrollmentItemViewModel(s));
+                    }
+                }
+            }
+        }
+
+        private async void SaveEnrollment()
+        {
+            var db = new DatabaseService().GetConnection();
+            
+            var selectedStudents = AvailableStudents.Where(s => s.IsSelected).ToList();
+
+            foreach (var student in selectedStudents)
+            {
+                var newRosterEntry = new ClassRoster
+                {
+                    ClassID = ClassId, // The class we are currently viewing
+                    StudentID = student.DbModel.StudentID // The student we just checked
+                };
+                await db.InsertAsync(newRosterEntry); // Link them in Table 3!
+            }
+
+            IsEnrolling = false;
+            await LoadEnrolledStudents(); // Refresh the grid
+        }
+
+        private async void RemoveStudent(Student student)
+        {
+            if (student == null) return;
+            var db = new DatabaseService().GetConnection();
+            
+            // Find the exact link in Table 3 and sever it
+            var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
+            if (rosterEntry != null)
+            {
+                await db.DeleteAsync(rosterEntry);
+                await LoadEnrolledStudents();
+            }
         }
     }
 
-    // --- THIS REPRESENTS A SINGLE ROW IN THE DATAGRID ---
-    public partial class StudentGradeRow : ObservableObject
+    public partial class EnrollmentItemViewModel : ObservableObject
     {
-        [ObservableProperty]
-        public partial string Lrn { get; set; } = string.Empty;
-
-        [ObservableProperty]
-        public partial string FullName { get; set; } = string.Empty;
-
-        // Note: Using 'double?' allows a score to be blank/null if they missed the quiz
-        [ObservableProperty]
-        public partial double? Quiz1 { get; set; }
-
-        [ObservableProperty]
-        public partial double? Quiz2 { get; set; }
-
-        [ObservableProperty]
-        public partial double? FinalExam { get; set; }
+        public Student DbModel { get; }
         
-        // This calculates the total automatically whenever a score changes!
-        public double ComputedGrade 
+        [ObservableProperty] public partial bool IsSelected { get; set; } = false;
+
+        public string FullName => $"{DbModel.LastName}, {DbModel.FirstName}";
+        public string StudentID => DbModel.StudentID ?? "";
+
+        public EnrollmentItemViewModel(Student student)
         {
-            get 
-            {
-                // A very basic temporary formula: (Quiz1 + Quiz2 + Exam) 
-                double q1 = Quiz1 ?? 0;
-                double q2 = Quiz2 ?? 0;
-                double exam = FinalExam ?? 0;
-                return q1 + q2 + exam;
-            }
+            DbModel = student;
         }
     }
 }

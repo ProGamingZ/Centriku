@@ -143,7 +143,10 @@ namespace Centriku.ViewModels
         {
             if (selectedClass != null)
             {
-                var gradebookVM = new GradebookViewModel { ClassTitle = selectedClass.SubjectName };
+                var gradebookVM = new GradebookViewModel();
+                
+                gradebookVM.Initialize(selectedClass.DbModel.ClassID, selectedClass.SubjectName);
+                
                 _navigateAction(gradebookVM);
             }
         }
