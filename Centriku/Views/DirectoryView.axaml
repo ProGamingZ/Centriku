@@ -5,60 +5,218 @@
              x:DataType="vm:DirectoryViewModel"
              x:Name="RootControl">
 
-    <Grid RowDefinitions="Auto, Auto, *">
-        
-        <StackPanel Grid.Row="0" Margin="40,30,40,20">
-            <TextBlock Text="Student Directory" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-            <TextBlock Text="Master roster of all students across all classes and academic years." 
-                       Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
-        </StackPanel>
-
-        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Grid RowDefinitions="Auto, Auto, Auto, *">
             
-            <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
-                     PlaceholderText="Search by LRN, Last Name, or First Name..." 
-                     Background="{DynamicResource SurfaceBrush}" 
-                     BorderBrush="{DynamicResource BorderBrush}" 
-                     CornerRadius="8" Padding="15,10" Width="400" HorizontalAlignment="Left"/>
-            
-            <Button Grid.Column="1" Content="+ Add New Student" 
-                    Background="{DynamicResource PrimaryBrush}" 
-                    Foreground="White" FontWeight="Bold" 
-                    CornerRadius="8" Padding="20,10"/>
-        </Grid>
+            <StackPanel Grid.Row="0" Margin="40,30,40,20">
+                <TextBlock Text="Student Directory" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                <TextBlock Text="Master roster of all students across all classes and academic years." 
+                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+            </StackPanel>
 
-        <DataGrid Grid.Row="2" Margin="40,0,40,30"
-                  ItemsSource="{Binding Students}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  GridLinesVisibility="Horizontal"
-                  BorderThickness="1"
-                  BorderBrush="{DynamicResource BorderBrush}"
-                  CornerRadius="8">
-
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="LRN" Binding="{Binding Lrn}" Width="150"/>
-                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*"/>
-                <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*"/>
-                <DataGridTextColumn Header="Grade Level" Binding="{Binding GradeLevel}" Width="120"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+            <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="40,0,40,20">
+                <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
+                         PlaceholderText="Search by LRN, Last Name, or First Name..." 
+                         Background="{DynamicResource SurfaceBrush}" 
+                         BorderBrush="{DynamicResource BorderBrush}" 
+                         CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
                 
-                <DataGridTemplateColumn Header="Profile" Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Command="{Binding #RootControl.((vm:DirectoryViewModel)DataContext).ViewProfileCommand}"
-                                    CommandParameter="{Binding}"
-                                    Content="View →" 
-                                    Background="Transparent" 
-                                    Foreground="{DynamicResource PrimaryBrush}" 
-                                    FontWeight="Bold"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-            
-        </DataGrid>
-    </Grid>
+                <Button Grid.Column="1" Content="Columns ⚙️" 
+                        Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                        CornerRadius="8" Padding="15,10" Margin="0,0,15,0">
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel Spacing="10" MinWidth="150">
+                                <TextBlock Text="Toggle Columns" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <CheckBox Content="LRN" IsChecked="{Binding ShowLrnColumn}"/>
+                                <CheckBox Content="Last Name" IsChecked="{Binding ShowLastNameColumn}"/>
+                                <CheckBox Content="First Name" IsChecked="{Binding ShowFirstNameColumn}"/>
+                                <CheckBox Content="Middle Name" IsChecked="{Binding ShowMiddleNameColumn}"/>
+                                <CheckBox Content="Suffix" IsChecked="{Binding ShowSuffixColumn}"/>
+                                <CheckBox Content="Gender" IsChecked="{Binding ShowGenderColumn}"/>
+                                <CheckBox Content="Date of Birth" IsChecked="{Binding ShowDobColumn}"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
+                <Button Grid.Column="2" Command="{Binding ToggleAddStudentFormCommand}" 
+                        Content="+ Add New Student" 
+                        Background="{DynamicResource PrimaryBrush}" 
+                        Foreground="White" FontWeight="Bold" 
+                        CornerRadius="8" Padding="20,10"/>
+            </Grid>
+
+            <Border Grid.Row="2" IsVisible="{Binding IsAddingStudent}" 
+                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                    BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,20">
+                <Grid RowDefinitions="*, Auto">
+                    
+                    <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="LRN (Student ID)*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentLrn}" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="First Name*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentFirstName}" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Middle Name" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentMiddleName}" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Last Name*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentLastName}" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Suffix (e.g. Jr.)" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentSuffix}" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Gender" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <ComboBox SelectedItem="{Binding NewStudentGender}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch">
+                                <x:String>Male</x:String>
+                                <x:String>Female</x:String>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Date of Birth" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <DatePicker SelectedDate="{Binding NewStudentDob}" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                    </WrapPanel>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                        <Button Command="{Binding ToggleAddStudentFormCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <Button Command="{Binding SaveStudentCommand}" Content="Save Student" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <DataGrid Grid.Row="3" Margin="40,0,40,30" ItemsSource="{Binding DisplayedStudents}" AutoGenerateColumns="False" CanUserResizeColumns="True" CanUserReorderColumns="True" IsReadOnly="True" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="300">
+                <DataGrid.Columns>
+                    
+                    <DataGridTemplateColumn Header="LRN" MinWidth="120" MaxWidth="250" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowLrnColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding StudentID}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding StudentID}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Last Name" MinWidth="100" MaxWidth="300" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowLastNameColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding LastName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding LastName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="First Name" MinWidth="100" MaxWidth="300" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowFirstNameColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding FirstName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding FirstName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                                        
+                    <DataGridTemplateColumn Header="Middle Name" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowMiddleNameColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding MiddleName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding MiddleName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                                        
+                    <DataGridTemplateColumn Header="Suffix" MinWidth="110" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowSuffixColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding Suffix}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding Suffix}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
+                    <DataGridTemplateColumn Header="Gender" MinWidth="110" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGenderColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding Gender}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <ComboBox SelectedItem="{Binding Gender}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch">
+                                        <x:String>Male</x:String>
+                                        <x:String>Female</x:String>
+                                    </ComboBox>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                                        
+                    <DataGridTemplateColumn Header="DOB" MinWidth="140" MaxWidth="140" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowDobColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding DateOfBirth, StringFormat='{}{0:dd/MM/yyyy}'}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    
+                                    <CalendarDatePicker SelectedDate="{Binding DateOfBirth}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
+                    <DataGridTemplateColumn Header="Actions" Width="160" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    
+                                    <Button Command="{Binding #RootControl.((vm:DirectoryViewModel)DataContext).EditOrSaveStudentCommand}"
+                                            CommandParameter="{Binding}"
+                                            Background="Transparent" ToolTip.Tip="Edit/Save">
+                                        <Panel>
+                                            <TextBlock Classes="Icon" Text="✏️" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding !IsEditing}"/>
+                                            <TextBlock Classes="Icon" Text="💾" Foreground="{DynamicResource PrimaryBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
+                                        </Panel>
+                                    </Button>
+                                    
+                                    <Button Command="{Binding #RootControl.((vm:DirectoryViewModel)DataContext).ViewProfileCommand}"
+                                            CommandParameter="{Binding}"
+                                            Background="Transparent" ToolTip.Tip="View Full Profile">
+                                        <TextBlock Classes="Icon" Text="👤" Foreground="{DynamicResource TextMainBrush}" FontSize="16"/>
+                                    </Button>
+                                    
+                                    <Button Command="{Binding #RootControl.((vm:DirectoryViewModel)DataContext).DeleteStudentCommand}"
+                                            CommandParameter="{Binding}"
+                                            Background="Transparent" ToolTip.Tip="Delete Student">
+                                        <TextBlock Classes="Icon" Text="🗑️" Foreground="#EF4444" FontSize="16"/>
+                                    </Button>
+                                    
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+        </Grid>
+    </ScrollViewer>
 </UserControl>
