@@ -26,7 +26,35 @@ namespace Centriku.ViewModels
         private int? _editingAssessmentId = null;
         public IRelayCommand<Assessment> EditAssessmentCommand { get; }
         public IRelayCommand<Assessment> DeleteAssessmentCommand { get; }
-        
+
+        [ObservableProperty] public partial bool ShowLRN { get; set; } = true;
+        [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
+        [ObservableProperty] public partial bool ShowLastName { get; set; } = true;
+
+        [ObservableProperty] public partial ObservableCollection<CategoryFilterViewModel> CategoryFilters { get; set; } = new();
+
+        // A trigger number to tell the UI to instantly redraw the columns
+        [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
+        private void TriggerGridRedraw() => GridRefreshTrigger++;
+
+        // CommunityToolkit MVVM Magic: Auto-run these methods when the booleans change!
+        partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+        partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+        partial void OnShowLastNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+
+        private async void SaveClassSettings()
+        {
+            var db = new DatabaseService().GetConnection();
+            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+            if (currentClass != null)
+            {
+                currentClass.ShowLRN = ShowLRN;
+                currentClass.ShowFirstName = ShowFirstName;
+                currentClass.ShowLastName = ShowLastName;
+                await db.UpdateAsync(currentClass);
+            }
+        }
+
         [ObservableProperty] public partial ObservableCollection<GradingCategory> AvailableCategories { get; set; } = new();
         [ObservableProperty] public partial GradingCategory? SelectedCategory { get; set; }
 
@@ -67,9 +95,28 @@ namespace Centriku.ViewModels
         {
             var db = new DatabaseService().GetConnection();
 
-            // 1. Get the Columns (Assessments)
+            // === NEW: 1. Load Class Visibility Settings ===
+            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+            if (currentClass != null)
+            {
+                ShowLRN = currentClass.ShowLRN;
+                ShowFirstName = currentClass.ShowFirstName;
+                ShowLastName = currentClass.ShowLastName;
+            }
+
+            // 2. Get the Columns (Assessments)
             var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
             ClassAssessments = new ObservableCollection<Assessment>(assessments);
+
+            // === NEW: 3. Build the Category Filters for the View Menu ===
+            var allFilters = assessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
+            var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
+            
+            CategoryFilters.Clear();
+            foreach (var group in grouped)
+            {
+                CategoryFilters.Add(new CategoryFilterViewModel(group.Key, group));
+            }
 
             // 2. Get the Students in this Class
             var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
@@ -113,6 +160,7 @@ namespace Centriku.ViewModels
                 
                 GradebookRows.Add(row);
             }
+            TriggerGridRedraw();
         }
 
         private async void ToggleEnrollment()
@@ -336,6 +384,78 @@ namespace Centriku.ViewModels
             // If it's a new blank score, Insert it. If it exists, Update it.
             if (DbModel.ScoreID == 0) await db.InsertAsync(DbModel);
             else await db.UpdateAsync(DbModel);
+        }
+    }
+
+    public partial class AssessmentFilterViewModel : ObservableObject
+    {
+        public Assessment DbModel { get; }
+        private readonly System.Action _onVisibilityChanged;
+
+        public string Title => DbModel.Title ?? "Unknown";
+
+        public bool IsVisible
+        {
+            get => DbModel.IsVisible;
+            set
+            {
+                // If the teacher clicks the checkbox, save it to SQLite instantly and redraw the grid!
+                if (DbModel.IsVisible != value)
+                {
+                    DbModel.IsVisible = value;
+                    OnPropertyChanged();
+                    SaveToDb();
+                    _onVisibilityChanged?.Invoke(); 
+                }
+            }
+        }
+
+        public AssessmentFilterViewModel(Assessment assessment, System.Action onVisibilityChanged)
+        {
+            DbModel = assessment;
+            _onVisibilityChanged = onVisibilityChanged;
+        }
+
+        private async void SaveToDb()
+        {
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            await db.UpdateAsync(DbModel);
+        }
+    }
+
+    public partial class CategoryFilterViewModel : ObservableObject
+    {
+        public string CategoryName { get; }
+        public ObservableCollection<AssessmentFilterViewModel> Assessments { get; }
+
+        // The Master Checkbox: If checked, it loops through and checks all children!
+        public bool IsCategoryVisible
+        {
+            get => Assessments.Any(a => a.IsVisible); 
+            set
+            {
+                foreach (var a in Assessments)
+                {
+                    a.IsVisible = value; 
+                }
+                OnPropertyChanged();
+            }
+        }
+
+        public CategoryFilterViewModel(string name, System.Collections.Generic.IEnumerable<AssessmentFilterViewModel> assessments)
+        {
+            CategoryName = name;
+            Assessments = new ObservableCollection<AssessmentFilterViewModel>(assessments);
+            
+            // Listen to children: If all quizzes are hidden, uncheck the master Category checkbox automatically
+            foreach(var a in Assessments) 
+            {
+                a.PropertyChanged += (s,e) => 
+                {
+                    if (e.PropertyName == nameof(AssessmentFilterViewModel.IsVisible))
+                        OnPropertyChanged(nameof(IsCategoryVisible));
+                };
+            }
         }
     }
 

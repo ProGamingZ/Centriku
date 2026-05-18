@@ -13,6 +13,10 @@ namespace Centriku.Models
         public string? SubjectName { get; set; }
         public string? SectionLabel { get; set; }
 
-        public int GradingTemplateID { get; set; } // Will link to a separate templates table later if needed
+        public int GradingTemplateID { get; set; } 
+
+        public bool ShowLRN { get; set; } = true;
+        public bool ShowFirstName { get; set; } = true;
+        public bool ShowLastName { get; set; } = true;
     }
 }

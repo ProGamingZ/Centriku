@@ -16,20 +16,74 @@
 
             <WrapPanel Grid.Row="1" HorizontalAlignment="Right" Margin="40,0,40,20">
                 
-                <Button Grid.Column="1" Command="{Binding ToggleAddAssessmentCommand}" 
+                <Button Content="👁️ View Options" 
+                        Background="Transparent" 
+                        Foreground="{DynamicResource TextMainBrush}" 
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        FontWeight="Bold" 
+                        CornerRadius="8" Padding="20,10" Margin="0,0,15,10">
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <Grid RowDefinitions="Auto, *" Width="250" MaxHeight="450" Margin="10">
+                                
+                                <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,10">
+                                    <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <CheckBox Content="Show LRN" IsChecked="{Binding ShowLRN}" Margin="10,0,0,0"/>
+                                    <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="10,0,0,0"/>
+                                    <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}" Margin="10,0,0,0"/>
+                                    
+                                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10,0,0"/>
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock Text="Grading Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
+                                        
+                                        <ItemsControl ItemsSource="{Binding CategoryFilters}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,0,0,15">
+                                                        
+                                                        <CheckBox Content="{Binding CategoryName}" 
+                                                                  IsChecked="{Binding IsCategoryVisible}" 
+                                                                  FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                                                        
+                                                        <ItemsControl ItemsSource="{Binding Assessments}" Margin="20,5,0,0">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <CheckBox Content="{Binding Title}" IsChecked="{Binding IsVisible}" Margin="0,0,0,5"/>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollViewer>
+                                
+                            </Grid>
+                        </Flyout>
+                    </Button.Flyout>
+
+                </Button>
+
+                <Button Command="{Binding ToggleAddAssessmentCommand}" 
                         Content="+ Add Assessment" 
                         Background="Transparent" 
                         Foreground="{DynamicResource PrimaryBrush}" 
                         BorderBrush="{DynamicResource PrimaryBrush}"
                         BorderThickness="1"
                         FontWeight="Bold" 
-                        CornerRadius="8" Padding="20,10" Margin="0,0,15,0"/>
+                        CornerRadius="8" Padding="20,10" Margin="0,0,15,10"/>
 
-                <Button Grid.Column="2" Command="{Binding ToggleEnrollmentCommand}" 
+                <Button Command="{Binding ToggleEnrollmentCommand}" 
                         Content="+ Enroll Students" 
                         Background="{DynamicResource PrimaryBrush}" 
                         Foreground="White" FontWeight="Bold" 
-                        CornerRadius="8" Padding="20,10"/>
+                        CornerRadius="8" Padding="20,10" Margin="0,0,0,10"/>
             </WrapPanel>
 
             <Border Grid.Row="2" IsVisible="{Binding IsEnrolling}" 
@@ -110,6 +164,8 @@
                       ItemsSource="{Binding GradebookRows}"
                       AutoGenerateColumns="False"
                       IsReadOnly="False"
+                      SelectionMode="Single"
+                      CurrentCellChanged="RosterGrid_CurrentCellChanged"
                       GridLinesVisibility="Horizontal"
                       BorderThickness="1"
                       BorderBrush="{DynamicResource BorderBrush}"
@@ -117,10 +173,10 @@
                       MinHeight="300">
                 <DataGrid.Columns>
                     
-                    <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" Width="150"/>
+                    <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" IsReadOnly="True" Width="150"/>
                     
-                    <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" Width="150"/>
-                    <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" Width="150"/>
+                    <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" IsReadOnly="True" Width="150"/>
+                    <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" IsReadOnly="True" Width="150"/>
                     
                     <DataGridTemplateColumn Header="Actions" Width="120">
                         <DataGridTemplateColumn.CellTemplate>

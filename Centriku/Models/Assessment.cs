@@ -16,5 +16,6 @@ namespace Centriku.Models
         public string? Category { get; set; } // e.g., "Written Work", "Performance Task"
         public double MaxScore { get; set; }
         public DateTime DateGiven { get; set; }
+        public bool IsVisible { get; set; } = true;
     }
 }
