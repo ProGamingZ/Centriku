@@ -17,7 +17,6 @@ namespace Centriku.Views
             InitializeComponent();
         }
 
-        // 2. Initialize the Notification Manager when the UI loads
         protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
         {
             base.OnAttachedToVisualTree(e);
@@ -50,7 +49,6 @@ namespace Centriku.Views
                 }
             }
         }
-
         private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if ((e.PropertyName == nameof(GradebookViewModel.ClassAssessments) || 
@@ -188,9 +186,6 @@ namespace Centriku.Views
             }
         }    
     
-        // ====================================================================
-        // EXCEL-STYLE FAST TYPING
-        // ====================================================================
         public void RosterGrid_CurrentCellChanged(object sender, System.EventArgs e)
         {
             TriggerAutoEdit(sender);

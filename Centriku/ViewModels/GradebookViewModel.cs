@@ -28,6 +28,29 @@ namespace Centriku.ViewModels
         partial void OnShowTotalLChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
         partial void OnShowTotalAChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
 
+        public System.Collections.ObjectModel.ObservableCollection<string> AttendanceModes { get; } = new() { "None", "Threshold", "Weighted", "Bonus" };
+
+        [ObservableProperty] public partial string AttendanceCalculationMode { get; set; } = "None";
+        [ObservableProperty] public partial int MaxAbsencesAllowed { get; set; } = 3;
+        [ObservableProperty] public partial double AttendanceWeight { get; set; } = 10.0;
+        [ObservableProperty] public partial double LateValue { get; set; } = 0.5;
+
+        // Magic UI Toggles: These tell the UI to show/hide specific sliders based on the Mode selected!
+        public bool IsThresholdMode => AttendanceCalculationMode == "Threshold";
+        public bool IsWeightedOrBonusMode => AttendanceCalculationMode == "Weighted" || AttendanceCalculationMode == "Bonus";
+        public bool IsMathEngineActive => AttendanceCalculationMode != "None";
+        partial void OnAttendanceCalculationModeChanged(string value) 
+        { 
+            OnPropertyChanged(nameof(IsThresholdMode)); 
+            OnPropertyChanged(nameof(IsWeightedOrBonusMode)); 
+            OnPropertyChanged(nameof(IsMathEngineActive)); 
+            SaveClassSettings(); 
+            // TriggerGridRedraw(); // We will need this later when we build the Final Grade column!
+        }
+        partial void OnMaxAbsencesAllowedChanged(int value) { SaveClassSettings(); }
+        partial void OnAttendanceWeightChanged(double value) { SaveClassSettings(); }
+        partial void OnLateValueChanged(double value) { SaveClassSettings(); }
+
         [ObservableProperty] public partial bool IsAddingRollCall { get; set; } = false;
         [ObservableProperty] public partial System.DateTime? NewRollCallDate { get; set; } = System.DateTime.Today;
         private System.DateTime? _editingRollCallDate = null;
@@ -77,6 +100,12 @@ namespace Centriku.ViewModels
                 currentClass.ShowTotalP = ShowTotalP;
                 currentClass.ShowTotalL = ShowTotalL;
                 currentClass.ShowTotalA = ShowTotalA;
+
+                currentClass.AttendanceCalculationMode = AttendanceCalculationMode;
+                currentClass.MaxAbsencesAllowed = MaxAbsencesAllowed;
+                currentClass.AttendanceWeight = AttendanceWeight;
+                currentClass.LateValue = LateValue;
+
                 await db.UpdateAsync(currentClass);
             }
         }
@@ -131,20 +160,25 @@ namespace Centriku.ViewModels
         {
             var db = new DatabaseService().GetConnection();
 
-            // === NEW: 1. Load Class Visibility Settings ===
+            // 1. Load Class Visibility Settings 
             var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
             if (currentClass != null)
             {
                 ShowLRN = currentClass.ShowLRN;
                 ShowFirstName = currentClass.ShowFirstName;
                 ShowLastName = currentClass.ShowLastName;
+
+                AttendanceCalculationMode = currentClass.AttendanceCalculationMode ?? "None";
+                MaxAbsencesAllowed = currentClass.MaxAbsencesAllowed;
+                AttendanceWeight = currentClass.AttendanceWeight;
+                LateValue = currentClass.LateValue;
             }
 
             // 2. Get the Columns (Assessments)
             var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
             ClassAssessments = new ObservableCollection<Assessment>(assessments);
 
-            // === NEW: 3. Build the Category Filters for the View Menu ===
+            // 3. Build the Category Filters for the View Menu 
             var allFilters = assessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
             var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
             
