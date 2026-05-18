@@ -11,7 +11,30 @@ namespace Centriku.ViewModels
     public partial class GradebookViewModel : ViewModelBase
     {
         [ObservableProperty] public partial int ClassId { get; set; }
-        [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;
+        [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
+        public System.Action<string>? ShowToastMessage { get; set; } 
+
+        [ObservableProperty] public partial ObservableCollection<System.DateTime> AttendanceDates { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<AttendanceGridRowViewModel> AttendanceGridRows { get; set; } = new();
+
+        [ObservableProperty] public partial bool ShowTotalP { get; set; } = true;
+        [ObservableProperty] public partial bool ShowTotalL { get; set; } = true;
+        [ObservableProperty] public partial bool ShowTotalA { get; set; } = true;
+        [ObservableProperty] public partial ObservableCollection<string> AvailableMonths { get; set; } = new();
+        [ObservableProperty] public partial string SelectedMonthFilter { get; set; } = "All Months";
+
+        partial void OnSelectedMonthFilterChanged(string value) { TriggerGridRedraw(); }
+        partial void OnShowTotalPChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+        partial void OnShowTotalLChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+        partial void OnShowTotalAChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+
+        [ObservableProperty] public partial bool IsAddingRollCall { get; set; } = false;
+        [ObservableProperty] public partial System.DateTime? NewRollCallDate { get; set; } = System.DateTime.Today;
+        private System.DateTime? _editingRollCallDate = null;
+        public IRelayCommand<System.DateTime?> EditRollCallCommand { get; }
+        public IRelayCommand<System.DateTime?> DeleteRollCallCommand { get; }
+        public IRelayCommand ToggleAddRollCallCommand { get; }
+        public IRelayCommand SaveRollCallCommand { get; }
 
         [ObservableProperty] public partial ObservableCollection<Assessment> ClassAssessments { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<StudentGradeRow> GradebookRows { get; set; } = new();   
@@ -51,6 +74,9 @@ namespace Centriku.ViewModels
                 currentClass.ShowLRN = ShowLRN;
                 currentClass.ShowFirstName = ShowFirstName;
                 currentClass.ShowLastName = ShowLastName;
+                currentClass.ShowTotalP = ShowTotalP;
+                currentClass.ShowTotalL = ShowTotalL;
+                currentClass.ShowTotalA = ShowTotalA;
                 await db.UpdateAsync(currentClass);
             }
         }
@@ -81,6 +107,15 @@ namespace Centriku.ViewModels
 
             EditAssessmentCommand = new RelayCommand<Assessment>(EditAssessment!);
             DeleteAssessmentCommand = new RelayCommand<Assessment>(DeleteAssessment!);
+
+            ToggleAddRollCallCommand = new RelayCommand(() => 
+            {
+                if (IsAddingRollCall) ResetRollCallForm();
+                else IsAddingRollCall = true;
+            });
+            SaveRollCallCommand = new RelayCommand(SaveRollCallDay);
+            EditRollCallCommand = new RelayCommand<System.DateTime?>(EditRollCall);
+            DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
         }
 
         public async void Initialize(int classId, string classTitle)
@@ -89,6 +124,7 @@ namespace Centriku.ViewModels
             ClassTitle = classTitle;
             await LoadGradebookData();
             await LoadCategories();
+            await LoadAttendanceData();
         }
 
         private async Task LoadGradebookData()
@@ -163,6 +199,144 @@ namespace Centriku.ViewModels
             TriggerGridRedraw();
         }
 
+        private async Task LoadAttendanceData()
+        {
+            var db = new DatabaseService().GetConnection();
+            await db.CreateTableAsync<AttendanceRecord>(); 
+            
+            // 1. Load Settings Memory
+            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+            if (currentClass != null)
+            {
+                ShowTotalP = currentClass.ShowTotalP;
+                ShowTotalL = currentClass.ShowTotalL;
+                ShowTotalA = currentClass.ShowTotalA;
+            }
+
+            // 2. Get students & ALL attendance records
+            var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+            var studentIds = roster.Select(r => r.StudentID).ToList();
+            var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).OrderBy(s => s.LastName).ToListAsync();
+            var allRecords = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId).ToListAsync();
+
+            // 3. Find unique dates to build our Columns
+            var uniqueDates = allRecords.Select(r => r.Date.Date).Distinct().OrderBy(d => d).ToList();
+            AttendanceDates = new ObservableCollection<System.DateTime>(uniqueDates);
+
+            var extractedMonths = uniqueDates.Select(d => d.ToString("MMM yyyy")).Distinct().ToList();
+            
+            AvailableMonths.Clear();
+            AvailableMonths.Add("All Months"); // Always keep an "All" option at the top!
+            
+            foreach (var m in extractedMonths)
+            {
+                AvailableMonths.Add(m);
+            }
+            
+            // Safety check: If the teacher deleted a date and that month no longer exists, reset the filter
+            if (!AvailableMonths.Contains(SelectedMonthFilter)) 
+            {
+                SelectedMonthFilter = "All Months";
+            }
+
+            // 4. Build the Excel Rows
+            AttendanceGridRows.Clear();
+            foreach (var student in enrolled)
+            {
+                var row = new AttendanceGridRowViewModel(student);
+                var studentRecords = allRecords.Where(r => r.StudentID == student.StudentID).ToList();
+
+                foreach (var date in uniqueDates)
+                {
+                    var existingRecord = studentRecords.FirstOrDefault(r => r.Date.Date == date);
+                    if (existingRecord == null) existingRecord = new AttendanceRecord { ClassID = ClassId, StudentID = student.StudentID, Date = date, Status = "" };
+                    
+                    row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(existingRecord, row.RefreshTotals, msg => ShowToastMessage?.Invoke(msg));
+                }
+                AttendanceGridRows.Add(row);
+            }
+            TriggerGridRedraw(); 
+        }
+
+        private async void SaveRollCallDay()
+        {
+            if (!NewRollCallDate.HasValue) return;
+            var targetDate = NewRollCallDate.Value.Date;
+            var db = new DatabaseService().GetConnection();
+
+            if (_editingRollCallDate.HasValue)
+            {
+                // === UPDATE MODE ===
+                var oldDate = _editingRollCallDate.Value;
+                
+                // If they changed the date, check if the new date already exists!
+                if (oldDate != targetDate && AttendanceDates.Contains(targetDate))
+                {
+                    ShowToastMessage?.Invoke("Roll call for this date already exists!");
+                    return;
+                }
+
+                // Update all records that belonged to the old date
+                var recordsToUpdate = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == oldDate).ToListAsync();
+                foreach (var r in recordsToUpdate)
+                {
+                    r.Date = targetDate;
+                    await db.UpdateAsync(r);
+                }
+            }
+            else
+            {
+                // === CREATE MODE ===
+                if (AttendanceDates.Contains(targetDate))
+                {
+                    ShowToastMessage?.Invoke("Roll call for this date already exists!");
+                    return;
+                }
+
+                await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST" });
+
+                var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+                foreach (var r in roster)
+                {
+                    await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
+                }
+            }
+
+            ResetRollCallForm();
+            await LoadAttendanceData(); // Refresh the grid!
+        }
+        
+        private void EditRollCall(System.DateTime? dateParam)
+        {
+            if (!dateParam.HasValue) return;
+            _editingRollCallDate = dateParam.Value.Date;
+            NewRollCallDate = dateParam.Value.Date;
+            IsAddingRollCall = true; // Slide the panel open!
+        }
+
+        private async void DeleteRollCall(System.DateTime? dateParam)
+        {
+            if (!dateParam.HasValue) return;
+            var targetDate = dateParam.Value.Date;
+            var db = new DatabaseService().GetConnection();
+            
+            // Delete ALL records for this class on this specific date
+            var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
+            foreach (var r in recordsToDelete)
+            {
+                await db.DeleteAsync(r);
+            }
+            
+            await LoadAttendanceData(); // Refresh the grid!
+        }
+
+        private void ResetRollCallForm()
+        {
+            _editingRollCallDate = null;
+            NewRollCallDate = System.DateTime.Today;
+            IsAddingRollCall = false;
+        }
+
         private async void ToggleEnrollment()
         {
             IsEnrolling = !IsEnrolling;
@@ -198,11 +372,12 @@ namespace Centriku.ViewModels
                     ClassID = ClassId, // The class we are currently viewing
                     StudentID = student.DbModel.StudentID // The student we just checked
                 };
-                await LoadGradebookData(); // Link them in Table 3!
+                await db.InsertAsync(newRosterEntry); // Link them in Table 3!
             }
 
             IsEnrolling = false;
             await LoadGradebookData(); // Refresh the grid
+            await LoadAttendanceData();
         }
 
         private async void RemoveStudent(Student student)
@@ -216,6 +391,7 @@ namespace Centriku.ViewModels
             {
                 await db.DeleteAsync(rosterEntry);
                 await LoadGradebookData();
+                await LoadAttendanceData();
             }
         }
     
@@ -459,4 +635,78 @@ namespace Centriku.ViewModels
         }
     }
 
+    public partial class AttendanceCellViewModel : ObservableObject
+    {
+        public AttendanceRecord DbModel { get; }
+        private readonly System.Action _onStatusChanged;
+        private readonly System.Action<string> _showToast;
+
+        public string Status
+        {
+            get => DbModel.Status ?? "";
+            set
+            {
+                // 1. Instantly force to Uppercase
+                string input = value?.ToUpper() ?? ""; 
+                
+                // 2. Validate input!
+                if (input == "P" || input == "L" || input == "A" || input == "")
+                {
+                    if (DbModel.Status != input)
+                    {
+                        DbModel.Status = input;
+                        OnPropertyChanged();
+                        SaveToDb();
+                        _onStatusChanged?.Invoke(); // Recalculate totals instantly!
+                    }
+                }
+                else
+                {
+                    // Invalid! Revert the UI to what it was and fire the Toast!
+                    OnPropertyChanged(); 
+                    _showToast?.Invoke($"'{input}' is invalid. Only use P, L, or A.");
+                }
+            }
+        }
+
+        public AttendanceCellViewModel(AttendanceRecord record, System.Action onStatusChanged, System.Action<string> showToast)
+        {
+            DbModel = record;
+            _onStatusChanged = onStatusChanged;
+            _showToast = showToast;
+        }
+
+        private async void SaveToDb()
+        {
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            if (DbModel.RecordID == 0) await db.InsertAsync(DbModel);
+            else await db.UpdateAsync(DbModel);
+        }
+    }
+
+    public partial class AttendanceGridRowViewModel : ObservableObject
+    {
+        public Student StudentInfo { get; }
+        public string LastName => StudentInfo.LastName ?? "";
+        public string FirstName => StudentInfo.FirstName ?? "";
+
+        // Dictionary to link a specific Date Column to its specific Cell
+        public System.Collections.Generic.Dictionary<string, AttendanceCellViewModel> Cells { get; set; } = [];
+
+        public int TotalP => Cells.Values.Count(c => c.Status == "P");
+        public int TotalL => Cells.Values.Count(c => c.Status == "L");
+        public int TotalA => Cells.Values.Count(c => c.Status == "A");
+
+        public void RefreshTotals()
+        {
+            OnPropertyChanged(nameof(TotalP));
+            OnPropertyChanged(nameof(TotalL));
+            OnPropertyChanged(nameof(TotalA));
+        }
+
+        public AttendanceGridRowViewModel(Student student)
+        {
+            StudentInfo = student;
+        }
+    }
 }
