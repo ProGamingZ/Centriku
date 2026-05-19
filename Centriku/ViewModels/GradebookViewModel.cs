@@ -86,6 +86,22 @@ namespace Centriku.ViewModels
         #endregion
 
         #region Setup& Data Loading
+
+            public IRelayCommand ExportCsvCommand { get; }
+            private async void ExportToCsv()
+            {
+                ShowToastMessage?.Invoke("Generating CSV files...");
+
+                var result = await CsvExportService.ExportClassDataAsync(
+                    ClassTitle,
+                    GradebookRows,
+                    ClassAssessments,
+                    AttendanceGridRows,
+                    AttendanceDates
+                );
+                // Pop the toast letting the teacher know exactly where it saved!
+                ShowToastMessage?.Invoke(result.Message); 
+            }
             public GradebookViewModel()
             {
                 ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
@@ -111,6 +127,7 @@ namespace Centriku.ViewModels
                 SaveRollCallCommand = new RelayCommand(SaveRollCallDay);
                 EditRollCallCommand = new RelayCommand<System.DateTime?>(EditRollCall);
                 DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
+                ExportCsvCommand = new RelayCommand(ExportToCsv);
             }
             public async void Initialize(int classId, string classTitle)
             {

@@ -36,7 +36,7 @@ namespace Centriku.Views
                 // 3. Connect the ViewModel's Toast action to our visual Toast Manager!
                 vm.ShowToastMessage = (msg) => 
                 {
-                    _notificationManager?.Show(new Notification("Invalid Entry", msg, NotificationType.Warning));
+                    _notificationManager?.Show(new Notification("Notification", msg, NotificationType.Warning));
                 };
 
                 vm.PropertyChanged -= Vm_PropertyChanged;

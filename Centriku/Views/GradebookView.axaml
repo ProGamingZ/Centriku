@@ -23,6 +23,14 @@
 
                             <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
                                 
+                                <Button Command="{Binding ExportCsvCommand}" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                        CornerRadius="8" Padding="20,10" Margin="0,0,15,0" FontWeight="Bold">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Classes="Icon" Text="📥" FontSize="14"/> <TextBlock Text="Export CSV" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
                                 <Button Content="👁️ View Options" 
                                         Background="Transparent" 
                                         Foreground="{DynamicResource TextMainBrush}" 
