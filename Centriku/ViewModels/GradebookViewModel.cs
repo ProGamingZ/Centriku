@@ -18,9 +18,11 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool ShowLRN { get; set; } = true;
             [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
             [ObservableProperty] public partial bool ShowLastName { get; set; } = true;
+            [ObservableProperty] public partial bool ShowFinalGrade { get; set; } = true;
             partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowLastNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowFinalGradeChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
 
             [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
             private void TriggerGridRedraw() => GridRefreshTrigger++;
@@ -34,6 +36,7 @@ namespace Centriku.ViewModels
                     currentClass.ShowLRN = ShowLRN;
                     currentClass.ShowFirstName = ShowFirstName;
                     currentClass.ShowLastName = ShowLastName;
+                    currentClass.ShowFinalGrade = ShowFinalGrade;
                     currentClass.ShowTotalP = ShowTotalP;
                     currentClass.ShowTotalL = ShowTotalL;
                     currentClass.ShowTotalA = ShowTotalA;
@@ -65,11 +68,11 @@ namespace Centriku.ViewModels
                 OnPropertyChanged(nameof(IsWeightedOrBonusMode)); 
                 OnPropertyChanged(nameof(IsMathEngineActive)); 
                 SaveClassSettings(); 
-                // TriggerGridRedraw(); // We will need this later when we build the Final Grade column!
+                RecalculateFinalGrades();
             }
-            partial void OnMaxAbsencesAllowedChanged(int value) { SaveClassSettings(); }
-            partial void OnAttendanceWeightChanged(double value) { SaveClassSettings(); }
-            partial void OnLateValueChanged(double value) { SaveClassSettings(); }
+            partial void OnMaxAbsencesAllowedChanged(int value) { SaveClassSettings(); RecalculateFinalGrades();}
+            partial void OnAttendanceWeightChanged(double value) { SaveClassSettings(); RecalculateFinalGrades();}
+            partial void OnLateValueChanged(double value) { SaveClassSettings(); RecalculateFinalGrades();}
         #endregion
 
         #region Grid Data Collections
@@ -128,7 +131,7 @@ namespace Centriku.ViewModels
                     ShowLRN = currentClass.ShowLRN;
                     ShowFirstName = currentClass.ShowFirstName;
                     ShowLastName = currentClass.ShowLastName;
-
+                    ShowFinalGrade = currentClass.ShowFinalGrade;
                     AttendanceCalculationMode = currentClass.AttendanceCalculationMode ?? "None";
                     MaxAbsencesAllowed = currentClass.MaxAbsencesAllowed;
                     AttendanceWeight = currentClass.AttendanceWeight;
@@ -175,7 +178,7 @@ namespace Centriku.ViewModels
                         if (existingScore != null)
                         {
                             // Wrap the existing score
-                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore);
+                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                         else
                         {
@@ -185,13 +188,14 @@ namespace Centriku.ViewModels
                                 StudentID = student.StudentID, 
                                 PointsEarned = 0 
                             };
-                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore);
+                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                     }
                     
                     GradebookRows.Add(row);
                 }
                 TriggerGridRedraw();
+                RecalculateFinalGrades();
             }
             private async Task LoadAttendanceData()
             {
@@ -245,11 +249,20 @@ namespace Centriku.ViewModels
                         var existingRecord = studentRecords.FirstOrDefault(r => r.Date.Date == date);
                         if (existingRecord == null) existingRecord = new AttendanceRecord { ClassID = ClassId, StudentID = student.StudentID, Date = date, Status = "" };
                         
-                        row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(existingRecord, row.RefreshTotals, msg => ShowToastMessage?.Invoke(msg));
+                        row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(
+                            existingRecord, 
+                            () => 
+                            {
+                                row.RefreshTotals();
+                                RecalculateFinalGrades(); 
+                            }, 
+                            msg => ShowToastMessage?.Invoke(msg)
+                        );
                     }
                     AttendanceGridRows.Add(row);
                 }
                 TriggerGridRedraw(); 
+                RecalculateFinalGrades();
             }
             private async Task LoadCategories()
             {
@@ -275,6 +288,93 @@ namespace Centriku.ViewModels
             public IRelayCommand SaveEnrollmentCommand { get; }
             public IRelayCommand<Student> RemoveStudentCommand { get; }
 
+            public void RecalculateFinalGrades()
+            {
+                if (GradebookRows == null || AttendanceGridRows == null) return;
+
+                foreach (var row in GradebookRows)
+                {
+                    // 1. Calculate pure Academic Grade (Total Earned / Total Max)
+                    double totalEarned = 0;
+                    double totalMax = 0;
+
+                    foreach (var cell in row.Scores.Values)
+                    {
+                        totalEarned += cell.PointsEarned;
+                        totalMax += cell.MaxScore;
+                    }
+
+                    double academicGrade = 100.0; // Default if no assessments exist
+                    if (totalMax > 0)
+                    {
+                        academicGrade = (totalEarned / totalMax) * 100.0;
+                    }
+
+                    // 2. Grab the student's Attendance Records
+                    var attendanceRow = AttendanceGridRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
+                    int totalDays = attendanceRow?.Cells.Count ?? 0;
+                    double effectiveAbsences = (attendanceRow?.TotalA ?? 0) + ((attendanceRow?.TotalL ?? 0) * LateValue);
+
+                    // 3. Run the Math Engine!
+                    string finalOutput = "";
+                    double finalNumeric = 0;
+                    switch (AttendanceCalculationMode)
+                    {
+                        case "None":
+                            finalOutput = $"{System.Math.Round(academicGrade, 2)}%";
+                            finalNumeric = academicGrade;
+                            break;
+
+                        case "Threshold":
+                            if (effectiveAbsences >= MaxAbsencesAllowed)
+                            {
+                                finalOutput = "FA";
+                                finalNumeric = -1; // -1 drops them to the bottom of the list!
+                            }
+                            else
+                            {
+                                finalOutput = $"{System.Math.Round(academicGrade, 2)}%";
+                                finalNumeric = academicGrade;
+                            }
+                            break;
+
+                        case "Weighted":
+                            double attendanceScore = 100.0;
+                            if (totalDays > 0)
+                            {
+                                attendanceScore = ((totalDays - effectiveAbsences) / totalDays) * 100.0;
+                                if (attendanceScore < 0) attendanceScore = 0;
+                            }
+
+                            double academicWeight = (100.0 - AttendanceWeight) / 100.0;
+                            double attWeight = AttendanceWeight / 100.0;
+                            
+                            double weightedFinal = (academicGrade * academicWeight) + (attendanceScore * attWeight);
+                            
+                            finalOutput = $"{System.Math.Round(weightedFinal, 2)}%";
+                            finalNumeric = weightedFinal;
+                            break;
+
+                        case "Bonus":
+                            double bonusFinal = academicGrade;
+                            if (effectiveAbsences == 0 && totalDays > 0) 
+                                bonusFinal += AttendanceWeight; 
+                            else if (effectiveAbsences > MaxAbsencesAllowed)
+                                bonusFinal -= AttendanceWeight; 
+                            
+                            if (bonusFinal > 100) bonusFinal = 100;
+                            if (bonusFinal < 0) bonusFinal = 0;
+
+                            finalOutput = $"{System.Math.Round(bonusFinal, 2)}%";
+                            finalNumeric = bonusFinal;
+                            break;
+                    }
+
+                    // 4. Lock it into the UI!
+                    row.FinalGrade = finalOutput;
+                    row.FinalGradeNumeric = finalNumeric;
+                }
+            }
             private async void ToggleEnrollment()
             {
                 IsEnrolling = !IsEnrolling;
@@ -531,60 +631,50 @@ namespace Centriku.ViewModels
             DbModel = student;
         }
     }
-    public partial class StudentGradeRow : ObservableObject
+    public partial class StudentGradeRow(Student student) : ObservableObject
     {
-        public Student StudentInfo { get; }
-        // Dictionary mapping AssessmentID -> Score object
+        public Student StudentInfo { get; } = student;
         public System.Collections.Generic.Dictionary<int, ScoreCellViewModel> Scores { get; set; } = [];
-
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
         public string StudentID => StudentInfo.StudentID ?? "";
-
-        public StudentGradeRow(Student student)
-        {
-            StudentInfo = student;
-        }
+        [ObservableProperty] public partial string FinalGrade { get; set; } = "---";
+        [ObservableProperty] public partial double FinalGradeNumeric { get; set; } = 0;
     }
     public partial class ScoreCellViewModel : ObservableObject
     {
         public Score DbModel { get; }
         public double MaxScore { get; }
+        private readonly System.Action _onScoreChanged; 
 
         public double PointsEarned
         {
             get => DbModel.PointsEarned;
             set
             {
-                // 1. THE SNAPPING LOGIC
                 double finalValue = value;
-                if (finalValue > MaxScore) finalValue = MaxScore; // Snap down
-                if (finalValue < 0) finalValue = 0;               // Snap up
+                if (finalValue > MaxScore) finalValue = MaxScore; 
+                if (finalValue < 0) finalValue = 0;               
 
-                // 2. Set the value
                 if (DbModel.PointsEarned != finalValue)
                 {
                     DbModel.PointsEarned = finalValue;
-                    
-                    // 3. Force the UI to update immediately (so they see the snap!)
                     OnPropertyChanged(); 
-                    
-                    // 4. Auto-Save to Database!
                     SaveScoreToDatabase(); 
+                    _onScoreChanged?.Invoke(); 
                 }
             }
         }
 
-        public ScoreCellViewModel(Score score, double maxScore)
+        public ScoreCellViewModel(Score score, double maxScore, System.Action onScoreChanged)
         {
             DbModel = score;
             MaxScore = maxScore;
+            _onScoreChanged = onScoreChanged;
         }
 
         private async void SaveScoreToDatabase()
         {
             var db = new Centriku.Services.DatabaseService().GetConnection();
-            
-            // If it's a new blank score, Insert it. If it exists, Update it.
             if (DbModel.ScoreID == 0) await db.InsertAsync(DbModel);
             else await db.UpdateAsync(DbModel);
         }

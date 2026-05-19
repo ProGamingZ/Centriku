@@ -39,7 +39,7 @@
                                                     <CheckBox Content="Show LRN" IsChecked="{Binding ShowLRN}" Margin="10,0,0,0"/>
                                                     <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="10,0,0,0"/>
                                                     <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}" Margin="10,0,0,0"/>
-                                                    
+                                                    <CheckBox Content="Show Final Grade" IsChecked="{Binding ShowFinalGrade}" Margin="10,0,0,0" />
                                                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10,0,0"/>
                                                 </StackPanel>
 
@@ -173,23 +173,15 @@
                     </Border>
 
                     <DataGrid x:Name="RosterGrid" Grid.Row="3" Margin="40,0,40,40"
-                            ItemsSource="{Binding GradebookRows}"
-                            AutoGenerateColumns="False"
-                            IsReadOnly="False"
-                            SelectionMode="Single"
-                            CurrentCellChanged="RosterGrid_CurrentCellChanged"
-                            GridLinesVisibility="Horizontal"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            CornerRadius="8"
-                            MinHeight="300">
+                            ItemsSource="{Binding GradebookRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
+                            GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
+                            CornerRadius="8" MinHeight="300" FrozenColumnCount="4">
                         <DataGrid.Columns>
                             
-                            <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" IsReadOnly="True" Width="150"/>
-                            
-                            <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" IsReadOnly="True" Width="150"/>
-                            <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" IsReadOnly="True" Width="150"/>
-                            
+                            <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="Final Grade" Binding="{Binding FinalGrade}" SortMemberPath="FinalGradeNumeric"  CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                             <DataGridTemplateColumn Header="Actions" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -227,9 +219,9 @@
                                     <Flyout Placement="BottomEdgeAlignedRight">
                                         <StackPanel Spacing="10" Width="200" Margin="10">
                                             <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                            <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
                                             <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
-
+                                            <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
+                                            
                                             <TextBlock Text="Summary Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                             <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
                                             <CheckBox Content="Show Total Late (L)" IsChecked="{Binding ShowTotalL}"/>
@@ -327,15 +319,15 @@
                           BorderThickness="1"
                           BorderBrush="{DynamicResource BorderBrush}"
                           CornerRadius="8"
-                          MinHeight="300">
+                          MinHeight="300" 
+                          FrozenColumnCount="5">
                     <DataGrid.Columns>
                         
-                        <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" IsReadOnly="True" Width="150"/>
-                        <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" IsReadOnly="True" Width="150"/>
-                        
-                        <DataGridTextColumn Header="P" Binding="{Binding TotalP}" IsReadOnly="True" Width="80"/>
-                        <DataGridTextColumn Header="L" Binding="{Binding TotalL}" IsReadOnly="True" Width="80"/>
-                        <DataGridTextColumn Header="A" Binding="{Binding TotalA}" IsReadOnly="True" Width="80"/>
+                        <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                        <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                        <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                        <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                        <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                         
                         </DataGrid.Columns>
                 </DataGrid>

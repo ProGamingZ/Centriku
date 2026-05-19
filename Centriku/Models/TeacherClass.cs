@@ -18,6 +18,7 @@ namespace Centriku.Models
         public bool ShowLRN { get; set; } = true;
         public bool ShowFirstName { get; set; } = true;
         public bool ShowLastName { get; set; } = true;
+        public bool ShowFinalGrade { get; set; } = true;
         public bool ShowTotalP { get; set; } = true;
         public bool ShowTotalL { get; set; } = true;
         public bool ShowTotalA { get; set; } = true;

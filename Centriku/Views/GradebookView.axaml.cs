@@ -117,7 +117,8 @@ namespace Centriku.Views
                 {
                     Header = headerPanel, 
                     Binding = new Binding($"Cells[{date:yyyy-MM-dd}].Status"),
-                    Width = new DataGridLength(140), 
+                    Width = DataGridLength.Auto, 
+                    MaxWidth = 150, 
                     CanUserSort = false 
                 };
                 grid.Columns.Add(newColumn);
@@ -132,16 +133,20 @@ namespace Centriku.Views
             var lrnCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "LRN");
             if (lrnCol != null) lrnCol.IsVisible = vm.ShowLRN;
 
+            var firstNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "First Name");
+            if (firstNameCol != null) firstNameCol.IsVisible = vm.ShowFirstName;
+
             var lastNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Last Name");
             if (lastNameCol != null) lastNameCol.IsVisible = vm.ShowLastName;
 
-            var firstNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "First Name");
-            if (firstNameCol != null) firstNameCol.IsVisible = vm.ShowFirstName;
+            var finalGradeCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Final Grade");
+            if (finalGradeCol != null) finalGradeCol.IsVisible = vm.ShowFinalGrade;
 
             var columnsToRemove = grid.Columns.Where(c => 
                 c.Header?.ToString() != "LRN" && 
                 c.Header?.ToString() != "Last Name" && 
-                c.Header?.ToString() != "First Name" && 
+                c.Header?.ToString() != "First Name" &&
+                c.Header?.ToString() != "Final Grade" && 
                 c.Header?.ToString() != "Actions").ToList();
 
             foreach (var col in columnsToRemove)
@@ -175,9 +180,11 @@ namespace Centriku.Views
                     var newColumn = new DataGridTextColumn
                     {
                         Header = headerPanel,
-                        MinWidth = 120,
+                        Width = DataGridLength.Auto,
+                        MaxWidth = 250,
                         Binding = new Binding($"Scores[{assessment.AssessmentID}].PointsEarned"),
-                        CanUserSort = false
+                        CanUserSort = true,
+                        SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned"
                     };
 
                     grid.Columns.Insert(insertIndex, newColumn);
