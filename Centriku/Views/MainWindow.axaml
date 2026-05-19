@@ -19,7 +19,7 @@
                PaneBackground="{DynamicResource SurfaceBrush}">
         
         <SplitView.Pane>
-            <Grid RowDefinitions="Auto, *, Auto">
+            <Grid RowDefinitions="Auto, *">
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="20,20,0,30">
                     <TextBlock Text="C" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                     <TextBlock Text="Centriku" FontSize="20" FontWeight="Bold" Margin="15,2,0,0" IsVisible="{Binding IsSidebarOpen}"/>
@@ -54,16 +54,6 @@
                         </StackPanel>
                     </Button>     
                 </StackPanel>
- 
-                <Button Grid.Row="2" Command="{Binding ToggleThemeCommand}" 
-                        Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
-                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,20" Margin="10,0,10,10">
-                    <StackPanel Orientation="Horizontal" Spacing="15">
-                        <TextBlock Classes="Icon" Text="{DynamicResource IconTheme}"/>
-                        <TextBlock Text="Toggle Theme" VerticalAlignment="Center" IsVisible="{Binding IsSidebarOpen}"/>
-                    </StackPanel>
-                </Button>
-
             </Grid>
         </SplitView.Pane>
 
@@ -77,20 +67,13 @@
                                 Content="≡" VerticalAlignment="Center"/>
                         
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            
-                            <Button Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
-                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                                    CornerRadius="6" Padding="15,8">
+                            <Button Command="{Binding ToggleThemeCommand}" 
+                                    Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
+                                    CornerRadius="6" Padding="12,8" ToolTip.Tip="Switch Color Mode">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconExport}"/>
-                                    <TextBlock Text="Export CSV" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Classes="Icon" Text="{DynamicResource IconTheme}" FontSize="18"/>
                                 </StackPanel>
                             </Button>
-                            
-                            <Button Content="+ Add Class" 
-                                    Background="{DynamicResource PrimaryBrush}" 
-                                    Foreground="White" 
-                                    CornerRadius="6" Padding="15,8" FontWeight="Bold"/>
                         </StackPanel>
                     </Grid>
                 </Border>

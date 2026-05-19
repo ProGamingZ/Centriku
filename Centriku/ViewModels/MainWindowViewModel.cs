@@ -30,11 +30,11 @@ namespace Centriku.ViewModels
                 IsDarkTheme = !IsDarkTheme;
                 Application.Current?.RequestedThemeVariant = IsDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light;
             });
-            NavigateToDashboardCommand = new RelayCommand(() => Navigate(new DashboardViewModel()));
+            NavigateToDashboardCommand = new RelayCommand(() => Navigate(new DashboardViewModel(Navigate)));
             NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel(Navigate)));
             NavigateToPoliciesCommand = new RelayCommand(() => Navigate(new PoliciesViewModel()));
             NavigateToDirectoryCommand = new RelayCommand(() => Navigate(new DirectoryViewModel()));
-            Navigate(new DashboardViewModel());
+            Navigate(new DashboardViewModel(Navigate));
             StartGlobalSecuritySweep();
         }
 
