@@ -12,7 +12,7 @@ namespace Centriku.Services
 
         public DatabaseService()
         {
-            string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "centriku.db");
+            string dbPath = StorageService.GetDatabasePath();
             _database = new SQLiteAsyncConnection(dbPath);
         }
 

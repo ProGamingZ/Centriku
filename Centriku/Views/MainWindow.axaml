@@ -13,8 +13,8 @@
 
     <SplitView IsPaneOpen="{Binding IsSidebarOpen}"
                DisplayMode="CompactInline"
-               CompactPaneLength="65"
-               OpenPaneLength="250"
+               CompactPaneLength="60"
+               OpenPaneLength="160"
                Background="{DynamicResource AppBackground}"
                PaneBackground="{DynamicResource SurfaceBrush}">
         
@@ -26,28 +26,28 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Spacing="10" Margin="10,0">
-                    <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDashboard}"/>
                             <TextBlock Text="Dashboard" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding NavigateToMyClassesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToMyClassesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconClasses}"/>
                             <TextBlock Text="My Classes" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding NavigateToPoliciesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToPoliciesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconPolicies}"/>
                             <TextBlock Text="Policies" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding NavigateToDirectoryCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15,10">
+                    <Button Command="{Binding NavigateToDirectoryCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
                             <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold"/>

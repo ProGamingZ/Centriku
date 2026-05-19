@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia;
 using Avalonia.Styling;
+using Centriku.Services; // === NEW: Added so we can access DatabaseService! ===
 
 namespace Centriku.ViewModels
 {
@@ -15,6 +16,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial double MinHeight { get; set; } = 768;
         [ObservableProperty] public partial WindowState CurrentWindowState { get; set; } = WindowState.Normal;
         [ObservableProperty] public partial bool IsDarkTheme { get; set; } = true;
+        
         public IRelayCommand ToggleSidebarCommand { get; }
         public IRelayCommand ToggleThemeCommand { get; }
         public IRelayCommand NavigateToDashboardCommand { get; }
@@ -34,7 +36,17 @@ namespace Centriku.ViewModels
             NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel(Navigate)));
             NavigateToPoliciesCommand = new RelayCommand(() => Navigate(new PoliciesViewModel()));
             NavigateToDirectoryCommand = new RelayCommand(() => Navigate(new DirectoryViewModel()));
+            BootUpApplication();
+        }
+
+        private async void BootUpApplication()
+        {
+            // 1. Ensure the database and all tables are created first!
+            var dbService = new DatabaseService();
+            await dbService.InitializeDatabaseAsync();
+            // 2. Now that the tables exist, it is 100% safe to load the Dashboard!
             Navigate(new DashboardViewModel(Navigate));
+            
             StartGlobalSecuritySweep();
         }
 
@@ -48,7 +60,6 @@ namespace Centriku.ViewModels
             var securityTimer = new DispatcherTimer { Interval = System.TimeSpan.FromMinutes(5) };
             securityTimer.Tick += (s, e) =>
             {
-                // Placeholder for LicenseManager logic
                 bool isLicenseValid = true; 
                 
                 if (!isLicenseValid)
