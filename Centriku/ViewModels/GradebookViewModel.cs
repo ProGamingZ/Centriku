@@ -10,517 +10,511 @@ namespace Centriku.ViewModels
 {
     public partial class GradebookViewModel : ViewModelBase
     {
-        [ObservableProperty] public partial int ClassId { get; set; }
-        [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
-        public System.Action<string>? ShowToastMessage { get; set; } 
+        #region Core Properties & UI Toggles
+            [ObservableProperty] public partial int ClassId { get; set; }
+            [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
+            public System.Action<string>? ShowToastMessage { get; set; } 
 
-        [ObservableProperty] public partial ObservableCollection<System.DateTime> AttendanceDates { get; set; } = new();
-        [ObservableProperty] public partial ObservableCollection<AttendanceGridRowViewModel> AttendanceGridRows { get; set; } = new();
+            [ObservableProperty] public partial bool ShowLRN { get; set; } = true;
+            [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
+            [ObservableProperty] public partial bool ShowLastName { get; set; } = true;
+            partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowLastNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
 
-        [ObservableProperty] public partial bool ShowTotalP { get; set; } = true;
-        [ObservableProperty] public partial bool ShowTotalL { get; set; } = true;
-        [ObservableProperty] public partial bool ShowTotalA { get; set; } = true;
-        [ObservableProperty] public partial ObservableCollection<string> AvailableMonths { get; set; } = new();
-        [ObservableProperty] public partial string SelectedMonthFilter { get; set; } = "All Months";
+            [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
+            private void TriggerGridRedraw() => GridRefreshTrigger++;
 
-        partial void OnSelectedMonthFilterChanged(string value) { TriggerGridRedraw(); }
-        partial void OnShowTotalPChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-        partial void OnShowTotalLChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-        partial void OnShowTotalAChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-
-        public System.Collections.ObjectModel.ObservableCollection<string> AttendanceModes { get; } = new() { "None", "Threshold", "Weighted", "Bonus" };
-
-        [ObservableProperty] public partial string AttendanceCalculationMode { get; set; } = "None";
-        [ObservableProperty] public partial int MaxAbsencesAllowed { get; set; } = 3;
-        [ObservableProperty] public partial double AttendanceWeight { get; set; } = 10.0;
-        [ObservableProperty] public partial double LateValue { get; set; } = 0.5;
-
-        // Magic UI Toggles: These tell the UI to show/hide specific sliders based on the Mode selected!
-        public bool IsThresholdMode => AttendanceCalculationMode == "Threshold";
-        public bool IsWeightedOrBonusMode => AttendanceCalculationMode == "Weighted" || AttendanceCalculationMode == "Bonus";
-        public bool IsMathEngineActive => AttendanceCalculationMode != "None";
-        partial void OnAttendanceCalculationModeChanged(string value) 
-        { 
-            OnPropertyChanged(nameof(IsThresholdMode)); 
-            OnPropertyChanged(nameof(IsWeightedOrBonusMode)); 
-            OnPropertyChanged(nameof(IsMathEngineActive)); 
-            SaveClassSettings(); 
-            // TriggerGridRedraw(); // We will need this later when we build the Final Grade column!
-        }
-        partial void OnMaxAbsencesAllowedChanged(int value) { SaveClassSettings(); }
-        partial void OnAttendanceWeightChanged(double value) { SaveClassSettings(); }
-        partial void OnLateValueChanged(double value) { SaveClassSettings(); }
-
-        [ObservableProperty] public partial bool IsAddingRollCall { get; set; } = false;
-        [ObservableProperty] public partial System.DateTime? NewRollCallDate { get; set; } = System.DateTime.Today;
-        private System.DateTime? _editingRollCallDate = null;
-        public IRelayCommand<System.DateTime?> EditRollCallCommand { get; }
-        public IRelayCommand<System.DateTime?> DeleteRollCallCommand { get; }
-        public IRelayCommand ToggleAddRollCallCommand { get; }
-        public IRelayCommand SaveRollCallCommand { get; }
-
-        [ObservableProperty] public partial ObservableCollection<Assessment> ClassAssessments { get; set; } = new();
-        [ObservableProperty] public partial ObservableCollection<StudentGradeRow> GradebookRows { get; set; } = new();   
-
-        [ObservableProperty] public partial bool IsEnrolling { get; set; } = false;
-        [ObservableProperty] public partial ObservableCollection<EnrollmentItemViewModel> AvailableStudents { get; set; } = new();
-
-        [ObservableProperty] public partial bool IsAddingAssessment { get; set; } = false;
-        [ObservableProperty] public partial string NewAssessmentTitle { get; set; } = string.Empty;
-        [ObservableProperty] public partial double NewAssessmentMaxScore { get; set; } = 100;
-        [ObservableProperty] public partial System.DateTime? NewAssessmentDate { get; set; } = System.DateTime.Now;
-        private int? _editingAssessmentId = null;
-        public IRelayCommand<Assessment> EditAssessmentCommand { get; }
-        public IRelayCommand<Assessment> DeleteAssessmentCommand { get; }
-
-        [ObservableProperty] public partial bool ShowLRN { get; set; } = true;
-        [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
-        [ObservableProperty] public partial bool ShowLastName { get; set; } = true;
-
-        [ObservableProperty] public partial ObservableCollection<CategoryFilterViewModel> CategoryFilters { get; set; } = new();
-
-        // A trigger number to tell the UI to instantly redraw the columns
-        [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
-        private void TriggerGridRedraw() => GridRefreshTrigger++;
-
-        // CommunityToolkit MVVM Magic: Auto-run these methods when the booleans change!
-        partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-        partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-        partial void OnShowLastNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-
-        private async void SaveClassSettings()
-        {
-            var db = new DatabaseService().GetConnection();
-            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-            if (currentClass != null)
-            {
-                currentClass.ShowLRN = ShowLRN;
-                currentClass.ShowFirstName = ShowFirstName;
-                currentClass.ShowLastName = ShowLastName;
-                currentClass.ShowTotalP = ShowTotalP;
-                currentClass.ShowTotalL = ShowTotalL;
-                currentClass.ShowTotalA = ShowTotalA;
-
-                currentClass.AttendanceCalculationMode = AttendanceCalculationMode;
-                currentClass.MaxAbsencesAllowed = MaxAbsencesAllowed;
-                currentClass.AttendanceWeight = AttendanceWeight;
-                currentClass.LateValue = LateValue;
-
-                await db.UpdateAsync(currentClass);
-            }
-        }
-
-        [ObservableProperty] public partial ObservableCollection<GradingCategory> AvailableCategories { get; set; } = new();
-        [ObservableProperty] public partial GradingCategory? SelectedCategory { get; set; }
-
-
-        public IRelayCommand ToggleEnrollmentCommand { get; }
-        public IRelayCommand SaveEnrollmentCommand { get; }
-        public IRelayCommand<Student> RemoveStudentCommand { get; }
-        public IRelayCommand ToggleAddAssessmentCommand { get; }
-        public IRelayCommand SaveAssessmentCommand { get; }
-
-        public GradebookViewModel()
-        {
-            ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
-            SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
-            RemoveStudentCommand = new RelayCommand<Student>(RemoveStudent!);
-
-            ToggleAddAssessmentCommand = new RelayCommand(() => 
-            {
-                if (IsAddingAssessment) ResetAssessmentForm(); // If clicking Cancel, wipe everything clean!
-                else IsAddingAssessment = true;                // If clicking Add, just open it.
-            });
-
-            SaveAssessmentCommand = new RelayCommand(SaveAssessment);
-
-            EditAssessmentCommand = new RelayCommand<Assessment>(EditAssessment!);
-            DeleteAssessmentCommand = new RelayCommand<Assessment>(DeleteAssessment!);
-
-            ToggleAddRollCallCommand = new RelayCommand(() => 
-            {
-                if (IsAddingRollCall) ResetRollCallForm();
-                else IsAddingRollCall = true;
-            });
-            SaveRollCallCommand = new RelayCommand(SaveRollCallDay);
-            EditRollCallCommand = new RelayCommand<System.DateTime?>(EditRollCall);
-            DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
-        }
-
-        public async void Initialize(int classId, string classTitle)
-        {
-            ClassId = classId;
-            ClassTitle = classTitle;
-            await LoadGradebookData();
-            await LoadCategories();
-            await LoadAttendanceData();
-        }
-
-        private async Task LoadGradebookData()
-        {
-            var db = new DatabaseService().GetConnection();
-
-            // 1. Load Class Visibility Settings 
-            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-            if (currentClass != null)
-            {
-                ShowLRN = currentClass.ShowLRN;
-                ShowFirstName = currentClass.ShowFirstName;
-                ShowLastName = currentClass.ShowLastName;
-
-                AttendanceCalculationMode = currentClass.AttendanceCalculationMode ?? "None";
-                MaxAbsencesAllowed = currentClass.MaxAbsencesAllowed;
-                AttendanceWeight = currentClass.AttendanceWeight;
-                LateValue = currentClass.LateValue;
-            }
-
-            // 2. Get the Columns (Assessments)
-            var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
-            ClassAssessments = new ObservableCollection<Assessment>(assessments);
-
-            // 3. Build the Category Filters for the View Menu 
-            var allFilters = assessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
-            var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
-            
-            CategoryFilters.Clear();
-            foreach (var group in grouped)
-            {
-                CategoryFilters.Add(new CategoryFilterViewModel(group.Key, group));
-            }
-
-            // 2. Get the Students in this Class
-            var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
-            var studentIds = roster.Select(r => r.StudentID).ToList();
-            var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync();
-
-            // 3. Get the Scores for this Class
-            var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
-            var scores = await db.Table<Score>().Where(s => assessmentIds.Contains(s.AssessmentID)).ToListAsync();
-
-            // 4. Stitch them together into Rows!
-            GradebookRows.Clear();
-            foreach (var student in enrolled)
-            {
-                var row = new StudentGradeRow(student);
-                
-                // Find all existing scores belonging to this specific student
-                var studentScores = scores.Where(s => s.StudentID == student.StudentID).ToList();
-
-                foreach (var assessment in ClassAssessments)
-                {
-                    // Check if the student already has a saved score for this column
-                    var existingScore = studentScores.FirstOrDefault(s => s.AssessmentID == assessment.AssessmentID);
-                    
-                    if (existingScore != null)
-                    {
-                        // Wrap the existing score
-                        row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore);
-                    }
-                    else
-                    {
-                        var blankScore = new Score 
-                        { 
-                            AssessmentID = assessment.AssessmentID, 
-                            StudentID = student.StudentID, 
-                            PointsEarned = 0 
-                        };
-                        row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore);
-                    }
-                }
-                
-                GradebookRows.Add(row);
-            }
-            TriggerGridRedraw();
-        }
-
-        private async Task LoadAttendanceData()
-        {
-            var db = new DatabaseService().GetConnection();
-            await db.CreateTableAsync<AttendanceRecord>(); 
-            
-            // 1. Load Settings Memory
-            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-            if (currentClass != null)
-            {
-                ShowTotalP = currentClass.ShowTotalP;
-                ShowTotalL = currentClass.ShowTotalL;
-                ShowTotalA = currentClass.ShowTotalA;
-            }
-
-            // 2. Get students & ALL attendance records
-            var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
-            var studentIds = roster.Select(r => r.StudentID).ToList();
-            var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).OrderBy(s => s.LastName).ToListAsync();
-            var allRecords = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId).ToListAsync();
-
-            // 3. Find unique dates to build our Columns
-            var uniqueDates = allRecords.Select(r => r.Date.Date).Distinct().OrderBy(d => d).ToList();
-            AttendanceDates = new ObservableCollection<System.DateTime>(uniqueDates);
-
-            var extractedMonths = uniqueDates.Select(d => d.ToString("MMM yyyy")).Distinct().ToList();
-            
-            AvailableMonths.Clear();
-            AvailableMonths.Add("All Months"); // Always keep an "All" option at the top!
-            
-            foreach (var m in extractedMonths)
-            {
-                AvailableMonths.Add(m);
-            }
-            
-            // Safety check: If the teacher deleted a date and that month no longer exists, reset the filter
-            if (!AvailableMonths.Contains(SelectedMonthFilter)) 
-            {
-                SelectedMonthFilter = "All Months";
-            }
-
-            // 4. Build the Excel Rows
-            AttendanceGridRows.Clear();
-            foreach (var student in enrolled)
-            {
-                var row = new AttendanceGridRowViewModel(student);
-                var studentRecords = allRecords.Where(r => r.StudentID == student.StudentID).ToList();
-
-                foreach (var date in uniqueDates)
-                {
-                    var existingRecord = studentRecords.FirstOrDefault(r => r.Date.Date == date);
-                    if (existingRecord == null) existingRecord = new AttendanceRecord { ClassID = ClassId, StudentID = student.StudentID, Date = date, Status = "" };
-                    
-                    row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(existingRecord, row.RefreshTotals, msg => ShowToastMessage?.Invoke(msg));
-                }
-                AttendanceGridRows.Add(row);
-            }
-            TriggerGridRedraw(); 
-        }
-
-        private async void SaveRollCallDay()
-        {
-            if (!NewRollCallDate.HasValue) return;
-            var targetDate = NewRollCallDate.Value.Date;
-            var db = new DatabaseService().GetConnection();
-
-            if (_editingRollCallDate.HasValue)
-            {
-                // === UPDATE MODE ===
-                var oldDate = _editingRollCallDate.Value;
-                
-                // If they changed the date, check if the new date already exists!
-                if (oldDate != targetDate && AttendanceDates.Contains(targetDate))
-                {
-                    ShowToastMessage?.Invoke("Roll call for this date already exists!");
-                    return;
-                }
-
-                // Update all records that belonged to the old date
-                var recordsToUpdate = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == oldDate).ToListAsync();
-                foreach (var r in recordsToUpdate)
-                {
-                    r.Date = targetDate;
-                    await db.UpdateAsync(r);
-                }
-            }
-            else
-            {
-                // === CREATE MODE ===
-                if (AttendanceDates.Contains(targetDate))
-                {
-                    ShowToastMessage?.Invoke("Roll call for this date already exists!");
-                    return;
-                }
-
-                await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST" });
-
-                var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
-                foreach (var r in roster)
-                {
-                    await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
-                }
-            }
-
-            ResetRollCallForm();
-            await LoadAttendanceData(); // Refresh the grid!
-        }
-        
-        private void EditRollCall(System.DateTime? dateParam)
-        {
-            if (!dateParam.HasValue) return;
-            _editingRollCallDate = dateParam.Value.Date;
-            NewRollCallDate = dateParam.Value.Date;
-            IsAddingRollCall = true; // Slide the panel open!
-        }
-
-        private async void DeleteRollCall(System.DateTime? dateParam)
-        {
-            if (!dateParam.HasValue) return;
-            var targetDate = dateParam.Value.Date;
-            var db = new DatabaseService().GetConnection();
-            
-            // Delete ALL records for this class on this specific date
-            var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
-            foreach (var r in recordsToDelete)
-            {
-                await db.DeleteAsync(r);
-            }
-            
-            await LoadAttendanceData(); // Refresh the grid!
-        }
-
-        private void ResetRollCallForm()
-        {
-            _editingRollCallDate = null;
-            NewRollCallDate = System.DateTime.Today;
-            IsAddingRollCall = false;
-        }
-
-        private async void ToggleEnrollment()
-        {
-            IsEnrolling = !IsEnrolling;
-            
-            if (IsEnrolling)
+            private async void SaveClassSettings()
             {
                 var db = new DatabaseService().GetConnection();
-                var allStudents = await db.Table<Student>().ToListAsync();
-                var enrolledIds = GradebookRows.Select(s => s.StudentID).ToList();
-
-                AvailableStudents.Clear();
-                foreach (var s in allStudents)
+                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                if (currentClass != null)
                 {
-                    // Only show students who are NOT already enrolled in this class
-                    if (s.StudentID != null && !enrolledIds.Contains(s.StudentID))
+                    currentClass.ShowLRN = ShowLRN;
+                    currentClass.ShowFirstName = ShowFirstName;
+                    currentClass.ShowLastName = ShowLastName;
+                    currentClass.ShowTotalP = ShowTotalP;
+                    currentClass.ShowTotalL = ShowTotalL;
+                    currentClass.ShowTotalA = ShowTotalA;
+                    currentClass.AttendanceCalculationMode = AttendanceCalculationMode;
+                    currentClass.MaxAbsencesAllowed = MaxAbsencesAllowed;
+                    currentClass.AttendanceWeight = AttendanceWeight;
+                    currentClass.LateValue = LateValue;
+
+                    await db.UpdateAsync(currentClass);
+                }
+            }
+
+        #endregion
+
+        #region Attendance Policy
+            public System.Collections.ObjectModel.ObservableCollection<string> AttendanceModes { get; } = new() { "None", "Threshold", "Weighted", "Bonus" };
+            [ObservableProperty] public partial string AttendanceCalculationMode { get; set; } = "None";
+            [ObservableProperty] public partial int MaxAbsencesAllowed { get; set; } = 3;
+            [ObservableProperty] public partial double AttendanceWeight { get; set; } = 10.0;
+            [ObservableProperty] public partial double LateValue { get; set; } = 0.5;
+
+            public bool IsThresholdMode => AttendanceCalculationMode == "Threshold";
+            public bool IsWeightedOrBonusMode => AttendanceCalculationMode == "Weighted" || AttendanceCalculationMode == "Bonus";
+            public bool IsMathEngineActive => AttendanceCalculationMode != "None";
+
+            partial void OnAttendanceCalculationModeChanged(string value) 
+            { 
+                OnPropertyChanged(nameof(IsThresholdMode)); 
+                OnPropertyChanged(nameof(IsWeightedOrBonusMode)); 
+                OnPropertyChanged(nameof(IsMathEngineActive)); 
+                SaveClassSettings(); 
+                // TriggerGridRedraw(); // We will need this later when we build the Final Grade column!
+            }
+            partial void OnMaxAbsencesAllowedChanged(int value) { SaveClassSettings(); }
+            partial void OnAttendanceWeightChanged(double value) { SaveClassSettings(); }
+            partial void OnLateValueChanged(double value) { SaveClassSettings(); }
+        #endregion
+
+        #region Grid Data Collections
+            [ObservableProperty] public partial ObservableCollection<StudentGradeRow> GradebookRows { get; set; } = new();   
+            [ObservableProperty] public partial ObservableCollection<Assessment> ClassAssessments { get; set; } = new();
+            [ObservableProperty] public partial ObservableCollection<AttendanceGridRowViewModel> AttendanceGridRows { get; set; } = new();
+            [ObservableProperty] public partial ObservableCollection<System.DateTime> AttendanceDates { get; set; } = new();
+            [ObservableProperty] public partial ObservableCollection<GradingCategory> AvailableCategories { get; set; } = new();
+            [ObservableProperty] public partial GradingCategory? SelectedCategory { get; set; }
+            [ObservableProperty] public partial ObservableCollection<CategoryFilterViewModel> CategoryFilters { get; set; } = new();
+        #endregion
+
+        #region Setup& Data Loading
+            public GradebookViewModel()
+            {
+                ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
+                SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
+                RemoveStudentCommand = new RelayCommand<Student>(RemoveStudent!);
+
+                ToggleAddAssessmentCommand = new RelayCommand(() => 
+                {
+                    if (IsAddingAssessment) ResetAssessmentForm(); // If clicking Cancel, wipe everything clean!
+                    else IsAddingAssessment = true;                // If clicking Add, just open it.
+                });
+
+                SaveAssessmentCommand = new RelayCommand(SaveAssessment);
+
+                EditAssessmentCommand = new RelayCommand<Assessment>(EditAssessment!);
+                DeleteAssessmentCommand = new RelayCommand<Assessment>(DeleteAssessment!);
+
+                ToggleAddRollCallCommand = new RelayCommand(() => 
+                {
+                    if (IsAddingRollCall) ResetRollCallForm();
+                    else IsAddingRollCall = true;
+                });
+                SaveRollCallCommand = new RelayCommand(SaveRollCallDay);
+                EditRollCallCommand = new RelayCommand<System.DateTime?>(EditRollCall);
+                DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
+            }
+            public async void Initialize(int classId, string classTitle)
+            {
+                ClassId = classId;
+                ClassTitle = classTitle;
+                await LoadGradebookData();
+                await LoadCategories();
+                await LoadAttendanceData();
+            }
+            private async Task LoadGradebookData()
+            {
+                var db = new DatabaseService().GetConnection();
+
+                // 1. Load Class Visibility Settings 
+                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                if (currentClass != null)
+                {
+                    ShowLRN = currentClass.ShowLRN;
+                    ShowFirstName = currentClass.ShowFirstName;
+                    ShowLastName = currentClass.ShowLastName;
+
+                    AttendanceCalculationMode = currentClass.AttendanceCalculationMode ?? "None";
+                    MaxAbsencesAllowed = currentClass.MaxAbsencesAllowed;
+                    AttendanceWeight = currentClass.AttendanceWeight;
+                    LateValue = currentClass.LateValue;
+                }
+
+                // 2. Get the Columns (Assessments)
+                var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
+                ClassAssessments = new ObservableCollection<Assessment>(assessments);
+
+                // 3. Build the Category Filters for the View Menu 
+                var allFilters = assessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
+                var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
+                
+                CategoryFilters.Clear();
+                foreach (var group in grouped)
+                {
+                    CategoryFilters.Add(new CategoryFilterViewModel(group.Key, group));
+                }
+
+                // 2. Get the Students in this Class
+                var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+                var studentIds = roster.Select(r => r.StudentID).ToList();
+                var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync();
+
+                // 3. Get the Scores for this Class
+                var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
+                var scores = await db.Table<Score>().Where(s => assessmentIds.Contains(s.AssessmentID)).ToListAsync();
+
+                // 4. Stitch them together into Rows!
+                GradebookRows.Clear();
+                foreach (var student in enrolled)
+                {
+                    var row = new StudentGradeRow(student);
+                    
+                    // Find all existing scores belonging to this specific student
+                    var studentScores = scores.Where(s => s.StudentID == student.StudentID).ToList();
+
+                    foreach (var assessment in ClassAssessments)
                     {
-                        AvailableStudents.Add(new EnrollmentItemViewModel(s));
+                        // Check if the student already has a saved score for this column
+                        var existingScore = studentScores.FirstOrDefault(s => s.AssessmentID == assessment.AssessmentID);
+                        
+                        if (existingScore != null)
+                        {
+                            // Wrap the existing score
+                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore);
+                        }
+                        else
+                        {
+                            var blankScore = new Score 
+                            { 
+                                AssessmentID = assessment.AssessmentID, 
+                                StudentID = student.StudentID, 
+                                PointsEarned = 0 
+                            };
+                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore);
+                        }
+                    }
+                    
+                    GradebookRows.Add(row);
+                }
+                TriggerGridRedraw();
+            }
+            private async Task LoadAttendanceData()
+            {
+                var db = new DatabaseService().GetConnection();
+                await db.CreateTableAsync<AttendanceRecord>(); 
+                
+                // 1. Load Settings Memory
+                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                if (currentClass != null)
+                {
+                    ShowTotalP = currentClass.ShowTotalP;
+                    ShowTotalL = currentClass.ShowTotalL;
+                    ShowTotalA = currentClass.ShowTotalA;
+                }
+
+                // 2. Get students & ALL attendance records
+                var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+                var studentIds = roster.Select(r => r.StudentID).ToList();
+                var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).OrderBy(s => s.LastName).ToListAsync();
+                var allRecords = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId).ToListAsync();
+
+                // 3. Find unique dates to build our Columns
+                var uniqueDates = allRecords.Select(r => r.Date.Date).Distinct().OrderBy(d => d).ToList();
+                AttendanceDates = new ObservableCollection<System.DateTime>(uniqueDates);
+
+                var extractedMonths = uniqueDates.Select(d => d.ToString("MMM yyyy")).Distinct().ToList();
+                
+                AvailableMonths.Clear();
+                AvailableMonths.Add("All Months"); // Always keep an "All" option at the top!
+                
+                foreach (var m in extractedMonths)
+                {
+                    AvailableMonths.Add(m);
+                }
+                
+                // Safety check: If the teacher deleted a date and that month no longer exists, reset the filter
+                if (!AvailableMonths.Contains(SelectedMonthFilter)) 
+                {
+                    SelectedMonthFilter = "All Months";
+                }
+
+                // 4. Build the Excel Rows
+                AttendanceGridRows.Clear();
+                foreach (var student in enrolled)
+                {
+                    var row = new AttendanceGridRowViewModel(student);
+                    var studentRecords = allRecords.Where(r => r.StudentID == student.StudentID).ToList();
+
+                    foreach (var date in uniqueDates)
+                    {
+                        var existingRecord = studentRecords.FirstOrDefault(r => r.Date.Date == date);
+                        if (existingRecord == null) existingRecord = new AttendanceRecord { ClassID = ClassId, StudentID = student.StudentID, Date = date, Status = "" };
+                        
+                        row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(existingRecord, row.RefreshTotals, msg => ShowToastMessage?.Invoke(msg));
+                    }
+                    AttendanceGridRows.Add(row);
+                }
+                TriggerGridRedraw(); 
+            }
+            private async Task LoadCategories()
+            {
+                var db = new DatabaseService().GetConnection();
+                
+                // 1. Get the current class to find out which Template it uses
+                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                
+                if (currentClass != null)
+                {
+                    // 2. Fetch only the categories that belong to that specific template!
+                    var categories = await db.Table<GradingCategory>().Where(cat => cat.TemplateID == currentClass.GradingTemplateID).ToListAsync();
+                    AvailableCategories = new ObservableCollection<GradingCategory>(categories);
+                }
+            }
+
+        #endregion
+
+        #region Enrollment Module
+            [ObservableProperty] public partial bool IsEnrolling { get; set; } = false;
+            [ObservableProperty] public partial ObservableCollection<EnrollmentItemViewModel> AvailableStudents { get; set; } = new();
+            public IRelayCommand ToggleEnrollmentCommand { get; }
+            public IRelayCommand SaveEnrollmentCommand { get; }
+            public IRelayCommand<Student> RemoveStudentCommand { get; }
+
+            private async void ToggleEnrollment()
+            {
+                IsEnrolling = !IsEnrolling;
+                
+                if (IsEnrolling)
+                {
+                    var db = new DatabaseService().GetConnection();
+                    var allStudents = await db.Table<Student>().ToListAsync();
+                    var enrolledIds = GradebookRows.Select(s => s.StudentID).ToList();
+
+                    AvailableStudents.Clear();
+                    foreach (var s in allStudents)
+                    {
+                        // Only show students who are NOT already enrolled in this class
+                        if (s.StudentID != null && !enrolledIds.Contains(s.StudentID))
+                        {
+                            AvailableStudents.Add(new EnrollmentItemViewModel(s));
+                        }
                     }
                 }
             }
-        }
-
-        private async void SaveEnrollment()
-        {
-            var db = new DatabaseService().GetConnection();
-            
-            var selectedStudents = AvailableStudents.Where(s => s.IsSelected).ToList();
-
-            foreach (var student in selectedStudents)
+            private async void SaveEnrollment()
             {
-                var newRosterEntry = new ClassRoster
+                var db = new DatabaseService().GetConnection();
+                
+                var selectedStudents = AvailableStudents.Where(s => s.IsSelected).ToList();
+
+                foreach (var student in selectedStudents)
                 {
-                    ClassID = ClassId, // The class we are currently viewing
-                    StudentID = student.DbModel.StudentID // The student we just checked
-                };
-                await db.InsertAsync(newRosterEntry); // Link them in Table 3!
-            }
+                    var newRosterEntry = new ClassRoster
+                    {
+                        ClassID = ClassId, // The class we are currently viewing
+                        StudentID = student.DbModel.StudentID // The student we just checked
+                    };
+                    await db.InsertAsync(newRosterEntry); // Link them in Table 3!
+                }
 
-            IsEnrolling = false;
-            await LoadGradebookData(); // Refresh the grid
-            await LoadAttendanceData();
-        }
-
-        private async void RemoveStudent(Student student)
-        {
-            if (student == null) return;
-            var db = new DatabaseService().GetConnection();
-            
-            // Find the exact link in Table 3 and sever it
-            var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
-            if (rosterEntry != null)
-            {
-                await db.DeleteAsync(rosterEntry);
-                await LoadGradebookData();
+                IsEnrolling = false;
+                await LoadGradebookData(); // Refresh the grid
                 await LoadAttendanceData();
             }
-        }
-    
-        private async Task LoadCategories()
-        {
-            var db = new DatabaseService().GetConnection();
-            
-            // 1. Get the current class to find out which Template it uses
-            var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-            
-            if (currentClass != null)
+            private async void RemoveStudent(Student student)
             {
-                // 2. Fetch only the categories that belong to that specific template!
-                var categories = await db.Table<GradingCategory>().Where(cat => cat.TemplateID == currentClass.GradingTemplateID).ToListAsync();
-                AvailableCategories = new ObservableCollection<GradingCategory>(categories);
-            }
-        }
-        private void EditAssessment(Assessment assessment)
-        {
-            if (assessment == null) return;
-
-            _editingAssessmentId = assessment.AssessmentID;
-            NewAssessmentTitle = assessment.Title ?? string.Empty;
-            NewAssessmentMaxScore = assessment.MaxScore;
-            NewAssessmentDate = assessment.DateGiven;
-            
-            // Find the matching category in the dropdown
-            SelectedCategory = AvailableCategories.FirstOrDefault(c => c.Name == assessment.Category);
-            
-            IsAddingAssessment = true; // Slide the form open!
-        }
-
-        private async void SaveAssessment()
-        {
-            if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
-                return;
-
-            var db = new DatabaseService().GetConnection();
-
-            if (_editingAssessmentId.HasValue)
-            {
-                // === UPDATE MODE ===
-                var assessmentToUpdate = await db.Table<Assessment>().Where(a => a.AssessmentID == _editingAssessmentId.Value).FirstOrDefaultAsync();
-                assessmentToUpdate.Title = NewAssessmentTitle;
-                assessmentToUpdate.Category = SelectedCategory.Name;
-                assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
-                assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
+                if (student == null) return;
+                var db = new DatabaseService().GetConnection();
                 
-                await db.UpdateAsync(assessmentToUpdate);
-            }
-            else
-            {
-                // === CREATE MODE ===
-                var newAssessment = new Assessment
+                // Find the exact link in Table 3 and sever it
+                var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
+                if (rosterEntry != null)
                 {
-                    ClassID = ClassId,
-                    Title = NewAssessmentTitle,
-                    Category = SelectedCategory.Name,
-                    MaxScore = NewAssessmentMaxScore,
-                    DateGiven = NewAssessmentDate ?? System.DateTime.Now
-                };
-                await db.InsertAsync(newAssessment);
+                    await db.DeleteAsync(rosterEntry);
+                    await LoadGradebookData();
+                    await LoadAttendanceData();
+                }
             }
-            ResetAssessmentForm();
-            await LoadGradebookData(); // Refresh the grid!
-        }
 
-        private async void DeleteAssessment(Assessment assessment)
-        {
-            if (assessment == null) return;
-            var db = new DatabaseService().GetConnection();
-            
-            // 1. Delete the Assessment column (Table 4)
-            await db.DeleteAsync(assessment);
+        #endregion
 
-            // 2. Wipe all the student scores associated with this exact Quiz (Table 5)
-            var scoresToDelete = await db.Table<Score>().Where(s => s.AssessmentID == assessment.AssessmentID).ToListAsync();
-            foreach (var score in scoresToDelete)
+        #region Assessment Module
+            [ObservableProperty] public partial bool IsAddingAssessment { get; set; } = false;
+            [ObservableProperty] public partial string NewAssessmentTitle { get; set; } = string.Empty;
+            [ObservableProperty] public partial double NewAssessmentMaxScore { get; set; } = 100;
+            [ObservableProperty] public partial System.DateTime? NewAssessmentDate { get; set; } = System.DateTime.Now;
+            private int? _editingAssessmentId = null;
+            public IRelayCommand ToggleAddAssessmentCommand { get; }
+            public IRelayCommand SaveAssessmentCommand { get; }
+            public IRelayCommand<Assessment> EditAssessmentCommand { get; }
+            public IRelayCommand<Assessment> DeleteAssessmentCommand { get; }
+
+            private void EditAssessment(Assessment assessment)
             {
-                await db.DeleteAsync(score);
+                if (assessment == null) return;
+
+                _editingAssessmentId = assessment.AssessmentID;
+                NewAssessmentTitle = assessment.Title ?? string.Empty;
+                NewAssessmentMaxScore = assessment.MaxScore;
+                NewAssessmentDate = assessment.DateGiven;
+                
+                // Find the matching category in the dropdown
+                SelectedCategory = AvailableCategories.FirstOrDefault(c => c.Name == assessment.Category);
+                
+                IsAddingAssessment = true; // Slide the form open!
+            }
+            private async void SaveAssessment()
+            {
+                if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
+                    return;
+
+                var db = new DatabaseService().GetConnection();
+
+                if (_editingAssessmentId.HasValue)
+                {
+                    // === UPDATE MODE ===
+                    var assessmentToUpdate = await db.Table<Assessment>().Where(a => a.AssessmentID == _editingAssessmentId.Value).FirstOrDefaultAsync();
+                    assessmentToUpdate.Title = NewAssessmentTitle;
+                    assessmentToUpdate.Category = SelectedCategory.Name;
+                    assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
+                    assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
+                    
+                    await db.UpdateAsync(assessmentToUpdate);
+                }
+                else
+                {
+                    // === CREATE MODE ===
+                    var newAssessment = new Assessment
+                    {
+                        ClassID = ClassId,
+                        Title = NewAssessmentTitle,
+                        Category = SelectedCategory.Name,
+                        MaxScore = NewAssessmentMaxScore,
+                        DateGiven = NewAssessmentDate ?? System.DateTime.Now
+                    };
+                    await db.InsertAsync(newAssessment);
+                }
+                ResetAssessmentForm();
+                await LoadGradebookData(); // Refresh the grid!
+            }
+            private async void DeleteAssessment(Assessment assessment)
+            {
+                if (assessment == null) return;
+                var db = new DatabaseService().GetConnection();
+                
+                // 1. Delete the Assessment column (Table 4)
+                await db.DeleteAsync(assessment);
+
+                // 2. Wipe all the student scores associated with this exact Quiz (Table 5)
+                var scoresToDelete = await db.Table<Score>().Where(s => s.AssessmentID == assessment.AssessmentID).ToListAsync();
+                foreach (var score in scoresToDelete)
+                {
+                    await db.DeleteAsync(score);
+                }
+
+                await LoadGradebookData(); // Refresh the grid
+            }
+            private void ResetAssessmentForm()
+            {
+                _editingAssessmentId = null; // Clears the "Edit Mode" tracking ID
+                NewAssessmentTitle = string.Empty;
+                NewAssessmentMaxScore = 100;
+                NewAssessmentDate = System.DateTime.Now;
+                SelectedCategory = null;
+                IsAddingAssessment = false; // Hides the form
             }
 
-            await LoadGradebookData(); // Refresh the grid
-        }
-        private void ResetAssessmentForm()
-        {
-            _editingAssessmentId = null; // Clears the "Edit Mode" tracking ID
-            NewAssessmentTitle = string.Empty;
-            NewAssessmentMaxScore = 100;
-            NewAssessmentDate = System.DateTime.Now;
-            SelectedCategory = null;
-            IsAddingAssessment = false; // Hides the form
-        }
-    
-    
+        #endregion
+
+        #region Attendance Module
+            [ObservableProperty] public partial bool IsAddingRollCall { get; set; } = false;
+            [ObservableProperty] public partial System.DateTime? NewRollCallDate { get; set; } = System.DateTime.Today;
+            private System.DateTime? _editingRollCallDate = null;
+            [ObservableProperty] public partial ObservableCollection<string> AvailableMonths { get; set; } = new();
+            [ObservableProperty] public partial string SelectedMonthFilter { get; set; } = "All Months";
+            partial void OnSelectedMonthFilterChanged(string value) { TriggerGridRedraw(); }
+            [ObservableProperty] public partial bool ShowTotalP { get; set; } = true;
+            [ObservableProperty] public partial bool ShowTotalL { get; set; } = true;
+            [ObservableProperty] public partial bool ShowTotalA { get; set; } = true;
+            partial void OnShowTotalPChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowTotalLChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowTotalAChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            public IRelayCommand ToggleAddRollCallCommand { get; }
+            public IRelayCommand SaveRollCallCommand { get; }
+            public IRelayCommand<System.DateTime?> EditRollCallCommand { get;}
+            public IRelayCommand<System.DateTime?> DeleteRollCallCommand { get;} 
+            private async void SaveRollCallDay()
+            {
+                if (!NewRollCallDate.HasValue) return;
+                var targetDate = NewRollCallDate.Value.Date;
+                var db = new DatabaseService().GetConnection();
+
+                if (_editingRollCallDate.HasValue)
+                {
+                    // === UPDATE MODE ===
+                    var oldDate = _editingRollCallDate.Value;
+                    
+                    // If they changed the date, check if the new date already exists!
+                    if (oldDate != targetDate && AttendanceDates.Contains(targetDate))
+                    {
+                        ShowToastMessage?.Invoke("Roll call for this date already exists!");
+                        return;
+                    }
+
+                    // Update all records that belonged to the old date
+                    var recordsToUpdate = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == oldDate).ToListAsync();
+                    foreach (var r in recordsToUpdate)
+                    {
+                        r.Date = targetDate;
+                        await db.UpdateAsync(r);
+                    }
+                }
+                else
+                {
+                    // === CREATE MODE ===
+                    if (AttendanceDates.Contains(targetDate))
+                    {
+                        ShowToastMessage?.Invoke("Roll call for this date already exists!");
+                        return;
+                    }
+
+                    await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST" });
+
+                    var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+                    foreach (var r in roster)
+                    {
+                        await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
+                    }
+                }
+
+                ResetRollCallForm();
+                await LoadAttendanceData(); // Refresh the grid!
+            } 
+            private void EditRollCall(System.DateTime? dateParam)
+            {
+                if (!dateParam.HasValue) return;
+                _editingRollCallDate = dateParam.Value.Date;
+                NewRollCallDate = dateParam.Value.Date;
+                IsAddingRollCall = true; // Slide the panel open!
+            }
+            private async void DeleteRollCall(System.DateTime? dateParam)
+            {
+                if (!dateParam.HasValue) return;
+                var targetDate = dateParam.Value.Date;
+                var db = new DatabaseService().GetConnection();
+                
+                // Delete ALL records for this class on this specific date
+                var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
+                foreach (var r in recordsToDelete)
+                {
+                    await db.DeleteAsync(r);
+                }
+                
+                await LoadAttendanceData(); // Refresh the grid!
+            }
+            private void ResetRollCallForm()
+            {
+                _editingRollCallDate = null;
+                NewRollCallDate = System.DateTime.Today;
+                IsAddingRollCall = false;
+            }
+
+        #endregion
     }
 
     public partial class EnrollmentItemViewModel : ObservableObject
@@ -540,7 +534,6 @@ namespace Centriku.ViewModels
     public partial class StudentGradeRow : ObservableObject
     {
         public Student StudentInfo { get; }
-        
         // Dictionary mapping AssessmentID -> Score object
         public System.Collections.Generic.Dictionary<int, ScoreCellViewModel> Scores { get; set; } = [];
 
@@ -596,7 +589,6 @@ namespace Centriku.ViewModels
             else await db.UpdateAsync(DbModel);
         }
     }
-
     public partial class AssessmentFilterViewModel : ObservableObject
     {
         public Assessment DbModel { get; }
@@ -632,7 +624,6 @@ namespace Centriku.ViewModels
             await db.UpdateAsync(DbModel);
         }
     }
-
     public partial class CategoryFilterViewModel : ObservableObject
     {
         public string CategoryName { get; }
@@ -668,7 +659,6 @@ namespace Centriku.ViewModels
             }
         }
     }
-
     public partial class AttendanceCellViewModel : ObservableObject
     {
         public AttendanceRecord DbModel { get; }
@@ -717,7 +707,6 @@ namespace Centriku.ViewModels
             else await db.UpdateAsync(DbModel);
         }
     }
-
     public partial class AttendanceGridRowViewModel : ObservableObject
     {
         public Student StudentInfo { get; }
