@@ -311,20 +311,45 @@ namespace Centriku.ViewModels
 
                 foreach (var row in GradebookRows)
                 {
-                    // 1. Calculate pure Academic Grade (Total Earned / Total Max)
-                    double totalEarned = 0;
-                    double totalMax = 0;
-
-                    foreach (var cell in row.Scores.Values)
-                    {
-                        totalEarned += cell.PointsEarned;
-                        totalMax += cell.MaxScore;
-                    }
-
                     double academicGrade = 100.0; // Default if no assessments exist
-                    if (totalMax > 0)
+                    double totalWeightedScore = 0;
+                    double totalActiveWeight = 0;
+
+                    if (AvailableCategories != null && ClassAssessments != null)
                     {
-                        academicGrade = (totalEarned / totalMax) * 100.0;
+                        // Loop through each distinct category (e.g. 30% WW, 50% PT, 20% QT)
+                        foreach (var category in AvailableCategories)
+                        {
+                            double catEarned = 0;
+                            double catMax = 0;
+
+                            // Find all assessment columns that belong to this specific category
+                            var categoryAssessments = ClassAssessments.Where(a => a.Category == category.Name).ToList();
+
+                            foreach (var assessment in categoryAssessments)
+                            {
+                                if (row.Scores.TryGetValue(assessment.AssessmentID, out var cell))
+                                {
+                                    catEarned += cell.PointsEarned;
+                                    catMax += assessment.MaxScore;
+                                }
+                            }
+
+                            // If this category has active scores, calculate its weighted slice
+                            if (catMax > 0)
+                            {
+                                double catPercentage = (catEarned / catMax) * 100.0;
+                                double weightDecimal = category.Weight / 100.0;
+
+                                totalWeightedScore += (catPercentage * weightDecimal);
+                                totalActiveWeight += weightDecimal; // Tracks how much of the 100% pie is actually in use
+                            }
+                        }
+
+                        if (totalActiveWeight > 0)
+                        {
+                            academicGrade = totalWeightedScore / totalActiveWeight;
+                        }
                     }
 
                     // 2. Grab the student's Attendance Records
@@ -391,7 +416,7 @@ namespace Centriku.ViewModels
                     row.FinalGrade = finalOutput;
                     row.FinalGradeNumeric = finalNumeric;
                 }
-            }
+            }            
             private async void ToggleEnrollment()
             {
                 IsEnrolling = !IsEnrolling;
