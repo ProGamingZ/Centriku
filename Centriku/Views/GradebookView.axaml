@@ -17,8 +17,11 @@
                             
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="{Binding ClassTitle}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                <TextBlock Text="Manage student enrollment and build your grading columns." 
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+                                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                                    <TextBlock Text="Viewing Grade For:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ComboBox ItemsSource="{Binding TermViews}" SelectedItem="{Binding SelectedTermView}" 
+                                              Width="200" Background="{DynamicResource AppBackground}" CornerRadius="6"/>
+                                </StackPanel>
                             </StackPanel>
 
                             <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -51,7 +54,7 @@
                                                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10,0,0"/>
                                                 </StackPanel>
 
-                                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowAssessmentFilters}">
                                                     <StackPanel>
                                                         <TextBlock Text="Grading Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
                                                         
@@ -161,6 +164,12 @@
                                     </ComboBox>
                                 </StackPanel>
 
+                                <StackPanel Margin="0,0,15,15" MinWidth="150">
+                                    <TextBlock Text="Grading Period*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                    <ComboBox ItemsSource="{Binding GradingPeriods}" SelectedItem="{Binding NewAssessmentPeriod}" 
+                                              Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                                </StackPanel>
+
                                 <StackPanel Margin="0,0,15,15" MinWidth="120">
                                     <TextBlock Text="Max Score*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
                                     <NumericUpDown Value="{Binding NewAssessmentMaxScore}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
@@ -183,7 +192,7 @@
                     <DataGrid x:Name="RosterGrid" Grid.Row="3" Margin="40,0,40,40"
                             ItemsSource="{Binding GradebookRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
                             GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
-                            CornerRadius="8" MinHeight="300" FrozenColumnCount="4">
+                            CornerRadius="8" MinHeight="300" FrozenColumnCount="3">
                         <DataGrid.Columns>
                             
                             <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>

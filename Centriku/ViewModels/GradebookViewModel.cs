@@ -49,6 +49,19 @@ namespace Centriku.ViewModels
                 }
             }
 
+            [ObservableProperty] public partial ObservableCollection<string> TermViews { get; set; } = new() { "Midterm", "Final", "Semester Average" };
+            [ObservableProperty] public partial string SelectedTermView { get; set; } = "Semester Average";
+            public bool ShowAssessmentFilters => SelectedTermView != "Semester Average";
+            partial void OnSelectedTermViewChanged(string value) 
+            { 
+                OnPropertyChanged(nameof(ShowAssessmentFilters)); // Tell UI to hide/show the list
+                BuildCategoryFilters();
+                TriggerGridRedraw(); 
+                RecalculateFinalGrades(); 
+            }
+
+            [ObservableProperty] public partial ObservableCollection<string> GradingPeriods { get; set; } = new() { "Midterm", "Final" };
+            [ObservableProperty] public partial string NewAssessmentPeriod { get; set; } = "Midterm";
         #endregion
 
         #region Attendance Policy
@@ -83,6 +96,22 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial ObservableCollection<GradingCategory> AvailableCategories { get; set; } = new();
             [ObservableProperty] public partial GradingCategory? SelectedCategory { get; set; }
             [ObservableProperty] public partial ObservableCollection<CategoryFilterViewModel> CategoryFilters { get; set; } = new();
+        
+            private void BuildCategoryFilters()
+            {
+                if (ClassAssessments == null) return;
+                CategoryFilters.Clear();
+                // If viewing the Semester Average, the flyout hides assessments anyway, so stop here!
+                if (SelectedTermView == "Semester Average") return; 
+
+                // Filter the assessments so the flyout ONLY shows quizzes for the currently viewed term!
+                var relevantAssessments = ClassAssessments.Where(a => a.GradingPeriod == SelectedTermView).ToList();
+                var allFilters = relevantAssessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
+                var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
+
+                foreach (var group in grouped)
+                { CategoryFilters.Add(new CategoryFilterViewModel(group.Key, group)); }
+            }
         #endregion
 
         #region Setup& Data Loading
@@ -159,15 +188,7 @@ namespace Centriku.ViewModels
                 var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
                 ClassAssessments = new ObservableCollection<Assessment>(assessments);
 
-                // 3. Build the Category Filters for the View Menu 
-                var allFilters = assessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
-                var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
-                
-                CategoryFilters.Clear();
-                foreach (var group in grouped)
-                {
-                    CategoryFilters.Add(new CategoryFilterViewModel(group.Key, group));
-                }
+                BuildCategoryFilters();
 
                 // 2. Get the Students in this Class
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
@@ -305,78 +326,99 @@ namespace Centriku.ViewModels
             public IRelayCommand SaveEnrollmentCommand { get; }
             public IRelayCommand<Student> RemoveStudentCommand { get; }
 
+            private double CalculateAcademicGrade(StudentGradeRow row, string targetPeriod)
+            {
+                double academicGrade = 100.0; 
+                double totalWeightedScore = 0;
+                double totalActiveWeight = 0;
+
+                if (AvailableCategories != null && ClassAssessments != null)
+                {
+                    foreach (var category in AvailableCategories)
+                    {
+                        double catEarned = 0;
+                        double catMax = 0;
+
+                        // ONLY grab assessments that belong to this category AND this specific Grading Period
+                        var categoryAssessments = ClassAssessments.Where(a => a.Category == category.Name && a.GradingPeriod == targetPeriod).ToList();
+
+                        foreach (var assessment in categoryAssessments)
+                        {
+                            if (row.Scores.TryGetValue(assessment.AssessmentID, out var cell))
+                            {
+                                catEarned += cell.PointsEarned;
+                                catMax += assessment.MaxScore;
+                            }
+                        }
+
+                        if (catMax > 0)
+                        {
+                            double catPercentage = (catEarned / catMax) * 100.0;
+                            double weightDecimal = category.Weight / 100.0;
+
+                            totalWeightedScore += (catPercentage * weightDecimal);
+                            totalActiveWeight += weightDecimal; 
+                        }
+                    }
+
+                    if (totalActiveWeight > 0) academicGrade = totalWeightedScore / totalActiveWeight;
+                }
+                return academicGrade;
+            }
             public void RecalculateFinalGrades()
             {
                 if (GradebookRows == null || AttendanceGridRows == null) return;
 
                 foreach (var row in GradebookRows)
                 {
-                    double academicGrade = 100.0; // Default if no assessments exist
-                    double totalWeightedScore = 0;
-                    double totalActiveWeight = 0;
+                    // === 1. TERM AVERAGING MATH ===
+                    double finalAcademicGrade = 100.0;
 
-                    if (AvailableCategories != null && ClassAssessments != null)
+                    if (SelectedTermView == "Semester Average")
                     {
-                        // Loop through each distinct category (e.g. 30% WW, 50% PT, 20% QT)
-                        foreach (var category in AvailableCategories)
-                        {
-                            double catEarned = 0;
-                            double catMax = 0;
+                        double midterm = CalculateAcademicGrade(row, "Midterm");
+                        double final = CalculateAcademicGrade(row, "Final");
 
-                            // Find all assessment columns that belong to this specific category
-                            var categoryAssessments = ClassAssessments.Where(a => a.Category == category.Name).ToList();
-
-                            foreach (var assessment in categoryAssessments)
-                            {
-                                if (row.Scores.TryGetValue(assessment.AssessmentID, out var cell))
-                                {
-                                    catEarned += cell.PointsEarned;
-                                    catMax += assessment.MaxScore;
-                                }
-                            }
-
-                            // If this category has active scores, calculate its weighted slice
-                            if (catMax > 0)
-                            {
-                                double catPercentage = (catEarned / catMax) * 100.0;
-                                double weightDecimal = category.Weight / 100.0;
-
-                                totalWeightedScore += (catPercentage * weightDecimal);
-                                totalActiveWeight += weightDecimal; // Tracks how much of the 100% pie is actually in use
-                            }
-                        }
-
-                        if (totalActiveWeight > 0)
-                        {
-                            academicGrade = totalWeightedScore / totalActiveWeight;
-                        }
+                        row.MidtermGradeDisplay = $"{System.Math.Round(midterm, 2)}%";
+                        row.FinalTermGradeDisplay = $"{System.Math.Round(final, 2)}%";
+                        
+                        // Safety Check: Prevent 0% averages if the teacher hasn't created a Final yet!
+                        bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
+                        bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
+                        
+                        if (hasMidterm && hasFinal) finalAcademicGrade = (midterm + final) / 2.0;
+                        else if (hasMidterm) finalAcademicGrade = midterm;
+                        else if (hasFinal) finalAcademicGrade = final;
+                    }
+                    else
+                    {
+                        finalAcademicGrade = CalculateAcademicGrade(row, SelectedTermView);
                     }
 
-                    // 2. Grab the student's Attendance Records
+                    // === 2. ATTENDANCE PENALTIES ===
                     var attendanceRow = AttendanceGridRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
                     int totalDays = attendanceRow?.Cells.Count ?? 0;
                     double effectiveAbsences = (attendanceRow?.TotalA ?? 0) + ((attendanceRow?.TotalL ?? 0) * LateValue);
 
-                    // 3. Run the Math Engine!
                     string finalOutput = "";
                     double finalNumeric = 0;
                     switch (AttendanceCalculationMode)
                     {
                         case "None":
-                            finalOutput = $"{System.Math.Round(academicGrade, 2)}%";
-                            finalNumeric = academicGrade;
+                            finalOutput = $"{System.Math.Round(finalAcademicGrade, 2)}%";
+                            finalNumeric = finalAcademicGrade;
                             break;
 
                         case "Threshold":
                             if (effectiveAbsences >= MaxAbsencesAllowed)
                             {
                                 finalOutput = "FA";
-                                finalNumeric = -1; // -1 drops them to the bottom of the list!
+                                finalNumeric = -1; 
                             }
                             else
                             {
-                                finalOutput = $"{System.Math.Round(academicGrade, 2)}%";
-                                finalNumeric = academicGrade;
+                                finalOutput = $"{System.Math.Round(finalAcademicGrade, 2)}%";
+                                finalNumeric = finalAcademicGrade;
                             }
                             break;
 
@@ -391,14 +433,14 @@ namespace Centriku.ViewModels
                             double academicWeight = (100.0 - AttendanceWeight) / 100.0;
                             double attWeight = AttendanceWeight / 100.0;
                             
-                            double weightedFinal = (academicGrade * academicWeight) + (attendanceScore * attWeight);
+                            double weightedFinal = (finalAcademicGrade * academicWeight) + (attendanceScore * attWeight);
                             
                             finalOutput = $"{System.Math.Round(weightedFinal, 2)}%";
                             finalNumeric = weightedFinal;
                             break;
 
                         case "Bonus":
-                            double bonusFinal = academicGrade;
+                            double bonusFinal = finalAcademicGrade;
                             if (effectiveAbsences == 0 && totalDays > 0) 
                                 bonusFinal += AttendanceWeight; 
                             else if (effectiveAbsences > MaxAbsencesAllowed)
@@ -489,16 +531,13 @@ namespace Centriku.ViewModels
             private void EditAssessment(Assessment assessment)
             {
                 if (assessment == null) return;
-
                 _editingAssessmentId = assessment.AssessmentID;
                 NewAssessmentTitle = assessment.Title ?? string.Empty;
                 NewAssessmentMaxScore = assessment.MaxScore;
                 NewAssessmentDate = assessment.DateGiven;
-                
-                // Find the matching category in the dropdown
                 SelectedCategory = AvailableCategories.FirstOrDefault(c => c.Name == assessment.Category);
-                
-                IsAddingAssessment = true; // Slide the form open!
+                NewAssessmentPeriod = assessment.GradingPeriod ?? "Midterm"; // <== ADD THIS
+                IsAddingAssessment = true; 
             }
             private async void SaveAssessment()
             {
@@ -513,6 +552,11 @@ namespace Centriku.ViewModels
                     var assessmentToUpdate = await db.Table<Assessment>().Where(a => a.AssessmentID == _editingAssessmentId.Value).FirstOrDefaultAsync();
                     assessmentToUpdate.Title = NewAssessmentTitle;
                     assessmentToUpdate.Category = SelectedCategory.Name;
+                    
+                    // === FIX: Tell SQLite which term this belongs to! ===
+                    assessmentToUpdate.GradingPeriod = NewAssessmentPeriod; 
+                    // ====================================================
+
                     assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
                     assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
                     
@@ -526,6 +570,11 @@ namespace Centriku.ViewModels
                         ClassID = ClassId,
                         Title = NewAssessmentTitle,
                         Category = SelectedCategory.Name,
+                        
+                        // === FIX: Save the dropdown selection to SQLite! ===
+                        GradingPeriod = NewAssessmentPeriod,
+                        // ===================================================
+
                         MaxScore = NewAssessmentMaxScore,
                         DateGiven = NewAssessmentDate ?? System.DateTime.Now
                     };
@@ -558,6 +607,7 @@ namespace Centriku.ViewModels
                 NewAssessmentMaxScore = 100;
                 NewAssessmentDate = System.DateTime.Now;
                 SelectedCategory = null;
+                NewAssessmentPeriod = SelectedTermView == "Semester Average" ? "Midterm" : SelectedTermView;
                 IsAddingAssessment = false; // Hides the form
             }
 
@@ -679,6 +729,8 @@ namespace Centriku.ViewModels
         public System.Collections.Generic.Dictionary<int, ScoreCellViewModel> Scores { get; set; } = [];
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
         public string StudentID => StudentInfo.StudentID ?? "";
+        [ObservableProperty] public partial string MidtermGradeDisplay { get; set; } = "---";
+        [ObservableProperty] public partial string FinalTermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial string FinalGrade { get; set; } = "---";
         [ObservableProperty] public partial double FinalGradeNumeric { get; set; } = 0;
     }

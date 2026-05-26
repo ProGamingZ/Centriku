@@ -86,6 +86,7 @@ namespace Centriku.Views
             var columnsToRemove = grid.Columns.Where(c => !fixedHeaders.Contains(c.Header?.ToString())).ToList();
             foreach (var col in columnsToRemove) grid.Columns.Remove(col);
 
+
             // C. Spawn the actual Dates
             foreach (var date in vm.AttendanceDates)
             {
@@ -130,6 +131,7 @@ namespace Centriku.Views
             var grid = this.FindControl<DataGrid>("RosterGrid");
             if (grid == null) return;
 
+            // 1. Toggle basic student info columns
             var lrnCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "LRN");
             if (lrnCol != null) lrnCol.IsVisible = vm.ShowLRN;
 
@@ -139,14 +141,21 @@ namespace Centriku.Views
             var lastNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Last Name");
             if (lastNameCol != null) lastNameCol.IsVisible = vm.ShowLastName;
 
-            var finalGradeCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Final Grade");
-            if (finalGradeCol != null) finalGradeCol.IsVisible = vm.ShowFinalGrade;
+            var finalGradeCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Final Grade" || c.Header?.ToString() == "Semester Average");
+            if (finalGradeCol != null) 
+            {
+                finalGradeCol.IsVisible = vm.ShowFinalGrade;
+                // Rename the final column header dynamically based on the view!
+                finalGradeCol.Header = vm.SelectedTermView == "Semester Average" ? "Semester Average" : "Final Grade";
+            }
 
+            // 2. WIPE CLEAN: Remove all previously generated dynamic columns (Quizzes OR the Midterm/Final summary columns)
             var columnsToRemove = grid.Columns.Where(c => 
                 c.Header?.ToString() != "LRN" && 
                 c.Header?.ToString() != "Last Name" && 
                 c.Header?.ToString() != "First Name" &&
                 c.Header?.ToString() != "Final Grade" && 
+                c.Header?.ToString() != "Semester Average" && 
                 c.Header?.ToString() != "Actions").ToList();
 
             foreach (var col in columnsToRemove)
@@ -154,8 +163,37 @@ namespace Centriku.Views
                 grid.Columns.Remove(col);
             }
 
-            int insertIndex = grid.Columns.Count - 1; 
+            var finalGradeTarget = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Final Grade" || c.Header?.ToString() == "Semester Average");
+            int insertIndex = finalGradeTarget != null ? grid.Columns.IndexOf(finalGradeTarget) : grid.Columns.Count - 1;
+            
+            // === 3A. MODE: SEMESTER AVERAGE ===
+            // Only draw the clean, high-level summary columns. Do NOT draw the quizzes.
+            if (vm.SelectedTermView == "Semester Average")
+            {
+                var midColumn = new DataGridTextColumn
+                {
+                    // === UPDATED: Changed from "Midterm Grade" to prevent clutter ===
+                    Header = "Midterm", 
+                    Binding = new Binding("MidtermGradeDisplay"),
+                    CanUserSort = false,
+                    IsReadOnly = true
+                };
+                grid.Columns.Insert(insertIndex++, midColumn);
 
+                var finalColumn = new DataGridTextColumn
+                {
+                    // === UPDATED: Changed from "Final Grade" to prevent the cloning bug! ===
+                    Header = "Final", 
+                    Binding = new Binding("FinalTermGradeDisplay"),
+                    CanUserSort = false,
+                    IsReadOnly = true
+                };
+                grid.Columns.Insert(insertIndex, finalColumn);
+                return; // STOP HERE! We don't want to draw any assessments!
+            }
+
+            // === 3B. MODE: MIDTERM or FINAL ===
+            // Loop through categories and draw the individual quizzes and projects
             foreach (var category in vm.CategoryFilters)
             {
                 foreach (var filter in category.Assessments)
@@ -163,6 +201,9 @@ namespace Centriku.Views
                     if (!filter.IsVisible) continue; 
 
                     var assessment = filter.DbModel;
+
+                    // FILTER: Only draw the column if it belongs to the currently viewed term!
+                    if (assessment.GradingPeriod != vm.SelectedTermView) continue;
 
                     var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 5) };
                     headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = assessment.Title, FontWeight = Avalonia.Media.FontWeight.Bold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
