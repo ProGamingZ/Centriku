@@ -22,8 +22,29 @@ namespace Centriku.ViewModels
                 {
                     DbModel.PointsEarned = finalValue;
                     OnPropertyChanged(); 
+                    OnPropertyChanged(nameof(PointsEarnedDisplay));
                     SaveScoreToDatabase(); 
                     _onScoreChanged?.Invoke(); 
+                }
+            }
+        }
+        public string PointsEarnedDisplay
+        {
+            get => PointsEarned.ToString("0.##"); // Strips trailing decimals for a clean UI
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    PointsEarned = 0; // If they delete everything, safely treat it as a 0
+                }
+                else if (double.TryParse(value, out double numericValue))
+                {
+                    PointsEarned = numericValue; // If it's a valid number, save it!
+                }
+                else
+                {
+                    // If they typed letters (e.g., "abc"), reject it and revert the UI to the last valid number!
+                    OnPropertyChanged(); 
                 }
             }
         }
