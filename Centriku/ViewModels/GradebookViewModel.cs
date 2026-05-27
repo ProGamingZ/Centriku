@@ -19,10 +19,15 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
             [ObservableProperty] public partial bool ShowLastName { get; set; } = true;
             [ObservableProperty] public partial bool ShowFinalGrade { get; set; } = true;
+            [ObservableProperty] public partial bool ShowMidtermGrade { get; set; } = true;
+            [ObservableProperty] public partial bool ShowFinalTermGrade { get; set; } = true;
+            
             partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowLastNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFinalGradeChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowMidtermGradeChanged(bool value) { TriggerGridRedraw(); }
+            partial void OnShowFinalTermGradeChanged(bool value) { TriggerGridRedraw(); }
 
             [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
             private void TriggerGridRedraw() => GridRefreshTrigger++;
@@ -52,9 +57,11 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial ObservableCollection<string> TermViews { get; set; } = new() { "Midterm", "Final", "Semester Average" };
             [ObservableProperty] public partial string SelectedTermView { get; set; } = "Semester Average";
             public bool ShowAssessmentFilters => SelectedTermView != "Semester Average";
+            public bool IsSemesterAverageView => SelectedTermView == "Semester Average";
             partial void OnSelectedTermViewChanged(string value) 
             { 
                 OnPropertyChanged(nameof(ShowAssessmentFilters)); // Tell UI to hide/show the list
+                OnPropertyChanged(nameof(IsSemesterAverageView));
                 BuildCategoryFilters();
                 TriggerGridRedraw(); 
                 RecalculateFinalGrades(); 

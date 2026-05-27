@@ -188,6 +188,7 @@ namespace Centriku.Views
                 var midColumn = new DataGridTemplateColumn
                 {
                     Header = "Midterm", 
+                    IsVisible = vm.ShowMidtermGrade,
                     CanUserSort = true,                       
                     SortMemberPath = "MidtermGradeNumeric",   
                     IsReadOnly = true,
@@ -203,6 +204,7 @@ namespace Centriku.Views
                 var finalColumn = new DataGridTemplateColumn
                 {
                     Header = "Final", 
+                    IsVisible = vm.ShowFinalTermGrade,
                     CanUserSort = true,                       
                     SortMemberPath = "FinalTermGradeNumeric",   
                     IsReadOnly = true,
