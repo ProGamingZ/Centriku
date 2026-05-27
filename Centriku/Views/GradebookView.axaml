@@ -198,7 +198,13 @@
                             <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                             <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                             <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                            <DataGridTextColumn Header="Final Grade" Binding="{Binding FinalGrade}" SortMemberPath="FinalGradeNumeric"  CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTemplateColumn Header="Final Grade" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FinalGrade}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="Actions" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -342,9 +348,23 @@
                         
                         <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                         <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                        <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                        <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                        <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                        <DataGridTemplateColumn Header="P" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate><TextBlock Text="{Binding TotalP}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
+                        <DataGridTemplateColumn Header="L" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate><TextBlock Text="{Binding TotalL}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
+                        <DataGridTemplateColumn Header="A" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate><TextBlock Text="{Binding TotalA}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         
                         </DataGrid.Columns>
                 </DataGrid>

@@ -114,13 +114,28 @@ namespace Centriku.Views
                 headerPanel.Children.Add(buttonPanel);
 
                 // 3. Attach it to the Column
-                var newColumn = new DataGridTextColumn
+                var newColumn = new DataGridTemplateColumn
                 {
                     Header = headerPanel, 
-                    Binding = new Binding($"Cells[{date:yyyy-MM-dd}].Status"),
                     Width = DataGridLength.Auto, 
                     MaxWidth = 150, 
-                    CanUserSort = false 
+                    CanUserSort = false,
+                    
+                    // The Display View (Centered Text)
+                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    {
+                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"Cells[{date:yyyy-MM-dd}].Status"));
+                        return tb;
+                    }),
+                    
+                    // The Edit View (Centered Input Box)
+                    CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    {
+                        var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                        box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Cells[{date:yyyy-MM-dd}].Status") { Mode = Avalonia.Data.BindingMode.TwoWay });
+                        return box;
+                    })
                 };
                 grid.Columns.Add(newColumn);
             }
@@ -170,26 +185,36 @@ namespace Centriku.Views
             // Only draw the clean, high-level summary columns. Do NOT draw the quizzes.
             if (vm.SelectedTermView == "Semester Average")
             {
-                var midColumn = new DataGridTextColumn
+                var midColumn = new DataGridTemplateColumn
                 {
-                    // === UPDATED: Changed from "Midterm Grade" to prevent clutter ===
                     Header = "Midterm", 
-                    Binding = new Binding("MidtermGradeDisplay"),
-                    CanUserSort = false,
-                    IsReadOnly = true
+                    CanUserSort = true,                       
+                    SortMemberPath = "MidtermGradeNumeric",   
+                    IsReadOnly = true,
+                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    {
+                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay"));
+                        return tb;
+                    })
                 };
                 grid.Columns.Insert(insertIndex++, midColumn);
 
-                var finalColumn = new DataGridTextColumn
+                var finalColumn = new DataGridTemplateColumn
                 {
-                    // === UPDATED: Changed from "Final Grade" to prevent the cloning bug! ===
                     Header = "Final", 
-                    Binding = new Binding("FinalTermGradeDisplay"),
-                    CanUserSort = false,
-                    IsReadOnly = true
+                    CanUserSort = true,                       
+                    SortMemberPath = "FinalTermGradeNumeric",   
+                    IsReadOnly = true,
+                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    {
+                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay"));
+                        return tb;
+                    })
                 };
                 grid.Columns.Insert(insertIndex, finalColumn);
-                return; // STOP HERE! We don't want to draw any assessments!
+                return; 
             }
 
             // === 3B. MODE: MIDTERM or FINAL ===
@@ -218,14 +243,29 @@ namespace Centriku.Views
                     buttonPanel.Children.Add(delBtn);
                     headerPanel.Children.Add(buttonPanel);
 
-                    var newColumn = new DataGridTextColumn
+                    var newColumn = new DataGridTemplateColumn
                     {
                         Header = headerPanel,
                         Width = DataGridLength.Auto,
                         MaxWidth = 250,
-                        Binding = new Binding($"Scores[{assessment.AssessmentID}].PointsEarned"),
                         CanUserSort = true,
-                        SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned"
+                        SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned",
+                        
+                        // The Display View (Centered Text)
+                        CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                        {
+                            var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                            tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarned"));
+                            return tb;
+                        }),
+                        
+                        // The Edit View (Centered Input Box)
+                        CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                        {
+                            var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                            box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarned") { Mode = Avalonia.Data.BindingMode.TwoWay });
+                            return box;
+                        })
                     };
 
                     grid.Columns.Insert(insertIndex, newColumn);

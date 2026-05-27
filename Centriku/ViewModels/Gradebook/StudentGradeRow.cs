@@ -11,6 +11,8 @@ namespace Centriku.ViewModels
         public string StudentID => StudentInfo.StudentID ?? "";
         [ObservableProperty] public partial string MidtermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial string FinalTermGradeDisplay { get; set; } = "---";
+        [ObservableProperty] public partial double MidtermGradeNumeric { get; set; } = 0;
+        [ObservableProperty] public partial double FinalTermGradeNumeric { get; set; } = 0;
         [ObservableProperty] public partial string FinalGrade { get; set; } = "---";
         [ObservableProperty] public partial double FinalGradeNumeric { get; set; } = 0;
     }

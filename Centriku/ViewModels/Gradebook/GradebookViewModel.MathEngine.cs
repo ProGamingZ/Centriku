@@ -65,7 +65,8 @@ namespace Centriku.ViewModels
 
                row.MidtermGradeDisplay = $"{System.Math.Round(midterm, 2)}%";
                row.FinalTermGradeDisplay = $"{System.Math.Round(final, 2)}%";
-               
+               row.MidtermGradeNumeric = midterm;
+               row.FinalTermGradeNumeric = final;
                // Safety Check: Prevent 0% averages if the teacher hasn't created a Final yet!
                bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
                bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
