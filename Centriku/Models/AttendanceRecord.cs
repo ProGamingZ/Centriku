@@ -18,5 +18,7 @@ namespace Centriku.Models
 
         // We will use standard strings for this: "Present", "Late", "Absent", "Excused"
         public string? Status { get; set; } 
+
+        public string? Reason { get; set; }
     }
 }

@@ -68,6 +68,11 @@ namespace Centriku.ViewModels
             }
 
             [ObservableProperty] public partial ObservableCollection<string> GradingPeriods { get; set; } = new() { "Midterm", "Final" };
+            [ObservableProperty] public partial AttendanceCellViewModel? SelectedAttendanceCell { get; set; }
+            [ObservableProperty] public partial string SelectedAttendanceStudentName { get; set; } = string.Empty;
+            [ObservableProperty] public partial string SelectedAttendanceDateDisplay { get; set; } = string.Empty;
+            [ObservableProperty] public partial bool IsAttendancePanelOpen { get; set; } = false;
+            [RelayCommand] public void CloseAttendancePanel() => IsAttendancePanelOpen = false;
         #endregion
 
         #region Grid Data Collections

@@ -81,8 +81,11 @@ namespace Centriku.Views
             var taCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "A");
             if (taCol != null) taCol.IsVisible = vm.ShowTotalA;
 
+            var teCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "E");
+            if (teCol != null) teCol.IsVisible = vm.ShowTotalE;
+
             // B. Clear Old Dynamic Date Columns
-            var fixedHeaders = new[] { "Last Name", "First Name", "P", "L", "A" };
+            var fixedHeaders = new[] { "Last Name", "First Name", "P", "L", "A", "E" };
             var columnsToRemove = grid.Columns.Where(c => !fixedHeaders.Contains(c.Header?.ToString())).ToList();
             foreach (var col in columnsToRemove) grid.Columns.Remove(col);
 
@@ -113,27 +116,85 @@ namespace Centriku.Views
                 buttonPanel.Children.Add(delBtn);
                 headerPanel.Children.Add(buttonPanel);
 
-                // 3. Attach it to the Column
+                // 3. Attach it to the Column 
                 var newColumn = new DataGridTemplateColumn
                 {
                     Header = headerPanel, 
                     Width = DataGridLength.Auto, 
                     MaxWidth = 150, 
                     CanUserSort = false,
+                    IsReadOnly = false, // Fast Editing!
                     
-                    // The Display View (Centered Text)
-                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    // === 1. THE DISPLAY VIEW ===
+                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((rowData, __) =>
                     {
+                        var cellGrid = new Avalonia.Controls.Grid { Background = Avalonia.Media.Brushes.Transparent };
+
                         var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
                         tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"Cells[{date:yyyy-MM-dd}].Status"));
-                        return tb;
+
+                        var indicator = new Avalonia.Controls.Shapes.Ellipse
+                        {
+                            Width = 6, Height = 6, Fill = Avalonia.Media.Brushes.Orange,
+                            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
+                            Margin = new Avalonia.Thickness(3)
+                        };
+                        indicator.Bind(Avalonia.Controls.Shapes.Ellipse.IsVisibleProperty, new Avalonia.Data.Binding($"Cells[{date:yyyy-MM-dd}].HasReason"));
+
+                        cellGrid.Children.Add(tb);
+                        cellGrid.Children.Add(indicator);
+
+                        // === THE FIX: Intercept Right-Click, block Auto-Edit, and slide the panel! ===
+                        cellGrid.PointerPressed += (s, ev) =>
+                        {
+                            if (ev.GetCurrentPoint(cellGrid).Properties.IsRightButtonPressed)
+                            {
+                                ev.Handled = true; // STOPS the DataGrid from triggering Auto-Edit!
+                                
+                                if (rowData is AttendanceGridRowViewModel row && vm != null)
+                                {
+                                    if (row.Cells.TryGetValue(date.ToString("yyyy-MM-dd"), out var cellVM))
+                                    {
+                                        vm.SelectedAttendanceCell = cellVM;
+                                        vm.SelectedAttendanceStudentName = $"{row.LastName}, {row.FirstName}";
+                                        vm.SelectedAttendanceDateDisplay = date.ToString("MMM dd, yyyy");
+                                        vm.IsAttendancePanelOpen = true; 
+                                    }
+                                }
+                            }
+                        };
+                        // =============================================================================
+
+                        return cellGrid;
                     }),
                     
-                    // The Edit View (Centered Input Box)
-                    CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    // === 2. THE EDIT VIEW (TextBox) ===
+                    CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((rowData, __) =>
                     {
                         var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
                         box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Cells[{date:yyyy-MM-dd}].Status") { Mode = Avalonia.Data.BindingMode.TwoWay });
+                        
+                        // === THE FIX: Do the exact same thing if they are already typing and decide to right-click ===
+                        box.PointerPressed += (s, ev) =>
+                        {
+                            if (ev.GetCurrentPoint(box).Properties.IsRightButtonPressed)
+                            {
+                                ev.Handled = true;
+                                
+                                if (rowData is AttendanceGridRowViewModel row && vm != null)
+                                {
+                                    if (row.Cells.TryGetValue(date.ToString("yyyy-MM-dd"), out var cellVM))
+                                    {
+                                        vm.SelectedAttendanceCell = cellVM;
+                                        vm.SelectedAttendanceStudentName = $"{row.LastName}, {row.FirstName}";
+                                        vm.SelectedAttendanceDateDisplay = date.ToString("MMM dd, yyyy");
+                                        vm.IsAttendancePanelOpen = true; 
+                                    }
+                                }
+                            }
+                        };
+                        // =============================================================================================
+
                         return box;
                     })
                 };
@@ -252,17 +313,20 @@ namespace Centriku.Views
                         MaxWidth = 250,
                         CanUserSort = true,
                         SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned",
-                        
-                        // The Display View (Centered Text)
+                        IsReadOnly = false, 
+
+                        // === 1. THE DISPLAY VIEW (Solid background for reliable clicking!) ===
                         CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                         {
-                            var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                            var cellGrid = new Avalonia.Controls.Grid { Background = Avalonia.Media.Brushes.Transparent };
                             
+                            var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
                             tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarnedDisplay"));
-                            return tb;
+                            
+                            cellGrid.Children.Add(tb);
+                            return cellGrid;
                         }),
-                        
-                        // The Edit View (Centered Input Box)
+                        // === 2. THE EDIT VIEW (Centered Input Box) ===
                         CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                         {
                             var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
@@ -289,12 +353,9 @@ namespace Centriku.Views
 
         private static void TriggerAutoEdit(object? sender)
         {
-            if (sender is DataGrid grid && grid.CurrentColumn != null)
+            if (sender is DataGrid grid && grid.CurrentColumn != null && !grid.CurrentColumn.IsReadOnly)
             {
-                if (!grid.CurrentColumn.IsReadOnly && grid.CurrentColumn is DataGridTextColumn)
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() => grid.BeginEdit(), Avalonia.Threading.DispatcherPriority.Input);
-                }
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => grid.BeginEdit(), Avalonia.Threading.DispatcherPriority.Input);
             }
         }
     }

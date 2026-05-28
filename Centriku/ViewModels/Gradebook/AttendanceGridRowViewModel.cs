@@ -15,12 +15,14 @@ namespace Centriku.ViewModels
         public int TotalP => Cells.Values.Count(c => c.Status == "P");
         public int TotalL => Cells.Values.Count(c => c.Status == "L");
         public int TotalA => Cells.Values.Count(c => c.Status == "A");
-
+        public int TotalE => Cells.Values.Count(c => c.Status == "E");
+        
         public void RefreshTotals()
         {
             OnPropertyChanged(nameof(TotalP));
             OnPropertyChanged(nameof(TotalL));
             OnPropertyChanged(nameof(TotalA));
+            OnPropertyChanged(nameof(TotalE));
         }
 
         public AttendanceGridRowViewModel(Student student)

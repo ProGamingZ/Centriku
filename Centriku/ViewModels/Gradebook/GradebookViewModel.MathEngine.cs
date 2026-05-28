@@ -83,6 +83,8 @@ namespace Centriku.ViewModels
             // === 2. ATTENDANCE PENALTIES ===
             var attendanceRow = AttendanceGridRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
             int totalDays = attendanceRow?.Cells.Count ?? 0;
+            int excusedDays = attendanceRow?.TotalE ?? 0;
+            int activeDays = totalDays - excusedDays;
             double effectiveAbsences = (attendanceRow?.TotalA ?? 0) + ((attendanceRow?.TotalL ?? 0) * LateValue);
 
             string finalOutput = "";
@@ -109,9 +111,9 @@ namespace Centriku.ViewModels
 
                case "Weighted":
                      double attendanceScore = 100.0;
-                     if (totalDays > 0)
+                     if (activeDays > 0)
                      {
-                        attendanceScore = ((totalDays - effectiveAbsences) / totalDays) * 100.0;
+                        attendanceScore = ((activeDays - effectiveAbsences) / activeDays) * 100.0;
                         if (attendanceScore < 0) attendanceScore = 0;
                      }
 
@@ -126,7 +128,7 @@ namespace Centriku.ViewModels
 
                case "Bonus":
                      double bonusFinal = finalAcademicGrade;
-                     if (effectiveAbsences == 0 && totalDays > 0) 
+                     if (effectiveAbsences == 0 && activeDays > 0) 
                         bonusFinal += AttendanceWeight; 
                      else if (effectiveAbsences > MaxAbsencesAllowed)
                         bonusFinal -= AttendanceWeight; 

@@ -20,9 +20,11 @@ namespace Centriku.ViewModels
          [ObservableProperty] public partial bool ShowTotalP { get; set; } = true;
          [ObservableProperty] public partial bool ShowTotalL { get; set; } = true;
          [ObservableProperty] public partial bool ShowTotalA { get; set; } = true;
+         [ObservableProperty] public partial bool ShowTotalE { get; set; } = true; 
          partial void OnShowTotalPChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
          partial void OnShowTotalLChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
          partial void OnShowTotalAChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+         partial void OnShowTotalEChanged(bool value) { TriggerGridRedraw(); }
          public IRelayCommand ToggleAddRollCallCommand { get; }
          public IRelayCommand SaveRollCallCommand { get; }
          public IRelayCommand<System.DateTime?> EditRollCallCommand { get;}

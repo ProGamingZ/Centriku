@@ -16,7 +16,7 @@ namespace Centriku.ViewModels
             {
                 string input = value?.ToUpper() ?? ""; 
                 
-                if (input == "P" || input == "L" || input == "A" || input == "")
+                if (input == "P" || input == "L" || input == "A" || input == "E" || input == "")
                 {
                     if (DbModel.Status != input)
                     {
@@ -29,11 +29,26 @@ namespace Centriku.ViewModels
                 else
                 {
                     OnPropertyChanged(); 
-                    _showToast?.Invoke($"'{input}' is invalid. Only use P, L, or A.");
+                    _showToast?.Invoke($"'{input}' is invalid. Only use P, L, A, or E.");
                 }
             }
         }
 
+        public string Reason
+        {
+            get => DbModel.Reason ?? "";
+            set
+            {
+                if (DbModel.Reason != value)
+                {
+                    DbModel.Reason = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(HasReason));
+                    SaveToDb(); // Instantly saves notes to SQLite!
+                }
+            }
+        }
+        public bool HasReason => !string.IsNullOrWhiteSpace(Reason);
         public AttendanceCellViewModel(AttendanceRecord record, System.Action onStatusChanged, System.Action<string> showToast)
         {
             DbModel = record;

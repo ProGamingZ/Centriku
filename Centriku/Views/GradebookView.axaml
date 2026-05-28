@@ -251,7 +251,8 @@
                                             <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
                                             <CheckBox Content="Show Total Late (L)" IsChecked="{Binding ShowTotalL}"/>
                                             <CheckBox Content="Show Total Absent (A)" IsChecked="{Binding ShowTotalA}"/>
-                                            
+                                            <CheckBox Content="Show Total Excused (E)" IsChecked="{Binding ShowTotalE}"/>
+
                                             <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
                                             <TextBlock Text="📅 Date Range Filter" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                             
@@ -334,42 +335,61 @@
                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
                 </StackPanel>
 
-                <DataGrid x:Name="AttendanceGrid" Grid.Row="1" Margin="40,0,40,40"
-                          ItemsSource="{Binding AttendanceGridRows}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="False"
-                          SelectionMode="Single"
-                          CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
-                          GridLinesVisibility="All"
-                          BorderThickness="1"
-                          BorderBrush="{DynamicResource BorderBrush}"
-                          CornerRadius="8"
-                          MinHeight="300" 
-                          FrozenColumnCount="5">
-                    <DataGrid.Columns>
-                        
-                        <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                        <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                        <DataGridTemplateColumn Header="P" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate><TextBlock Text="{Binding TotalP}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        
-                        <DataGridTemplateColumn Header="L" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate><TextBlock Text="{Binding TotalL}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        
-                        <DataGridTemplateColumn Header="A" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate><TextBlock Text="{Binding TotalA}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        
+                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,40">
+                    
+                    <DataGrid x:Name="AttendanceGrid" Grid.Column="0" 
+                              ItemsSource="{Binding AttendanceGridRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
+                              GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="300" FrozenColumnCount="5">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                            <DataGridTemplateColumn Header="E" SortMemberPath="TotalE" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate><TextBlock Text="{Binding TotalE}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
-                </DataGrid>
+                    </DataGrid>
+
+                    <Border Grid.Column="1" Width="300" IsVisible="{Binding IsAttendancePanelOpen}"
+                            Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="20" Margin="20,0,0,0">
+                        <StackPanel Spacing="15">
+                            
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Grid.Column="0" Text="Attendance Details" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource TextMainBrush}"/>
+                                <Button Grid.Column="1" Command="{Binding CloseAttendancePanelCommand}" Content="✕" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" Padding="5"/>
+                            </Grid>
+                            
+                            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Student" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                <TextBlock Text="{Binding SelectedAttendanceStudentName}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Date" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                <TextBlock Text="{Binding SelectedAttendanceDateDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="5" Margin="0,10,0,0">
+                                <TextBlock Text="Status (P, L, A, E)*" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                <TextBox Text="{Binding SelectedAttendanceCell.Status}" MaxLength="1" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Reason / Notes" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                <TextBox Text="{Binding SelectedAttendanceCell.Reason}" Height="100" AcceptsReturn="True" TextWrapping="Wrap"
+                                         PlaceholderText="e.g. Medical certificate provided..." Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            
+                        </StackPanel>
+                    </Border>
+                </Grid>
                 
             </Grid>
         </TabItem>
