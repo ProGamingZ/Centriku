@@ -3,7 +3,7 @@ using Avalonia.Data;
 using Centriku.ViewModels;
 using System.Linq;
 using System.ComponentModel;
-using Avalonia.Controls.Notifications; // NEEDED FOR TOASTS!
+using Avalonia.Controls.Notifications; 
 
 namespace Centriku.Views
 {
@@ -95,7 +95,7 @@ namespace Centriku.Views
             {
                 if (vm.SelectedMonthFilter != "All Months" && date.ToString("MMM yyyy") != vm.SelectedMonthFilter)
                 {
-                    continue; // Skip drawing this column if it doesn't match the selected month!
+                    continue; // Skip drawing column if doesn't match selected month!
                 }
 
                 // 1. Create a StackPanel for the header exactly like the Grades tab
@@ -174,7 +174,6 @@ namespace Centriku.Views
                         var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
                         box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Cells[{date:yyyy-MM-dd}].Status") { Mode = Avalonia.Data.BindingMode.TwoWay });
                         
-                        // === THE FIX: Do the exact same thing if they are already typing and decide to right-click ===
                         box.PointerPressed += (s, ev) =>
                         {
                             if (ev.GetCurrentPoint(box).Properties.IsRightButtonPressed)
