@@ -21,6 +21,9 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool ShowFinalGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowMidtermGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowFinalTermGrade { get; set; } = true;
+            [ObservableProperty] public partial string CalculationMode { get; set; } = "Raw Percentage";
+            [ObservableProperty] public partial double NrfgBaseValue { get; set; } = 60.0;
+            public System.Collections.Generic.List<Centriku.Models.GradeBoundary> ClassGradeBoundaries { get; set; } = new();
             
             partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
@@ -156,7 +159,7 @@ namespace Centriku.ViewModels
             private async Task LoadGradebookData()
             {
                 var db = new DatabaseService().GetConnection();
-
+                await db.CreateTableAsync<Centriku.Models.GradeBoundary>();
                 // 1. Load Class Visibility Settings 
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass != null)
@@ -169,6 +172,14 @@ namespace Centriku.ViewModels
                     MaxAbsencesAllowed = currentClass.MaxAbsencesAllowed;
                     AttendanceWeight = currentClass.AttendanceWeight;
                     LateValue = currentClass.LateValue;
+                    var template = await db.Table<GradingTemplate>().Where(t => t.TemplateID == currentClass.GradingTemplateID).FirstOrDefaultAsync();
+                    if (template != null) 
+                    {
+                        CalculationMode = template.CalculationMode ?? "NRFG";
+                        NrfgBaseValue = template.NrfgBaseValue; 
+                    }
+                    
+                    ClassGradeBoundaries = await db.Table<GradeBoundary>().Where(b => b.TemplateID == currentClass.GradingTemplateID).ToListAsync();
                 }
 
                 // 2. Get the Columns (Assessments)

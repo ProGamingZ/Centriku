@@ -141,6 +141,36 @@ namespace Centriku.ViewModels
                      break;
             }
 
+            switch (CalculationMode)
+            {
+               case "NRFG":
+                     // THE RUBBER BAND (Norm-Referenced Formula) 
+                     // Universal Formula: Transmuted = (Raw / 100) * (100 - Base) + Base
+                     double baseVal = NrfgBaseValue;
+                     finalNumeric = (finalNumeric / 100.0) * (100.0 - baseVal) + baseVal;
+                     
+                     // We round to 0 decimal places for NRFG curves usually
+                     finalOutput = $"{System.Math.Round(finalNumeric, 0)}"; 
+                     break;
+
+               case "CRG":
+                     // THE SORTING BUCKETS (Criterion-Referenced Boundaries) 
+                     if (ClassGradeBoundaries != null && ClassGradeBoundaries.Any())
+                     {
+                        var matchingBand = ClassGradeBoundaries.FirstOrDefault(b => finalNumeric >= b.MinScore && finalNumeric <= b.MaxScore);
+                        if (matchingBand != null)
+                        {
+                           finalOutput = matchingBand.Label ?? "";
+                           finalNumeric = matchingBand.GpaValue; 
+                        }
+                     }
+                     break;
+
+               default:
+                     finalOutput = $"{System.Math.Round(finalNumeric, 2)}%";
+                     break;
+            }
+
             // 4. Lock it into the UI!
             row.FinalGrade = finalOutput;
             row.FinalGradeNumeric = finalNumeric;

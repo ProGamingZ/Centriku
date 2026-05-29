@@ -14,8 +14,8 @@
 
             <Grid Grid.Row="1" Margin="40,10,40,30">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" MinWidth="450" />
-                    <ColumnDefinition Width="1*" MinWidth="300" />
+                    <ColumnDefinition Width="1.2*" MinWidth="350" />
+                    <ColumnDefinition Width="1*" MinWidth="280" />
                 </Grid.ColumnDefinitions>
                 
                 <Grid Grid.Column="0" RowDefinitions="Auto, *" Margin="0,0,25,0">
@@ -23,7 +23,7 @@
                     <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
                         <Grid RowDefinitions="Auto, Auto, Auto">
                             
-                            <Grid Grid.Row="0" ColumnDefinitions="*, 120, 100" Margin="0,0,0,15">
+                            <Grid Grid.Row="0" ColumnDefinitions="*, 130, 80" Margin="0,0,0,15">
                                 <TextBlock Grid.Column="0" Text="CATEGORY NAME" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="12"/>
                                 <TextBlock Grid.Column="1" Text="WEIGHT (%)" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="12"/>
                             </Grid>
@@ -32,7 +32,7 @@
                                 <ItemsControl ItemsSource="{Binding Categories}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid ColumnDefinitions="*, 120, 100" Margin="0,0,0,15">
+                                            <Grid ColumnDefinitions="*, 130, 80" Margin="0,0,0,15">
                                                 <TextBox Grid.Column="0" Text="{Binding Name}" Margin="0,0,15,0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
                                                 <NumericUpDown Grid.Column="1" Value="{Binding Weight}" Minimum="0" Maximum="100" Margin="0,0,15,0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
                                                 <Button Grid.Column="2" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).RemoveCategoryCommand}" CommandParameter="{Binding}" Content="Remove" Foreground="#EF4444" Background="Transparent" HorizontalAlignment="Left"/>
@@ -94,10 +94,45 @@
                         </Border>
 
                         <TextBlock Text="Calculation Mode" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
-                        <ToggleSwitch IsChecked="{Binding UseTransmutation}" OnContent="DepEd Transmutation" OffContent="Raw Percentage" Margin="0,0,0,30"/>
+                        <ComboBox ItemsSource="{Binding AvailableCalculationModes}" 
+                                  SelectedItem="{Binding CalculationMode}" 
+                                  HorizontalAlignment="Stretch" 
+                                  Background="{DynamicResource AppBackground}" 
+                                  Margin="0,0,0,20"/>
+
+                        <StackPanel IsVisible="{Binding IsFormulaMode}" Margin="0,0,0,25">
+                            <TextBlock Text="Formula Base Value" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,5"/>
+                            <TextBlock Text="Enter the minimum baseline percentage (e.g. 50 for Base-50, 60 for Base-60). A higher base provides a larger curve." Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                            <NumericUpDown Value="{Binding NrfgBaseValue}" Minimum="0" Maximum="100" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
+                        </StackPanel>
+
+                        <StackPanel IsVisible="{Binding IsBoundaryMode}" Margin="0,0,0,25">
+                            <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                                <TextBlock Grid.Column="0" Text="Grade Boundaries" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Command="{Binding AddBoundaryCommand}" Content="+ Add Band" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" Padding="8,4"/>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="1*, 1*, 1.5*, Auto" Margin="0,0,0,5">
+                                <TextBlock Grid.Column="0" Text="Min %" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" FontWeight="Bold" Margin="0,0,5,0"/>
+                                <TextBlock Grid.Column="1" Text="Max %" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" FontWeight="Bold" Margin="0,0,10,0"/>
+                                <TextBlock Grid.Column="2" Text="Label (e.g. A)" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" FontWeight="Bold" Margin="0,0,10,0"/>
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding Boundaries}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="1*, 1*, 1.5*, Auto" Margin="0,0,0,8">
+                                            <NumericUpDown Grid.Column="0" Value="{Binding MinScore}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Margin="0,0,5,0" Background="{DynamicResource AppBackground}"/>
+                                            <NumericUpDown Grid.Column="1" Value="{Binding MaxScore}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Margin="0,0,10,0" Background="{DynamicResource AppBackground}"/>
+                                            <TextBox Grid.Column="2" Text="{Binding Label}" PlaceholderText="Label" Margin="0,0,10,0" Background="{DynamicResource AppBackground}"/>
+                                            <Button Grid.Column="3" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).RemoveBoundaryCommand}" CommandParameter="{Binding}" Content="✕" Foreground="#EF4444" Background="Transparent" Padding="5"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                         
-                        <Button Command="{Binding SavePolicyCommand}" Content="Save Policy" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="15"/>
-                    </StackPanel>
+                        <Button Command="{Binding SavePolicyCommand}" Content="Save Policy" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="15"/>                    </StackPanel>
                 </Border>
             </Grid>
         

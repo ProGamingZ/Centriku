@@ -13,6 +13,7 @@ namespace Centriku.Models
         // Note: Using double to keep your data types consistent with Score.cs and Assessment.cs
         public double PassingGrade { get; set; } // e.g., 75
         
-        public bool UseTransmutation { get; set; } // True = DepEd Transmutation, False = Raw Percentage
+        public string CalculationMode { get; set; } = "NRFG";
+        public double NrfgBaseValue { get; set; } = 60.0;
     }
 }

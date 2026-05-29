@@ -13,7 +13,22 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<Centriku.Models.GradingTemplate> SavedTemplates { get; set; } = new();
         [ObservableProperty] public partial string TemplateName { get; set; } = "Standard High School";
 
-        [ObservableProperty] public partial bool UseTransmutation { get; set; } = true;
+        [ObservableProperty] public partial string CalculationMode { get; set; } = "NRFG";
+        public ObservableCollection<string> AvailableCalculationModes { get; } = new() { "CRG", "NRFG" };
+        
+        public bool IsBoundaryMode => CalculationMode == "CRG";
+        public bool IsFormulaMode => CalculationMode == "NRFG"; 
+        
+        partial void OnCalculationModeChanged(string value) 
+        { 
+            OnPropertyChanged(nameof(IsBoundaryMode)); 
+            OnPropertyChanged(nameof(IsFormulaMode)); 
+        }
+
+        [ObservableProperty] public partial double NrfgBaseValue { get; set; } = 60.0;   
+        [ObservableProperty] public partial ObservableCollection<Centriku.Models.GradeBoundary> Boundaries { get; set; } = new();     
+        public IRelayCommand AddBoundaryCommand { get; }
+        public IRelayCommand<Centriku.Models.GradeBoundary> RemoveBoundaryCommand { get; }
 
         [ObservableProperty] public partial decimal PassingGrade { get; set; } = 75m;
 
@@ -34,6 +49,8 @@ namespace Centriku.ViewModels
             Categories = new ObservableCollection<PolicyCategoryItem>();
             
             AddCategoryCommand = new RelayCommand(() => AddCategory("New Category", 0m));
+            AddBoundaryCommand = new RelayCommand(AddBoundary);
+            RemoveBoundaryCommand = new RelayCommand<Centriku.Models.GradeBoundary>(RemoveBoundary!);
             RemoveCategoryCommand = new RelayCommand<PolicyCategoryItem>(RemoveCategory!);
             SavePolicyCommand = new RelayCommand(SavePolicy, () => IsValidPolicy);
             
@@ -51,9 +68,14 @@ namespace Centriku.ViewModels
             _editingTemplateId = template.TemplateID;
             TemplateName = template.TemplateName ?? "Unnamed Template";
             PassingGrade = (decimal)template.PassingGrade;
-            UseTransmutation = template.UseTransmutation;
+            CalculationMode = template.CalculationMode ?? "NRFG";
             var db = new Centriku.Services.DatabaseService().GetConnection();
+            NrfgBaseValue = template.NrfgBaseValue;
             var savedCategories = await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == template.TemplateID).ToListAsync();
+
+            var savedBoundaries = await db.Table<Centriku.Models.GradeBoundary>().Where(b => b.TemplateID == template.TemplateID).ToListAsync();
+            Boundaries.Clear();
+            foreach (var b in savedBoundaries) Boundaries.Add(b);
 
             foreach (var cat in Categories) { cat.PropertyChanged -= Category_PropertyChanged; }
             Categories.Clear();
@@ -64,13 +86,14 @@ namespace Centriku.ViewModels
             }
         }
 
-        // --- NEW: The Delete Logic ---
         private async void DeleteTemplate(Centriku.Models.GradingTemplate template)
         {
             if (template == null) return;
             var db = new Centriku.Services.DatabaseService().GetConnection();
             await db.DeleteAsync(template);
             await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == template.TemplateID).DeleteAsync();
+            
+            await db.Table<Centriku.Models.GradeBoundary>().Where(b => b.TemplateID == template.TemplateID).DeleteAsync();
             if (_editingTemplateId == template.TemplateID) ResetForm();
 
             LoadSavedTemplates();
@@ -87,24 +110,40 @@ namespace Centriku.ViewModels
                     var templateToUpdate = await db.Table<Centriku.Models.GradingTemplate>().Where(t => t.TemplateID == _editingTemplateId.Value).FirstOrDefaultAsync();
                     templateToUpdate.TemplateName = this.TemplateName;
                     templateToUpdate.PassingGrade = (double)this.PassingGrade;
-                    templateToUpdate.UseTransmutation = this.UseTransmutation;
+                    templateToUpdate.CalculationMode = this.CalculationMode;
+                    templateToUpdate.NrfgBaseValue = this.NrfgBaseValue;
                     await db.UpdateAsync(templateToUpdate);
 
-                    // To update Table 8 easily, we delete the old categories and insert the new ones
                     await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == templateToUpdate.TemplateID).DeleteAsync();
                     foreach (var uiCat in Categories)
                     {
                         await db.InsertAsync(new Centriku.Models.GradingCategory { TemplateID = templateToUpdate.TemplateID, Name = uiCat.Name, Weight = (double)(uiCat.Weight ?? 0m) });
                     }
+
+                    await db.Table<Centriku.Models.GradeBoundary>().Where(b => b.TemplateID == templateToUpdate.TemplateID).DeleteAsync();
+                    foreach (var b in Boundaries) { b.TemplateID = templateToUpdate.TemplateID; await db.InsertAsync(b); }
+
                     System.Console.WriteLine($"SUCCESS: Updated Template #{templateToUpdate.TemplateID}!");
                 }
                 else
                 {
-                    var newTemplate = new Centriku.Models.GradingTemplate { TemplateName = this.TemplateName, PassingGrade = (double)this.PassingGrade, UseTransmutation = this.UseTransmutation };
+                    var newTemplate = new Centriku.Models.GradingTemplate 
+                    { 
+                        TemplateName = this.TemplateName, 
+                        PassingGrade = (double)this.PassingGrade, 
+                        CalculationMode = this.CalculationMode,
+                        NrfgBaseValue = this.NrfgBaseValue 
+                    };                    
                     await db.InsertAsync(newTemplate);
+
                     foreach (var uiCat in Categories)
                     {
                         await db.InsertAsync(new Centriku.Models.GradingCategory { TemplateID = newTemplate.TemplateID, Name = uiCat.Name, Weight = (double)(uiCat.Weight ?? 0m) });
+                    }
+
+                    foreach (var b in Boundaries) 
+                    { 
+                        b.TemplateID = newTemplate.TemplateID; await db.InsertAsync(b); 
                     }
                     System.Console.WriteLine($"SUCCESS: Created New Template #{newTemplate.TemplateID}!");
                 }
@@ -118,7 +157,9 @@ namespace Centriku.ViewModels
             _editingTemplateId = null; 
             TemplateName = "New Grading Template";
             PassingGrade = 75m;
-            UseTransmutation = true;
+            CalculationMode = "NRFG";
+            NrfgBaseValue = 60.0;
+            Boundaries.Clear();
             
             foreach (var cat in Categories) { cat.PropertyChanged -= Category_PropertyChanged; }
             Categories.Clear();
@@ -127,9 +168,20 @@ namespace Centriku.ViewModels
             AddCategory("Quarterly Assessment", 20m);
         }
 
+        private void AddBoundary()
+        {
+            Boundaries.Add(new Centriku.Models.GradeBoundary { MinScore = 90, MaxScore = 100, Label = "A", GpaValue = 4.0 });
+        }
+
+        private void RemoveBoundary(Centriku.Models.GradeBoundary boundary)
+        {
+            if (boundary != null && Boundaries.Contains(boundary)) Boundaries.Remove(boundary);
+        }
+
         private async void LoadSavedTemplates()
         {
             var db = new Centriku.Services.DatabaseService().GetConnection();
+            await db.CreateTableAsync<Centriku.Models.GradeBoundary>();
             var templates = await db.Table<Centriku.Models.GradingTemplate>().ToListAsync();
             SavedTemplates.Clear();
             foreach (var t in templates) { SavedTemplates.Add(t); }
