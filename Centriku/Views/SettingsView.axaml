@@ -22,6 +22,15 @@
                               HorizontalAlignment="Stretch" 
                               Background="{DynamicResource AppBackground}"
                               Margin="0,5,0,0"/>
+
+                    <TextBlock Text="Student ID Format" FontWeight="SemiBold"/>
+                    <TextBlock Text="What does your school or region call a student's unique identification number?" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
+                    
+                    <ComboBox ItemsSource="{Binding AvailableIdTerminologies}" 
+                              SelectedItem="{Binding IdTerminology}" 
+                              HorizontalAlignment="Stretch" 
+                              Background="{DynamicResource AppBackground}"
+                              Margin="0,5,0,0"/>
                 </StackPanel>
             </Border>
             

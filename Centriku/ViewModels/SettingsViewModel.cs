@@ -14,5 +14,15 @@ namespace Centriku.ViewModels
             "Periods / Blocks (USA)", 
             "Sets / Streams (UK)" 
         ];
+
+        [ObservableProperty] 
+        public partial string IdTerminology { get; set; } = "LRN (Philippines)";
+        
+        public ObservableCollection<string> AvailableIdTerminologies { get; } = new() 
+        { 
+            "LRN (Philippines)", 
+            "Student ID (USA / General)", 
+            "UPN (UK / Commonwealth)" 
+        };
     }
 }
