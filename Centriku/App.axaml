@@ -140,6 +140,7 @@
             <x:String x:Key="IconClasses">&#62154;</x:String>
             <x:String x:Key="IconPolicies">&#983182;</x:String>
             <x:String x:Key="IconDirectory">&#62901;</x:String>
+            <x:String x:Key="IconSettings">&#63146;</x:String>
             <x:String x:Key="IconSearch">&#63120;</x:String>
             <x:String x:Key="IconExport">&#58599;</x:String>
             <x:String x:Key="IconTheme">&#58450;</x:String>

@@ -23,6 +23,7 @@ namespace Centriku.ViewModels
         public IRelayCommand NavigateToMyClassesCommand { get; }
         public IRelayCommand NavigateToPoliciesCommand { get; }
         public IRelayCommand NavigateToDirectoryCommand { get; }
+        public IRelayCommand NavigateToSettingsCommand { get; }
 
         public MainWindowViewModel()
         {
@@ -36,6 +37,7 @@ namespace Centriku.ViewModels
             NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel(Navigate)));
             NavigateToPoliciesCommand = new RelayCommand(() => Navigate(new PoliciesViewModel()));
             NavigateToDirectoryCommand = new RelayCommand(() => Navigate(new DirectoryViewModel()));
+            NavigateToSettingsCommand = new RelayCommand(() => Navigate(new SettingsViewModel()));
             BootUpApplication();
         }
 

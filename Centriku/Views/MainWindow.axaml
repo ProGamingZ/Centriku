@@ -52,7 +52,15 @@
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
                             <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
-                    </Button>     
+                    </Button>
+                    
+                    <Button Command="{Binding NavigateToSettingsCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <TextBlock Classes="Icon" Text="{DynamicResource IconSettings}"/>
+                            <TextBlock Text="Settings" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
                 </StackPanel>
             </Grid>
         </SplitView.Pane>

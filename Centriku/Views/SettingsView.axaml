@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Centriku.ViewModels"
+             x:Class="Centriku.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+             
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40,30,40,20" Spacing="20">
+            
+            <TextBlock Text="Application Settings" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+            <TextBlock Text="Customize Centriku to fit your teaching environment." Foreground="{DynamicResource TextMutedBrush}" FontSize="14" Margin="0,-15,0,20"/>
+            
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25" MaxWidth="600" HorizontalAlignment="Left">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Localization &amp; Terminology" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
+                    
+                    <TextBlock Text="Classroom Grouping Structure" FontWeight="SemiBold"/>
+                    <TextBlock Text="How do you organize your students? This will update the labels used when creating new classes and reports." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
+                    
+                    <ComboBox ItemsSource="{Binding AvailableTerminologies}" 
+                              SelectedItem="{Binding ClassroomTerminology}" 
+                              HorizontalAlignment="Stretch" 
+                              Background="{DynamicResource AppBackground}"
+                              Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+            
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
