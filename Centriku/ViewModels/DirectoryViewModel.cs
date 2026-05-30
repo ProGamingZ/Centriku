@@ -11,7 +11,6 @@ namespace Centriku.ViewModels
     {
         [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
         
-        // Notice we are now using our new Wrapper Class here
         private List<StudentRowViewModel> _allStudents = new();
         [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> DisplayedStudents { get; set; } = new();
 
@@ -22,7 +21,6 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool ShowMiddleNameColumn { get; set; } = false;
         [ObservableProperty] public partial bool ShowSuffixColumn { get; set; } = false;
         [ObservableProperty] public partial bool ShowGenderColumn { get; set; } = true;
-        [ObservableProperty] public partial bool ShowDobColumn { get; set; } = false;
 
         // --- Add Student Form Properties ---
         [ObservableProperty] public partial bool IsAddingStudent { get; set; } = false;
@@ -32,7 +30,6 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewStudentLastName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentSuffix { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentGender { get; set; } = "Male";
-        [ObservableProperty] public partial DateTimeOffset? NewStudentDob { get; set; } = DateTimeOffset.Now; 
 
         public IRelayCommand ToggleAddStudentFormCommand { get; }
         public IRelayCommand SaveStudentCommand { get; }
@@ -74,8 +71,7 @@ namespace Centriku.ViewModels
                 MiddleName = NewStudentMiddleName,
                 LastName = NewStudentLastName,
                 Suffix = NewStudentSuffix,
-                Gender = NewStudentGender,
-                DateOfBirth = NewStudentDob?.DateTime ?? DateTime.Now 
+                Gender = NewStudentGender
             };
 
             await db.InsertOrReplaceAsync(newStudent);
@@ -85,7 +81,6 @@ namespace Centriku.ViewModels
             NewStudentMiddleName = string.Empty;
             NewStudentLastName = string.Empty;
             NewStudentSuffix = string.Empty;
-            NewStudentDob = DateTimeOffset.Now;
             IsAddingStudent = false;
             
             LoadStudents();
@@ -182,11 +177,6 @@ namespace Centriku.ViewModels
         {
             get => DbModel.Gender ?? string.Empty;
             set { DbModel.Gender = value; OnPropertyChanged(); }
-        }
-        public DateTime DateOfBirth
-        {
-            get => DbModel.DateOfBirth;
-            set { DbModel.DateOfBirth = value; OnPropertyChanged(); }
         }
 
         public StudentRowViewModel(Centriku.Models.Student student)

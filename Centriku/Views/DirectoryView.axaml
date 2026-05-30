@@ -35,7 +35,6 @@
                                 <CheckBox Content="Middle Name" IsChecked="{Binding ShowMiddleNameColumn}"/>
                                 <CheckBox Content="Suffix" IsChecked="{Binding ShowSuffixColumn}"/>
                                 <CheckBox Content="Gender" IsChecked="{Binding ShowGenderColumn}"/>
-                                <CheckBox Content="Date of Birth" IsChecked="{Binding ShowDobColumn}"/>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
@@ -87,10 +86,6 @@
                             </ComboBox>
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,15,15">
-                            <TextBlock Text="Date of Birth" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <DatePicker SelectedDate="{Binding NewStudentDob}" Background="{DynamicResource AppBackground}"/>
-                        </StackPanel>
                     </WrapPanel>
 
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
@@ -172,18 +167,6 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                                         
-                    <DataGridTemplateColumn Header="DOB" MinWidth="140" MaxWidth="140" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowDobColumn}">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Panel Margin="10,0">
-                                    <TextBlock Text="{Binding DateOfBirth, StringFormat='{}{0:dd/MM/yyyy}'}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
-                                    
-                                    <CalendarDatePicker SelectedDate="{Binding DateOfBirth}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch"/>
-                                </Panel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    
                     <DataGridTemplateColumn Header="Actions" Width="160" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
