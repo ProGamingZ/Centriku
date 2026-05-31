@@ -22,6 +22,11 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool ShowSuffixColumn { get; set; } = false;
         [ObservableProperty] public partial bool ShowGenderColumn { get; set; } = true;
 
+        // NEW Column Toggles
+        [ObservableProperty] public partial bool ShowGradeYearLevelColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowSectionBlockColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowEnrollmentStatusColumn { get; set; } = true;
+
         // --- Add Student Form Properties ---
         [ObservableProperty] public partial bool IsAddingStudent { get; set; } = false;
         [ObservableProperty] public partial string NewStudentLrn { get; set; } = string.Empty;
@@ -30,6 +35,11 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewStudentLastName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentSuffix { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentGender { get; set; } = "Male";
+
+        // NEW Form Properties
+        [ObservableProperty] public partial string NewStudentGradeYearLevel { get; set; } = string.Empty;
+        [ObservableProperty] public partial string NewStudentSectionBlock { get; set; } = string.Empty;
+        [ObservableProperty] public partial string NewStudentEnrollmentStatus { get; set; } = "Regular";
 
         public IRelayCommand ToggleAddStudentFormCommand { get; }
         public IRelayCommand SaveStudentCommand { get; }
@@ -54,7 +64,7 @@ namespace Centriku.ViewModels
             var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
             
             // Wrap the raw database models in our UI wrapper
-            _allStudents = rawStudents.Select(s => new StudentRowViewModel(s)).ToList();
+            _allStudents = [.. rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s))];
             UpdateDisplayedStudents();
         }
 
@@ -71,7 +81,11 @@ namespace Centriku.ViewModels
                 MiddleName = NewStudentMiddleName,
                 LastName = NewStudentLastName,
                 Suffix = NewStudentSuffix,
-                Gender = NewStudentGender
+                Gender = NewStudentGender,
+                GradeYearLevel = NewStudentGradeYearLevel,
+                SectionBlock = NewStudentSectionBlock,
+                EnrollmentStatus = NewStudentEnrollmentStatus,
+                IsArchived = false
             };
 
             await db.InsertOrReplaceAsync(newStudent);
@@ -81,28 +95,27 @@ namespace Centriku.ViewModels
             NewStudentMiddleName = string.Empty;
             NewStudentLastName = string.Empty;
             NewStudentSuffix = string.Empty;
-            IsAddingStudent = false;
+            NewStudentGradeYearLevel = string.Empty;
+            NewStudentSectionBlock = string.Empty;
+            NewStudentEnrollmentStatus = "Regular";
             
+            IsAddingStudent = false;
             LoadStudents();
         }
 
-        // --- NEW: Toggles the row between Edit Mode and Read Mode ---
         private async void EditOrSaveStudent(StudentRowViewModel row)
         {
             if (row == null) return;
 
             if (!row.IsEditing)
             {
-                // User clicked "Edit". Unlock the row inputs!
                 row.IsEditing = true;
             }
             else
             {
-                // User clicked "Save". Lock the row and update the Database!
                 var db = new Centriku.Services.DatabaseService().GetConnection();
                 await db.UpdateAsync(row.DbModel);
                 row.IsEditing = false;
-                System.Console.WriteLine($"Inline Edit Saved for LRN: {row.StudentID}");
             }
         }
 
@@ -110,7 +123,8 @@ namespace Centriku.ViewModels
         {
             if (row == null) return;
             var db = new Centriku.Services.DatabaseService().GetConnection();
-            await db.DeleteAsync(row.DbModel);
+            row.DbModel.IsArchived = true;
+            await db.UpdateAsync(row.DbModel);
             LoadStudents();
         }
 
@@ -129,8 +143,10 @@ namespace Centriku.ViewModels
             var lowerQuery = SearchQuery.ToLower();
             var filtered = _allStudents.Where(s => 
                 (s.StudentID?.Contains(lowerQuery) == true) || 
-                (s.LastName?.ToLower().Contains(lowerQuery) == true) || 
-                (s.FirstName?.ToLower().Contains(lowerQuery) == true));
+                (s.LastName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || 
+                (s.FirstName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) ||
+                (s.GradeYearLevel?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) ||
+                (s.SectionBlock?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true));
 
             DisplayedStudents = new ObservableCollection<StudentRowViewModel>(filtered);
         }
@@ -140,15 +156,14 @@ namespace Centriku.ViewModels
             System.Console.WriteLine($"Viewing Profile for {row.FirstName} {row.LastName}");
         }
     }
-    public partial class StudentRowViewModel : ObservableObject
+    public partial class StudentRowViewModel(Centriku.Models.Student student) : ObservableObject
     {
-        public Centriku.Models.Student DbModel { get; }
+      public Centriku.Models.Student DbModel { get; } = student;
 
-        [ObservableProperty]
-        public partial bool IsEditing { get; set; }
+      [ObservableProperty]
+      public partial bool IsEditing { get; set; } = false; // Rows are locked by default
 
-        // We wrap the properties so the UI instantly detects changes when typing
-        public string StudentID
+      public string StudentID
         {
             get => DbModel.StudentID ?? string.Empty;
             set { DbModel.StudentID = value; OnPropertyChanged(); }
@@ -178,11 +193,20 @@ namespace Centriku.ViewModels
             get => DbModel.Gender ?? string.Empty;
             set { DbModel.Gender = value; OnPropertyChanged(); }
         }
-
-        public StudentRowViewModel(Centriku.Models.Student student)
+        public string GradeYearLevel
         {
-            DbModel = student;
-            IsEditing = false; // Rows are locked by default
+            get => DbModel.GradeYearLevel ?? string.Empty;
+            set { DbModel.GradeYearLevel = value; OnPropertyChanged(); }
         }
-    }
+        public string SectionBlock
+        {
+            get => DbModel.SectionBlock ?? string.Empty;
+            set { DbModel.SectionBlock = value; OnPropertyChanged(); }
+        }
+        public string EnrollmentStatus
+        {
+            get => DbModel.EnrollmentStatus ?? string.Empty;
+            set { DbModel.EnrollmentStatus = value; OnPropertyChanged(); }
+        }
+   }
 }

@@ -16,7 +16,7 @@
 
             <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="40,0,40,20">
                 <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
-                         PlaceholderText="Search by LRN, Last Name, or First Name..." 
+                         PlaceholderText="Search by LRN, Name, Grade, or Section..." 
                          Background="{DynamicResource SurfaceBrush}" 
                          BorderBrush="{DynamicResource BorderBrush}" 
                          CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
@@ -32,6 +32,9 @@
                                 <CheckBox Content="LRN" IsChecked="{Binding ShowLrnColumn}"/>
                                 <CheckBox Content="Last Name" IsChecked="{Binding ShowLastNameColumn}"/>
                                 <CheckBox Content="First Name" IsChecked="{Binding ShowFirstNameColumn}"/>
+                                <CheckBox Content="Grade / Year" IsChecked="{Binding ShowGradeYearLevelColumn}"/>
+                                <CheckBox Content="Section / Block" IsChecked="{Binding ShowSectionBlockColumn}"/>
+                                <CheckBox Content="Status" IsChecked="{Binding ShowEnrollmentStatusColumn}"/>
                                 <CheckBox Content="Middle Name" IsChecked="{Binding ShowMiddleNameColumn}"/>
                                 <CheckBox Content="Suffix" IsChecked="{Binding ShowSuffixColumn}"/>
                                 <CheckBox Content="Gender" IsChecked="{Binding ShowGenderColumn}"/>
@@ -53,39 +56,52 @@
                 <Grid RowDefinitions="*, Auto">
                     
                     <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+                        <!-- BIOGRAPHICAL -->
                         <StackPanel Margin="0,0,15,15">
                             <TextBlock Text="LRN (Student ID)*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewStudentLrn}" Background="{DynamicResource AppBackground}"/>
+                            <TextBox Text="{Binding NewStudentLrn}" Background="{DynamicResource AppBackground}" Width="150"/>
                         </StackPanel>
-
                         <StackPanel Margin="0,0,15,15">
                             <TextBlock Text="First Name*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewStudentFirstName}" Background="{DynamicResource AppBackground}"/>
+                            <TextBox Text="{Binding NewStudentFirstName}" Background="{DynamicResource AppBackground}" Width="150"/>
                         </StackPanel>
-
                         <StackPanel Margin="0,0,15,15">
                             <TextBlock Text="Middle Name" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewStudentMiddleName}" Background="{DynamicResource AppBackground}"/>
+                            <TextBox Text="{Binding NewStudentMiddleName}" Background="{DynamicResource AppBackground}" Width="120"/>
                         </StackPanel>
-
                         <StackPanel Margin="0,0,15,15">
                             <TextBlock Text="Last Name*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewStudentLastName}" Background="{DynamicResource AppBackground}"/>
+                            <TextBox Text="{Binding NewStudentLastName}" Background="{DynamicResource AppBackground}" Width="150"/>
                         </StackPanel>
-
                         <StackPanel Margin="0,0,15,15">
-                            <TextBlock Text="Suffix (e.g. Jr.)" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewStudentSuffix}" Background="{DynamicResource AppBackground}"/>
+                            <TextBlock Text="Suffix" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentSuffix}" Background="{DynamicResource AppBackground}" Width="70"/>
                         </StackPanel>
-
                         <StackPanel Margin="0,0,15,15">
                             <TextBlock Text="Gender" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <ComboBox SelectedItem="{Binding NewStudentGender}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch">
+                            <ComboBox SelectedItem="{Binding NewStudentGender}" Background="{DynamicResource AppBackground}" Width="100">
                                 <x:String>Male</x:String>
                                 <x:String>Female</x:String>
                             </ComboBox>
                         </StackPanel>
-
+                        
+                        <!-- NEW ACADEMIC DETAILS -->
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Grade / Year Level" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentGradeYearLevel}" PlaceholderText="e.g. Grade 11" Background="{DynamicResource AppBackground}" Width="120"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Section / Block" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewStudentSectionBlock}" PlaceholderText="e.g. STEM-A" Background="{DynamicResource AppBackground}" Width="120"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15">
+                            <TextBlock Text="Status" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <ComboBox SelectedItem="{Binding NewStudentEnrollmentStatus}" Background="{DynamicResource AppBackground}" Width="120">
+                                <x:String>Regular</x:String>
+                                <x:String>Irregular</x:String>
+                                <x:String>Transferee</x:String>
+                            </ComboBox>
+                        </StackPanel>
                     </WrapPanel>
 
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
@@ -130,6 +146,44 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+                    
+                    <!-- NEW ACADEMIC COLUMNS -->
+                    <DataGridTemplateColumn Header="Grade/Year" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGradeYearLevelColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding GradeYearLevel}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding GradeYearLevel}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Section/Block" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowSectionBlockColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding SectionBlock}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <TextBox Text="{Binding SectionBlock}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Status" MinWidth="100" MaxWidth="150" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowEnrollmentStatusColumn}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Panel Margin="10,0">
+                                    <TextBlock Text="{Binding EnrollmentStatus}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                    <ComboBox SelectedItem="{Binding EnrollmentStatus}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch">
+                                        <x:String>Regular</x:String>
+                                        <x:String>Irregular</x:String>
+                                        <x:String>Transferee</x:String>
+                                    </ComboBox>
+                                </Panel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                                         
                     <DataGridTemplateColumn Header="Middle Name" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowMiddleNameColumn}">
                         <DataGridTemplateColumn.CellTemplate>
@@ -142,7 +196,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                                         
-                    <DataGridTemplateColumn Header="Suffix" MinWidth="110" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowSuffixColumn}">
+                    <DataGridTemplateColumn Header="Suffix" MinWidth="80" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowSuffixColumn}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Panel Margin="10,0">
@@ -153,7 +207,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     
-                    <DataGridTemplateColumn Header="Gender" MinWidth="110" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGenderColumn}">
+                    <DataGridTemplateColumn Header="Gender" MinWidth="90" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGenderColumn}">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Panel Margin="10,0">
@@ -189,7 +243,7 @@
                                     
                                     <Button Command="{Binding #RootControl.((vm:DirectoryViewModel)DataContext).DeleteStudentCommand}"
                                             CommandParameter="{Binding}"
-                                            Background="Transparent" ToolTip.Tip="Delete Student">
+                                            Background="Transparent" ToolTip.Tip="Archive Student">
                                         <TextBlock Classes="Icon" Text="🗑️" Foreground="#EF4444" FontSize="16"/>
                                     </Button>
                                     
