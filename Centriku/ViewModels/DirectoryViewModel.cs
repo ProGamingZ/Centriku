@@ -54,6 +54,9 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewStudentSectionBlock { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentEnrollmentStatus { get; set; } = "Regular";
 
+        [ObservableProperty] public partial bool IsProfileOpen { get; set; } = false;
+        [ObservableProperty] public partial StudentRowViewModel? SelectedProfile { get; set; }
+
         public IRelayCommand ToggleAddStudentFormCommand { get; }
         public IRelayCommand SaveStudentCommand { get; }
         public IRelayCommand<StudentRowViewModel> EditOrSaveStudentCommand { get; }
@@ -61,6 +64,7 @@ namespace Centriku.ViewModels
         public IRelayCommand<StudentRowViewModel> ArchiveStudentCommand { get; }
         public IRelayCommand<StudentRowViewModel> RestoreStudentCommand { get; } 
         public IRelayCommand<StudentRowViewModel> DeleteStudentCommand { get; } 
+        public IRelayCommand CloseProfileCommand { get; }
 
         public DirectoryViewModel()
         {
@@ -71,7 +75,8 @@ namespace Centriku.ViewModels
             
             ArchiveStudentCommand = new RelayCommand<StudentRowViewModel>(ArchiveStudent!); 
             RestoreStudentCommand = new RelayCommand<StudentRowViewModel>(RestoreStudent!); 
-            DeleteStudentCommand = new RelayCommand<StudentRowViewModel>(DeleteStudent!); 
+            DeleteStudentCommand = new RelayCommand<StudentRowViewModel>(DeleteStudent!);
+            CloseProfileCommand = new RelayCommand(() => IsProfileOpen = false); 
 
             LoadStudents();
         }
@@ -295,7 +300,9 @@ namespace Centriku.ViewModels
 
         private void ViewProfile(StudentRowViewModel row)
         {
-            System.Console.WriteLine($"Viewing Profile for {row.FirstName} {row.LastName}");
+            if (row == null) return;
+            SelectedProfile = row;
+            IsProfileOpen = true;
         }
     }
     public partial class StudentRowViewModel(Centriku.Models.Student student) : ObservableObject

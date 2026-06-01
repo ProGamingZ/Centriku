@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+   xmlns:vm="using:Centriku.ViewModels"
+   x:Class="Centriku.Views.Directory.StudentProfileOverlay"
+   x:DataType="vm:DirectoryViewModel">
+             
+   <Border IsVisible="{Binding IsProfileOpen}" Background="{DynamicResource AppBackground}" ZIndex="100">
+      <Grid RowDefinitions="Auto, *">
+            
+            <!-- Header / Navigation -->
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20">
+               <Grid ColumnDefinitions="Auto, *, Auto">
+                  <Button Grid.Column="0" Command="{Binding CloseProfileCommand}" Content="← Back to Directory" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold"/>
+                  <TextBlock Grid.Column="1" Text="Student Profile (SF9 / Form 138)" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  <Button Grid.Column="2" Content="Export PDF" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="6" Padding="15,8"/>
+               </Grid>
+            </Border>
+
+            <!-- Profile Content Skeleton -->
+            <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+               <StackPanel Margin="40" Spacing="30">
+                  
+                  <!-- Biographical Header -->
+                  <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Width="100" Height="100" CornerRadius="50" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,25,0">
+                           <TextBlock Text="👤" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                           <WrapPanel Orientation="Horizontal">
+                              <TextBlock Text="{Binding SelectedProfile.LastName, StringFormat='{}{0}, '}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
+                              <TextBlock Text="{Binding SelectedProfile.FirstName, StringFormat='{}{0} '}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
+                              <TextBlock Text="{Binding SelectedProfile.MiddleName}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
+                           </WrapPanel>
+                           <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,5,0,0">
+                              <TextBlock Text="{Binding SelectedProfile.StudentID, StringFormat='{}{0}'}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold"/>
+                              <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                                    <TextBlock Text="{Binding SelectedProfile.Gender}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold"/>
+                              <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                                    <TextBlock Text="{Binding SelectedProfile.GradeYearLevel}" Foreground="{DynamicResource TextMutedBrush}"/>
+                              <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                                    <TextBlock Text="{Binding SelectedProfile.SectionBlock}" Foreground="{DynamicResource TextMutedBrush}"/>
+                              <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                                    <TextBlock Text="{Binding SelectedProfile.EnrollmentStatus}" Foreground="{DynamicResource TextMutedBrush}"/>
+                           </StackPanel>
+                        </StackPanel>
+                  </Grid>
+
+                  <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+
+                  <TextBlock Text="Academic Records and Grades will go here..." Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,50,0,0"/>
+
+               </StackPanel>
+            </ScrollViewer>
+            
+      </Grid>
+   </Border>
+
+</UserControl>

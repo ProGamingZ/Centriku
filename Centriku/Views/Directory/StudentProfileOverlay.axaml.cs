@@ -3,11 +3,11 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Centriku.ViewModels;
 
-namespace Centriku.Views
+namespace Centriku.Views.Directory
 {
-    public partial class DirectoryView : UserControl
+    public partial class StudentProfileOverlay : UserControl
     {
-        public DirectoryView()
+        public StudentProfileOverlay()
         {
             InitializeComponent();
         }
