@@ -1,10 +1,10 @@
 using System;
-using System.IO;
-using System.Threading.Tasks;
-using ExcelDataReader;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.IO;
+using System.Threading.Tasks;
+using ExcelDataReader;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -14,11 +14,24 @@ namespace Centriku.ViewModels
     {
         [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
         
-        private List<StudentRowViewModel> _allStudents = new();
+        private List<StudentRowViewModel> _allStudents = [];
+        private List<StudentRowViewModel> _allArchivedStudents = [];
         [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> DisplayedStudents { get; set; } = new();
-        [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> ArchivedStudents { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> DisplayedArchivedStudents { get; set; } = new();
+        [ObservableProperty] public partial string ArchiveSearchQuery { get; set; } = string.Empty;
 
-        // --- Column Visibility Toggles ---
+        // Archive Column Visibility Toggles
+        [ObservableProperty] public partial bool ShowArchiveLrnColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowArchiveLastNameColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowArchiveFirstNameColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowArchiveMiddleNameColumn { get; set; } = false;
+        [ObservableProperty] public partial bool ShowArchiveSuffixColumn { get; set; } = false;
+        [ObservableProperty] public partial bool ShowArchiveGenderColumn { get; set; } = false;
+        [ObservableProperty] public partial bool ShowArchiveGradeYearLevelColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowArchiveSectionBlockColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowArchiveEnrollmentStatusColumn { get; set; } = true;
+
+        // --- Master Column Visibility Toggles ---
         [ObservableProperty] public partial bool ShowLrnColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowLastNameColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowFirstNameColumn { get; set; } = true;
@@ -45,8 +58,9 @@ namespace Centriku.ViewModels
         public IRelayCommand SaveStudentCommand { get; }
         public IRelayCommand<StudentRowViewModel> EditOrSaveStudentCommand { get; }
         public IRelayCommand<StudentRowViewModel> ViewProfileCommand { get; }
-        public IRelayCommand<StudentRowViewModel> DeleteStudentCommand { get; }
-        public IRelayCommand<StudentRowViewModel> RestoreStudentCommand { get; } // NEW
+        public IRelayCommand<StudentRowViewModel> ArchiveStudentCommand { get; }
+        public IRelayCommand<StudentRowViewModel> RestoreStudentCommand { get; } 
+        public IRelayCommand<StudentRowViewModel> DeleteStudentCommand { get; } 
 
         public DirectoryViewModel()
         {
@@ -54,8 +68,10 @@ namespace Centriku.ViewModels
             SaveStudentCommand = new RelayCommand(SaveStudent);
             EditOrSaveStudentCommand = new RelayCommand<StudentRowViewModel>(EditOrSaveStudent!);
             ViewProfileCommand = new RelayCommand<StudentRowViewModel>(ViewProfile!);
-            DeleteStudentCommand = new RelayCommand<StudentRowViewModel>(DeleteStudent!);
-            RestoreStudentCommand = new RelayCommand<StudentRowViewModel>(RestoreStudent!); // NEW
+            
+            ArchiveStudentCommand = new RelayCommand<StudentRowViewModel>(ArchiveStudent!); 
+            RestoreStudentCommand = new RelayCommand<StudentRowViewModel>(RestoreStudent!); 
+            DeleteStudentCommand = new RelayCommand<StudentRowViewModel>(DeleteStudent!); 
 
             LoadStudents();
         }
@@ -65,13 +81,11 @@ namespace Centriku.ViewModels
             var db = new Centriku.Services.DatabaseService().GetConnection();
             var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
             
-            // Separate Active vs Archived students
             _allStudents = rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
-            ArchivedStudents = new ObservableCollection<StudentRowViewModel>(
-                rawStudents.Where(s => s.IsArchived).Select(s => new StudentRowViewModel(s))
-            );
+            _allArchivedStudents = rawStudents.Where(s => s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
 
             UpdateDisplayedStudents();
+            UpdateDisplayedArchivedStudents();
         }
 
         private async void SaveStudent()
@@ -125,7 +139,7 @@ namespace Centriku.ViewModels
             }
         }
 
-        private async void DeleteStudent(StudentRowViewModel row)
+        private async void ArchiveStudent(StudentRowViewModel row)
         {
             if (row == null) return;
             var db = new Centriku.Services.DatabaseService().GetConnection();
@@ -142,6 +156,15 @@ namespace Centriku.ViewModels
             await db.UpdateAsync(row.DbModel);
             LoadStudents(); 
         }
+
+        private async void DeleteStudent(StudentRowViewModel row)
+        {
+            if (row == null) return;
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            await db.DeleteAsync(row.DbModel);
+            LoadStudents(); 
+        }
+
         public async Task ProcessBulkImportAsync(string filePath)
         {
             try
@@ -149,14 +172,12 @@ namespace Centriku.ViewModels
                 var newStudents = new List<Centriku.Models.Student>();
                 string extension = Path.GetExtension(filePath).ToLower();
 
-                // Required configuration for ExcelDataReader in modern .NET
                 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
                 if (extension == ".csv")
                 {
-                    // --- CSV PARSING ROUTINE ---
                     var lines = await File.ReadAllLinesAsync(filePath);
-                    for (int i = 1; i < lines.Length; i++) // Skip header
+                    for (int i = 1; i < lines.Length; i++) 
                     {
                         var cols = lines[i].Split(',');
                         if (cols.Length < 3) continue;
@@ -166,15 +187,13 @@ namespace Centriku.ViewModels
                 }
                 else if (extension == ".xlsx" || extension == ".xls")
                 {
-                    // --- EXCEL PARSING ROUTINE ---
                     using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
-                        reader.Read(); // Skip the header row
+                        reader.Read(); 
 
                         while (reader.Read())
                         {
-                            // Convert the Excel row into a string array safely
                             var cols = new string[reader.FieldCount];
                             for (int i = 0; i < reader.FieldCount; i++)
                             {
@@ -193,13 +212,12 @@ namespace Centriku.ViewModels
                     return;
                 }
 
-                // --- DATABASE INSERTION ---
                 if (newStudents.Any())
                 {
                     var db = new Centriku.Services.DatabaseService().GetConnection();
                     await db.InsertAllAsync(newStudents, runInTransaction: true);
                     
-                    LoadStudents(); // Refresh the UI grid
+                    LoadStudents(); 
                     System.Console.WriteLine($"Successfully imported {newStudents.Count} students.");
                 }
             }
@@ -208,7 +226,8 @@ namespace Centriku.ViewModels
                 System.Console.WriteLine($"Bulk Import failed: {ex.Message}");
             }
         }
-        private Centriku.Models.Student ParseStudentRow(string[] cols)
+
+        private static Centriku.Models.Student ParseStudentRow(string[] cols)
         {
             return new Centriku.Models.Student
             {
@@ -225,11 +244,35 @@ namespace Centriku.ViewModels
             };
         }
 
-
         partial void OnSearchQueryChanged(string value)
         {
             UpdateDisplayedStudents();
         }
+
+        partial void OnArchiveSearchQueryChanged(string value)
+        {
+            UpdateDisplayedArchivedStudents();
+        }
+
+        private void UpdateDisplayedArchivedStudents()
+        {
+            if (string.IsNullOrWhiteSpace(ArchiveSearchQuery))
+            {
+                DisplayedArchivedStudents = new ObservableCollection<StudentRowViewModel>(_allArchivedStudents);
+                return;
+            }
+            var lowerQuery = ArchiveSearchQuery.ToLower();
+            
+            var filtered = _allArchivedStudents.Where(s => 
+                (s.StudentID?.Contains(lowerQuery) == true) || 
+                (s.LastName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || 
+                (s.FirstName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) ||
+                (s.GradeYearLevel?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) ||
+                (s.SectionBlock?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true));
+
+            DisplayedArchivedStudents = new ObservableCollection<StudentRowViewModel>(filtered);
+        }
+
 
         private void UpdateDisplayedStudents()
         {
@@ -258,7 +301,9 @@ namespace Centriku.ViewModels
     public partial class StudentRowViewModel(Centriku.Models.Student student) : ObservableObject
     {
       public Centriku.Models.Student DbModel { get; } = student;
-      [ObservableProperty] public partial bool IsEditing { get; set; } = false;
+
+      [ObservableProperty]
+      public partial bool IsEditing { get; set; } = false;
 
       public string StudentID
         {
