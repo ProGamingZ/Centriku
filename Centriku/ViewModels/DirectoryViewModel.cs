@@ -1,4 +1,7 @@
 using System;
+using System.IO;
+using System.Threading.Tasks;
+using ExcelDataReader;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -139,6 +142,89 @@ namespace Centriku.ViewModels
             await db.UpdateAsync(row.DbModel);
             LoadStudents(); 
         }
+        public async Task ProcessBulkImportAsync(string filePath)
+        {
+            try
+            {
+                var newStudents = new List<Centriku.Models.Student>();
+                string extension = Path.GetExtension(filePath).ToLower();
+
+                // Required configuration for ExcelDataReader in modern .NET
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+                if (extension == ".csv")
+                {
+                    // --- CSV PARSING ROUTINE ---
+                    var lines = await File.ReadAllLinesAsync(filePath);
+                    for (int i = 1; i < lines.Length; i++) // Skip header
+                    {
+                        var cols = lines[i].Split(',');
+                        if (cols.Length < 3) continue;
+
+                        newStudents.Add(ParseStudentRow(cols));
+                    }
+                }
+                else if (extension == ".xlsx" || extension == ".xls")
+                {
+                    // --- EXCEL PARSING ROUTINE ---
+                    using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        reader.Read(); // Skip the header row
+
+                        while (reader.Read())
+                        {
+                            // Convert the Excel row into a string array safely
+                            var cols = new string[reader.FieldCount];
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                cols[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
+                            }
+
+                            if (cols.Length < 3 || string.IsNullOrWhiteSpace(cols[0])) continue;
+
+                            newStudents.Add(ParseStudentRow(cols));
+                        }
+                    }
+                }
+                else
+                {
+                    System.Console.WriteLine("Unsupported file format.");
+                    return;
+                }
+
+                // --- DATABASE INSERTION ---
+                if (newStudents.Any())
+                {
+                    var db = new Centriku.Services.DatabaseService().GetConnection();
+                    await db.InsertAllAsync(newStudents, runInTransaction: true);
+                    
+                    LoadStudents(); // Refresh the UI grid
+                    System.Console.WriteLine($"Successfully imported {newStudents.Count} students.");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Bulk Import failed: {ex.Message}");
+            }
+        }
+        private Centriku.Models.Student ParseStudentRow(string[] cols)
+        {
+            return new Centriku.Models.Student
+            {
+                StudentID = cols[0].Trim(),
+                LastName = cols[1].Trim(),
+                FirstName = cols[2].Trim(),
+                MiddleName = cols.Length > 3 ? cols[3].Trim() : string.Empty,
+                Suffix = cols.Length > 4 ? cols[4].Trim() : string.Empty,
+                Gender = cols.Length > 5 ? cols[5].Trim() : "Male",
+                GradeYearLevel = cols.Length > 6 ? cols[6].Trim() : string.Empty,
+                SectionBlock = cols.Length > 7 ? cols[7].Trim() : string.Empty,
+                EnrollmentStatus = cols.Length > 8 ? cols[8].Trim() : "Regular",
+                IsArchived = false
+            };
+        }
+
 
         partial void OnSearchQueryChanged(string value)
         {
