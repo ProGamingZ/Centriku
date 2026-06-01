@@ -28,8 +28,7 @@ namespace Centriku.Services
             await _database.CreateTableAsync<GradingTemplate>();
             await _database.CreateTableAsync<GradingCategory>();
             await _database.CreateTableAsync<AttendanceRecord>();
-
-            Console.WriteLine("Database initialized successfully at: " + _database.DatabasePath);
+            await _database.CreateTableAsync<MasterQuarterlyGrade>();
         }
         public SQLiteAsyncConnection GetConnection() => _database;
     }

@@ -12,7 +12,7 @@
                 <dir:MasterRosterTab />
             </TabItem>
 
-            <TabItem Header="Bulk Import (CSV)" FontSize="16" FontWeight="SemiBold">
+            <TabItem Header="Bulk Import" FontSize="16" FontWeight="SemiBold">
                 <dir:BulkImportTab />
             </TabItem>
 
