@@ -35,5 +35,8 @@ namespace Centriku.Models
         // How much penalty does a "Late" (L) carry? 
         // e.g., 0.5 means 2 Lates = 1 Absent. 0.0 means Lates are ignored mathematically.
         public double LateValue { get; set; } = 0.5;
+
+        // Mode: "Quarterly" (K-12/DepEd) or "Semestral" (College/CHED)
+        public string EducationMode { get; set; } = "Quarterly";
     }
 }

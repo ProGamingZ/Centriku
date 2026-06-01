@@ -19,6 +19,8 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewSectionLabel { get; set; } = string.Empty;   
         [ObservableProperty] public partial string NewAcademicYear { get; set; } = "2025-2026";        
         [ObservableProperty] public partial string NewTerm { get; set; } = "Q1"; 
+        [ObservableProperty] public partial string NewEducationMode { get; set; } = "Quarterly";
+        public ObservableCollection<string> AvailableEducationModes { get; } = ["Quarterly", "Semestral"];
         [ObservableProperty] public partial GradingTemplate? SelectedTemplate { get; set; }
 
         
@@ -82,6 +84,7 @@ namespace Centriku.ViewModels
             NewSectionLabel = classCard.SectionLabel;
             NewAcademicYear = classCard.AcademicYear;
             NewTerm = classCard.Term;
+            NewEducationMode = classCard.DbModel.EducationMode ?? "Quarterly";
             SelectedTemplate = AvailableTemplates.FirstOrDefault(t => t.TemplateID == classCard.DbModel.GradingTemplateID);
             
             IsAddingClass = true;
@@ -100,6 +103,7 @@ namespace Centriku.ViewModels
                 classToUpdate.SectionLabel = NewSectionLabel;
                 classToUpdate.AcademicYear = NewAcademicYear;
                 classToUpdate.Term = NewTerm;
+                classToUpdate.EducationMode = NewEducationMode;
                 classToUpdate.GradingTemplateID = SelectedTemplate.TemplateID;
                 
                 await db.UpdateAsync(classToUpdate);
@@ -113,6 +117,7 @@ namespace Centriku.ViewModels
                     SectionLabel = NewSectionLabel,
                     AcademicYear = NewAcademicYear,
                     Term = NewTerm,
+                    EducationMode = NewEducationMode,
                     GradingTemplateID = SelectedTemplate.TemplateID
                 };
                 await db.InsertAsync(newClass);
@@ -136,6 +141,7 @@ namespace Centriku.ViewModels
             NewSectionLabel = string.Empty;
             SelectedTemplate = null;
             IsAddingClass = false;
+            NewEducationMode = "Quarterly";
         }
 
         
@@ -161,7 +167,7 @@ namespace Centriku.ViewModels
         public string SectionLabel => DbModel.SectionLabel ?? string.Empty;
         public string AcademicYear => DbModel.AcademicYear ?? string.Empty;
         public string Term => DbModel.Term ?? string.Empty;
-
+        public string EducationMode => DbModel.EducationMode ?? "Quarterly";
         public ClassCardViewModel(TeacherClass teacherClass, string templateName)
         {
             DbModel = teacherClass;
