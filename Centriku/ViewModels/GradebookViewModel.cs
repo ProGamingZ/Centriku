@@ -10,7 +10,8 @@ namespace Centriku.ViewModels
 {
     public partial class GradebookViewModel : ViewModelBase
     {
-        #region Core Properties & UI Toggles
+      #region Core Properties & UI Toggles
+
             [ObservableProperty] public partial int ClassId { get; set; }
             [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
             public System.Action<string>? ShowToastMessage { get; set; } 
@@ -21,6 +22,10 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool ShowFinalGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowMidtermGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowFinalTermGrade { get; set; } = true;
+            [ObservableProperty] public partial bool ShowQ1Grade { get; set; } = true;
+            [ObservableProperty] public partial bool ShowQ2Grade { get; set; } = true;
+            [ObservableProperty] public partial bool ShowQ3Grade { get; set; } = true;
+            [ObservableProperty] public partial bool ShowQ4Grade { get; set; } = true;
             [ObservableProperty] public partial string CalculationMode { get; set; } = "Raw Percentage";
             [ObservableProperty] public partial double NrfgBaseValue { get; set; } = 60.0;
             public System.Collections.Generic.List<Centriku.Models.GradeBoundary> ClassGradeBoundaries { get; set; } = new();
@@ -31,6 +36,10 @@ namespace Centriku.ViewModels
             partial void OnShowFinalGradeChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowMidtermGradeChanged(bool value) { TriggerGridRedraw(); }
             partial void OnShowFinalTermGradeChanged(bool value) { TriggerGridRedraw(); }
+            partial void OnShowQ1GradeChanged(bool value) { TriggerGridRedraw(); }
+            partial void OnShowQ2GradeChanged(bool value) { TriggerGridRedraw(); }
+            partial void OnShowQ3GradeChanged(bool value) { TriggerGridRedraw(); }
+            partial void OnShowQ4GradeChanged(bool value) { TriggerGridRedraw(); }
 
             [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
             private void TriggerGridRedraw() => GridRefreshTrigger++;
@@ -57,20 +66,33 @@ namespace Centriku.ViewModels
                 }
             }
 
-            [ObservableProperty] public partial ObservableCollection<string> TermViews { get; set; } = new() { "Midterm", "Final", "Semester Average" };
-            [ObservableProperty] public partial string SelectedTermView { get; set; } = "Semester Average";
-            public bool ShowAssessmentFilters => SelectedTermView != "Semester Average";
-            public bool IsSemesterAverageView => SelectedTermView == "Semester Average";
+            [ObservableProperty] public partial string EducationMode { get; set; } = "Quarterly";
+        
+            [ObservableProperty] public partial ObservableCollection<string> TermViews { get; set; } = new();
+            [ObservableProperty] public partial ObservableCollection<string> GradingPeriods { get; set; } = new();
+            
+            [ObservableProperty] public partial string SelectedTermView { get; set; } = string.Empty;
+            
+            public bool ShowAssessmentFilters => SelectedTermView != "Semester Average" && SelectedTermView != "Final Average";
+            public bool IsSemesterAverageView => SelectedTermView == "Semester Average" || SelectedTermView == "Final Average";
+            public bool IsSemestralMode => EducationMode == "Semestral";
+            public bool IsQuarterlyMode => EducationMode == "Quarterly";
+            public bool IsSemestralSummaryView => IsSemestralMode && IsSemesterAverageView;
+            public bool IsQuarterlySummaryView => IsQuarterlyMode && IsSemesterAverageView; 
+            public string DynamicFinalColumnName => IsSemesterAverageView ? SelectedTermView : $"{SelectedTermView} Grade";
+            
             partial void OnSelectedTermViewChanged(string value) 
             { 
-                OnPropertyChanged(nameof(ShowAssessmentFilters)); // Tell UI to hide/show the list
+                OnPropertyChanged(nameof(ShowAssessmentFilters)); 
                 OnPropertyChanged(nameof(IsSemesterAverageView));
+                OnPropertyChanged(nameof(IsSemestralSummaryView));
+                OnPropertyChanged(nameof(IsQuarterlySummaryView));
+                OnPropertyChanged(nameof(DynamicFinalColumnName));
                 BuildCategoryFilters();
                 TriggerGridRedraw(); 
                 RecalculateFinalGrades(); 
             }
 
-            [ObservableProperty] public partial ObservableCollection<string> GradingPeriods { get; set; } = new() { "Midterm", "Final" };
             [ObservableProperty] public partial AttendanceCellViewModel? SelectedAttendanceCell { get; set; }
             [ObservableProperty] public partial string SelectedAttendanceStudentName { get; set; } = string.Empty;
             [ObservableProperty] public partial string SelectedAttendanceDateDisplay { get; set; } = string.Empty;
@@ -180,6 +202,23 @@ namespace Centriku.ViewModels
                     }
                     
                     ClassGradeBoundaries = await db.Table<GradeBoundary>().Where(b => b.TemplateID == currentClass.GradingTemplateID).ToListAsync();
+                }
+
+                EducationMode = currentClass?.EducationMode ?? "Quarterly";
+                OnPropertyChanged(nameof(IsSemestralMode));
+                OnPropertyChanged(nameof(IsQuarterlyMode));
+
+                if (EducationMode == "Semestral")
+                {
+                    TermViews = new ObservableCollection<string> { "Midterm", "Final", "Semester Average" };
+                    GradingPeriods = new ObservableCollection<string> { "Midterm", "Final" };
+                    if (!TermViews.Contains(SelectedTermView)) SelectedTermView = "Semester Average";
+                }
+                else // Quarterly (DepEd)
+                {
+                    TermViews = new ObservableCollection<string> { "Q1", "Q2", "Q3", "Q4", "Final Average" };
+                    GradingPeriods = new ObservableCollection<string> { "Q1", "Q2", "Q3", "Q4" };
+                    if (!TermViews.Contains(SelectedTermView)) SelectedTermView = "Final Average";
                 }
 
                 // 2. Get the Columns (Assessments)

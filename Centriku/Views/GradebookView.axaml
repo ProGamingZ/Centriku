@@ -43,10 +43,16 @@
                                                     <CheckBox Content="Show LRN" IsChecked="{Binding ShowLRN}" Margin="10,0,0,0"/>
                                                     <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="10,0,0,0"/>
                                                     <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}" Margin="10,0,0,0"/>
-                                                    <CheckBox Content="Show Midterm" IsChecked="{Binding ShowMidtermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="10,0,0,0"/>
-                                                    <CheckBox Content="Show Final" IsChecked="{Binding ShowFinalTermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="10,0,0,0"/>   
-                                                    <CheckBox Content="{Binding SelectedTermView, StringFormat='Show {0}'}" IsChecked="{Binding ShowFinalGrade}" Margin="10,0,0,0" />                                           
-                                                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10,0,0"/>
+
+                                                    <CheckBox Content="Show Midterm" IsChecked="{Binding ShowMidtermGrade}" IsVisible="{Binding IsSemestralSummaryView}" Margin="10,0,0,0"/>
+                                                    <CheckBox Content="Show Final" IsChecked="{Binding ShowFinalTermGrade}" IsVisible="{Binding IsSemestralSummaryView}" Margin="10,0,0,0"/>   
+                                                    
+                                                    <CheckBox Content="Show Q1" IsChecked="{Binding ShowQ1Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
+                                                    <CheckBox Content="Show Q2" IsChecked="{Binding ShowQ2Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
+                                                    <CheckBox Content="Show Q3" IsChecked="{Binding ShowQ3Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
+                                                    <CheckBox Content="Show Q4" IsChecked="{Binding ShowQ4Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
+
+                                                    <CheckBox Content="{Binding DynamicFinalColumnName, StringFormat='Show {0}'}" IsChecked="{Binding ShowFinalGrade}" Margin="10,0,0,0" />
                                                 </StackPanel>
 
                                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowAssessmentFilters}">

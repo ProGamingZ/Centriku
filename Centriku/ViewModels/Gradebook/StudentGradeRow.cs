@@ -15,5 +15,16 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial double FinalTermGradeNumeric { get; set; } = 0;
         [ObservableProperty] public partial string FinalGrade { get; set; } = "---";
         [ObservableProperty] public partial double FinalGradeNumeric { get; set; } = 0;
+        [ObservableProperty] public partial string Q1GradeDisplay { get; set; } = "--";
+        [ObservableProperty] public partial double Q1GradeNumeric { get; set; }
+        
+        [ObservableProperty] public partial string Q2GradeDisplay { get; set; } = "--";
+        [ObservableProperty] public partial double Q2GradeNumeric { get; set; }
+        
+        [ObservableProperty] public partial string Q3GradeDisplay { get; set; } = "--";
+        [ObservableProperty] public partial double Q3GradeNumeric { get; set; }
+        
+        [ObservableProperty] public partial string Q4GradeDisplay { get; set; } = "--";
+        [ObservableProperty] public partial double Q4GradeNumeric { get; set; }
     }
 }

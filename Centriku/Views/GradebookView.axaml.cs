@@ -65,30 +65,37 @@ namespace Centriku.Views
             var grid = this.FindControl<DataGrid>("AttendanceGrid");
             if (grid == null) return;
 
-            var lastNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Last Name");
-            if (lastNameCol != null) lastNameCol.IsVisible = vm.ShowLastName;
+            // 1. Find the fixed columns safely
+            var attColFirstName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "FirstName");
+            var attColLastName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "LastName");
+            var attColP = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalP");
+            var attColL = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalL");
+            var attColA = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalA");
+            var attColE = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalE");
 
-            var firstNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "First Name");
-            if (firstNameCol != null) firstNameCol.IsVisible = vm.ShowFirstName;
+            // 2. Toggle visibility
+            if (attColFirstName != null) attColFirstName.IsVisible = vm.ShowFirstName;
+            if (attColLastName != null) attColLastName.IsVisible = vm.ShowLastName;
+            if (attColP != null) attColP.IsVisible = vm.ShowTotalP;
+            if (attColL != null) attColL.IsVisible = vm.ShowTotalL;
+            if (attColA != null) attColA.IsVisible = vm.ShowTotalA;
+            if (attColE != null) attColE.IsVisible = vm.ShowTotalE;
 
-            // A. Toggle the Summary Columns
-            var tpCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "P");
-            if (tpCol != null) tpCol.IsVisible = vm.ShowTotalP;
+            // 3. WIPE CLEAN: Tell the grid to keep ONLY our 6 fixed columns
+            var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
+            if (attColFirstName != null) staticColumns.Add(attColFirstName);
+            if (attColLastName != null) staticColumns.Add(attColLastName);
+            if (attColP != null) staticColumns.Add(attColP);
+            if (attColL != null) staticColumns.Add(attColL);
+            if (attColA != null) staticColumns.Add(attColA);
+            if (attColE != null) staticColumns.Add(attColE);
 
-            var tlCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "L");
-            if (tlCol != null) tlCol.IsVisible = vm.ShowTotalL;
+            var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
 
-            var taCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "A");
-            if (taCol != null) taCol.IsVisible = vm.ShowTotalA;
-
-            var teCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "E");
-            if (teCol != null) teCol.IsVisible = vm.ShowTotalE;
-
-            // B. Clear Old Dynamic Date Columns
-            var fixedHeaders = new[] { "Last Name", "First Name", "P", "L", "A", "E" };
-            var columnsToRemove = grid.Columns.Where(c => !fixedHeaders.Contains(c.Header?.ToString())).ToList();
-            foreach (var col in columnsToRemove) grid.Columns.Remove(col);
-
+            foreach (var col in columnsToRemove)
+            {
+                grid.Columns.Remove(col);
+            }
 
             // C. Spawn the actual Dates
             foreach (var date in vm.AttendanceDates)
@@ -206,81 +213,90 @@ namespace Centriku.Views
             var grid = this.FindControl<DataGrid>("RosterGrid");
             if (grid == null) return;
 
-            // 1. Toggle basic student info columns
-            var lrnCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "LRN");
-            if (lrnCol != null) lrnCol.IsVisible = vm.ShowLRN;
+            // 1. Find the fixed columns safely
+            var colLRN = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentID");
+            var colFirstName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.FirstName");
+            var colLastName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.LastName");
+            var colFinalGrade = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "FinalGradeNumeric");
+            var colActions = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Actions");
 
-            var firstNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "First Name");
-            if (firstNameCol != null) firstNameCol.IsVisible = vm.ShowFirstName;
-
-            var lastNameCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Last Name");
-            if (lastNameCol != null) lastNameCol.IsVisible = vm.ShowLastName;
-
-            var finalGradeCol = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Final Grade" || c.Header?.ToString() == "Semester Average");
-            if (finalGradeCol != null) 
+            // 2. Toggle visibility
+            if (colLRN != null) colLRN.IsVisible = vm.ShowLRN;
+            if (colFirstName != null) colFirstName.IsVisible = vm.ShowFirstName;
+            if (colLastName != null) colLastName.IsVisible = vm.ShowLastName;
+            
+            if (colFinalGrade != null) 
             {
-                finalGradeCol.IsVisible = vm.ShowFinalGrade;
-                // Rename the final column header dynamically based on the view!
-                finalGradeCol.Header = vm.SelectedTermView == "Semester Average" ? "Semester Average" : "Final Grade";
+                colFinalGrade.IsVisible = vm.ShowFinalGrade;
+                colFinalGrade.Header = vm.DynamicFinalColumnName;
             }
 
-            // 2. WIPE CLEAN: Remove all previously generated dynamic columns (Quizzes OR the Midterm/Final summary columns)
-            var columnsToRemove = grid.Columns.Where(c => 
-                c.Header?.ToString() != "LRN" && 
-                c.Header?.ToString() != "Last Name" && 
-                c.Header?.ToString() != "First Name" &&
-                c.Header?.ToString() != "Final Grade" && 
-                c.Header?.ToString() != "Semester Average" && 
-                c.Header?.ToString() != "Actions").ToList();
+            // 3. Tell the grid to keep ONLY our 5 fixed columns
+            var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
+            if (colLRN != null) staticColumns.Add(colLRN);
+            if (colFirstName != null) staticColumns.Add(colFirstName);
+            if (colLastName != null) staticColumns.Add(colLastName);
+            if (colFinalGrade != null) staticColumns.Add(colFinalGrade);
+            if (colActions != null) staticColumns.Add(colActions);
+
+            var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
 
             foreach (var col in columnsToRemove)
             {
                 grid.Columns.Remove(col);
             }
 
-            var finalGradeTarget = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Final Grade" || c.Header?.ToString() == "Semester Average");
-            int insertIndex = finalGradeTarget != null ? grid.Columns.IndexOf(finalGradeTarget) : grid.Columns.Count - 1;
+            // 4. Insert new dynamic columns right before the Final Grade column
+            int insertIndex = colFinalGrade != null ? grid.Columns.IndexOf(colFinalGrade) : grid.Columns.Count - 1;
+            if (insertIndex < 0) insertIndex = grid.Columns.Count;
             
-            // === 3A. MODE: SEMESTER AVERAGE ===
-            // Only draw the clean, high-level summary columns. Do NOT draw the quizzes.
-            if (vm.SelectedTermView == "Semester Average")
+            // 3A. MODE: SEMESTER AVERAGE 
+            if (vm.IsSemesterAverageView)
             {
-                var midColumn = new DataGridTemplateColumn
+                if (vm.EducationMode == "Semestral")
                 {
-                    Header = "Midterm", 
-                    IsVisible = vm.ShowMidtermGrade,
-                    CanUserSort = true,                       
-                    SortMemberPath = "MidtermGradeNumeric",   
-                    IsReadOnly = true,
-                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
-                    {
-                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
-                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay"));
-                        return tb;
-                    })
-                };
-                grid.Columns.Insert(insertIndex++, midColumn);
+                    // Draw Midterm and Final columns
+                    var midColumn = new DataGridTemplateColumn { Header = "Midterm", IsVisible = vm.ShowMidtermGrade, CanUserSort = true, SortMemberPath = "MidtermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay")); return tb; })};
+                    grid.Columns.Insert(insertIndex++, midColumn);
 
-                var finalColumn = new DataGridTemplateColumn
+                    var finalColumn = new DataGridTemplateColumn { Header = "Final", IsVisible = vm.ShowFinalTermGrade, CanUserSort = true, SortMemberPath = "FinalTermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay")); return tb; })};
+                    grid.Columns.Insert(insertIndex, finalColumn);
+                }
+                else // Quarterly
                 {
-                    Header = "Final", 
-                    IsVisible = vm.ShowFinalTermGrade,
-                    CanUserSort = true,                       
-                    SortMemberPath = "FinalTermGradeNumeric",   
-                    IsReadOnly = true,
-                    CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                    // Draw Q1, Q2, Q3, Q4 columns automatically!
+                    var quarters = new[] 
+                    { 
+                        new { Name = "Q1", IsVisible = vm.ShowQ1Grade },
+                        new { Name = "Q2", IsVisible = vm.ShowQ2Grade },
+                        new { Name = "Q3", IsVisible = vm.ShowQ3Grade },
+                        new { Name = "Q4", IsVisible = vm.ShowQ4Grade }
+                    };
+
+                    foreach (var q in quarters)
                     {
-                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
-                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay"));
-                        return tb;
-                    })
-                };
-                grid.Columns.Insert(insertIndex, finalColumn);
+                        if (!q.IsVisible) continue; // Skip drawing this column if the user unchecked it!
+
+                        var qCol = new DataGridTemplateColumn 
+                        { 
+                            Header = q.Name, 
+                            CanUserSort = true, 
+                            SortMemberPath = $"{q.Name}GradeNumeric", 
+                            IsReadOnly = true, 
+                            CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => 
+                            { 
+                                var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; 
+                                tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"{q.Name}GradeDisplay")); 
+                                return tb; 
+                            })
+                        };
+                        grid.Columns.Insert(insertIndex++, qCol);
+                    }
+                }
                 return; 
             }
 
-            // === 3B. MODE: MIDTERM or FINAL ===
-            // Loop through categories and draw the individual quizzes and projects
+            // 3B. MODE: MIDTERM or FINAL
             foreach (var category in vm.CategoryFilters)
             {
                 foreach (var filter in category.Assessments)
@@ -289,7 +305,7 @@ namespace Centriku.Views
 
                     var assessment = filter.DbModel;
 
-                    // FILTER: Only draw the column if it belongs to the currently viewed term!
+                    //Only draw the column if it belongs to the currently viewed term!
                     if (assessment.GradingPeriod != vm.SelectedTermView) continue;
 
                     var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 5) };
