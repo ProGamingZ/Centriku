@@ -16,7 +16,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool HasEnrolledClasses { get; set; } = false;
         [ObservableProperty] public partial bool IsMasterRecordVisible { get; set; } = true;
         [ObservableProperty] public partial ObservableCollection<MasterGradeRowViewModel> MasterGrades { get; set; } = new();
-        
+        [ObservableProperty] public partial ObservableCollection<Sf9MonthlyAttendance> Sf9Attendance { get; set; } = new(); 
         // The 5 Quarterly Average Trackers
         [ObservableProperty] public partial string Q1Average { get; set; } = "--";
         [ObservableProperty] public partial string Q2Average { get; set; } = "--";
@@ -27,6 +27,7 @@ namespace Centriku.ViewModels
         public IRelayCommand SaveMasterRecordCommand { get; }
         public IRelayCommand AddBlankMasterSubjectCommand { get; }
         public IRelayCommand<MasterGradeRowViewModel> DeleteMasterSubjectCommand { get; } 
+        public IRelayCommand GenerateSf9Command { get; }
         
         private List<StudentRowViewModel> _allStudents = [];
         private List<StudentRowViewModel> _allArchivedStudents = [];
@@ -95,6 +96,7 @@ namespace Centriku.ViewModels
             SaveMasterRecordCommand = new RelayCommand(SaveMasterRecord);
             AddBlankMasterSubjectCommand = new RelayCommand(AddBlankMasterSubject);
             DeleteMasterSubjectCommand = new RelayCommand<MasterGradeRowViewModel>(DeleteMasterSubject!);
+            GenerateSf9Command = new RelayCommand(GenerateSf9);
             CloseProfileCommand = new RelayCommand(() => IsProfileOpen = false); 
 
             LoadStudents();
@@ -398,6 +400,50 @@ namespace Centriku.ViewModels
             IsMasterRecordVisible = !(hasSemestral && !hasQuarterly);
 
             if (IsMasterRecordVisible) await LoadMasterRecordAsync(studentId, performanceList);
+
+            // --- LOAD ATTENDANCE FOR SF9 ---
+            var allAttendance = await db.Table<Centriku.Models.AttendanceRecord>()
+                                        .Where(a => a.StudentID == studentId)
+                                        .ToListAsync();
+
+            var sf9AttList = new List<Sf9MonthlyAttendance>();
+            int[] monthOrder = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5]; 
+            string[] monthNames = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May"];
+
+            for (int i = 0; i < monthOrder.Length; i++)
+            {
+                int m = monthOrder[i];
+                var monthRecords = allAttendance.Where(a => a.Date.Month == m).ToList();
+                
+                // Group by the specific Day so we don't double-count students taking multiple subjects
+                var uniqueDates = monthRecords.GroupBy(a => a.Date.Date).ToList();
+
+                int present = 0;
+                int absent = 0;
+
+                foreach (var dateGroup in uniqueDates)
+                {
+                    // If marked Present or Late in ANY subject that day, they are present for the school day.
+                    if (dateGroup.Any(r => r.Status == "P" || r.Status == "L"))
+                    {
+                        present++;
+                    }
+                    else // If all their records for that day are Absent (A) or Excused (E), they are absent.
+                    {
+                        absent++;
+                    }
+                }
+
+                sf9AttList.Add(new Sf9MonthlyAttendance
+                {
+                    Month = monthNames[i],
+                    MonthNum = m,
+                    DaysPresent = present,
+                    DaysAbsent = absent,
+                    SchoolDays = present + absent
+                });
+            }
+            Sf9Attendance = new ObservableCollection<Sf9MonthlyAttendance>(sf9AttList);
         }
 
         private async Task LoadMasterRecordAsync(string studentId, List<StudentClassPerformanceViewModel> activeClasses)
@@ -563,6 +609,40 @@ namespace Centriku.ViewModels
             return totalWeightedScore / totalCategoryWeight;
         }
     
+        private void GenerateSf9()
+        {
+            if (SelectedProfile == null) return;
+
+            // Create a safe file name (e.g., "Mason_Justin_SF9.pdf")
+            string safeName = $"{SelectedProfile.LastName}_{SelectedProfile.FirstName}_SF9".Replace(" ", "_");
+            
+            // Save it directly to the user's Desktop for easy access
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string fullPath = System.IO.Path.Combine(desktopPath, $"{safeName}.pdf");
+
+            try
+            {
+                // We pass 'this' (the entire ViewModel) so the generator can access MasterGrades!
+                Centriku.Services.Sf9Generator.GenerateReportCard(this, fullPath);
+                
+                // Automatically open the PDF immediately after generating it
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fullPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Failed to generate PDF: {ex.Message}");
+            }
+        }
+
+        public class Sf9MonthlyAttendance
+        {
+            public string Month { get; set; } = string.Empty;
+            public int MonthNum { get; set; }
+            public int SchoolDays { get; set; }
+            public int DaysPresent { get; set; }
+            public int DaysAbsent { get; set; }
+        }
+
     }
     public partial class StudentRowViewModel(Centriku.Models.Student student) : ObservableObject
     {

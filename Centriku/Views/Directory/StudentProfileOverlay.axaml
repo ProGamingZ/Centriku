@@ -162,7 +162,7 @@
                                     <TextBlock Text="DepEd Form 138 / SF9 Data" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                     <TextBlock Text="Compile grades from all subject teachers to generate the official report card." Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" Content="📄 Generate SF9 (PDF)" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="6" Padding="15,8"/>
+                                <Button Grid.Column="1" Command="{Binding GenerateSf9Command}" Content="📄 Generate SF9 (PDF)" Background="Transparent" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" CornerRadius="6" Padding="15,8"/>
                             </Grid>
 
                             <DataGrid ItemsSource="{Binding MasterGrades}" AutoGenerateColumns="False" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="200">
