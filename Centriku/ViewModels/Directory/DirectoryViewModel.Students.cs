@@ -129,6 +129,12 @@ namespace Centriku.ViewModels
         {
             try
             {
+                var db = new Centriku.Services.DatabaseService().GetConnection();
+                
+                // Fetch settings, or fallback to defaults if table is empty
+                var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() 
+                               ?? new Centriku.Models.AppSettings();
+
                 var newStudents = new List<Centriku.Models.Student>();
                 string extension = Path.GetExtension(filePath).ToLower();
                 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -136,47 +142,74 @@ namespace Centriku.ViewModels
                 if (extension == ".csv")
                 {
                     var lines = await File.ReadAllLinesAsync(filePath);
-                    for (int i = 1; i < lines.Length; i++) 
+                    
+                    // Respect the "Skip First Row" setting
+                    int startRow = settings.SkipFirstRow ? 1 : 0; 
+                    
+                    for (int i = startRow; i < lines.Length; i++) 
                     {
                         var cols = lines[i].Split(',');
-                        if (cols.Length < 3) continue;
-                        newStudents.Add(ParseStudentRow(cols));
+                        
+                        // If they didn't map an LRN, or the row is totally blank, skip it
+                        if (cols.Length == 0 || settings.LrnColumnIndex == -1) continue; 
+                        
+                        newStudents.Add(ParseStudentRow(cols, settings));
                     }
                 }
                 else if (extension == ".xlsx" || extension == ".xls")
                 {
                     using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
                     using var reader = ExcelReaderFactory.CreateReader(stream);
-                    reader.Read(); 
+                    
+                    // Respect the "Skip First Row" setting
+                    if (settings.SkipFirstRow) reader.Read(); 
+                    
                     while (reader.Read())
                     {
                         var cols = new string[reader.FieldCount];
                         for (int i = 0; i < reader.FieldCount; i++) cols[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
-                        if (cols.Length < 3 || string.IsNullOrWhiteSpace(cols[0])) continue;
-                        newStudents.Add(ParseStudentRow(cols));
+                        
+                        // Make sure the row isn't blank and they mapped an LRN column
+                        if (cols.Length == 0 || settings.LrnColumnIndex == -1 || string.IsNullOrWhiteSpace(cols[settings.LrnColumnIndex])) continue;
+                        
+                        newStudents.Add(ParseStudentRow(cols, settings));
                     }
                 }
+
                 if (newStudents.Any())
                 {
-                    var db = new Centriku.Services.DatabaseService().GetConnection();
                     await db.InsertAllAsync(newStudents, runInTransaction: true);
                     LoadStudents(); 
+                    Console.WriteLine($"Successfully imported {newStudents.Count} students.");
                 }
             }
             catch (Exception ex) { Console.WriteLine($"Bulk Import failed: {ex.Message}"); }
         }
 
-        private static Centriku.Models.Student ParseStudentRow(string[] cols)
+        private static Centriku.Models.Student ParseStudentRow(string[] cols, Centriku.Models.AppSettings settings)
         {
+            // A helper function to safely extract data without crashing
+            string GetColValue(int mappedIndex, string fallbackValue)
+            {
+                // If the user set it to "Ignore (-1)" OR the Excel row is shorter than expected, use the fallback
+                if (mappedIndex < 0 || mappedIndex >= cols.Length) return fallbackValue;
+                
+                string val = cols[mappedIndex].Trim();
+                
+                // If the cell exists but is completely empty, inject the fallback
+                return string.IsNullOrWhiteSpace(val) ? fallbackValue : val;
+            }
+
             return new Centriku.Models.Student
             {
-                StudentID = cols[0].Trim(), LastName = cols[1].Trim(), FirstName = cols[2].Trim(),
-                MiddleName = cols.Length > 3 ? cols[3].Trim() : string.Empty,
-                Suffix = cols.Length > 4 ? cols[4].Trim() : string.Empty,
-                Gender = cols.Length > 5 ? cols[5].Trim() : "Male",
-                GradeYearLevel = cols.Length > 6 ? cols[6].Trim() : string.Empty,
-                SectionBlock = cols.Length > 7 ? cols[7].Trim() : string.Empty,
-                EnrollmentStatus = cols.Length > 8 ? cols[8].Trim() : "Regular",
+                StudentID = GetColValue(settings.LrnColumnIndex, string.Empty),
+                LastName = GetColValue(settings.LastNameColumnIndex, string.Empty),
+                FirstName = GetColValue(settings.FirstNameColumnIndex, string.Empty),
+                MiddleName = GetColValue(settings.MiddleNameColumnIndex, string.Empty),
+                Gender = GetColValue(settings.GenderColumnIndex, settings.DefaultGender),
+                GradeYearLevel = GetColValue(settings.GradeLevelColumnIndex, settings.DefaultGradeLevel),
+                SectionBlock = GetColValue(settings.SectionColumnIndex, settings.DefaultSection),
+                EnrollmentStatus = GetColValue(settings.EnrollmentStatusColumnIndex, settings.DefaultEnrollmentStatus),
                 IsArchived = false
             };
         }
