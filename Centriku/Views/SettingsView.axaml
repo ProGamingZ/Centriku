@@ -5,32 +5,104 @@
              x:DataType="vm:SettingsViewModel">
              
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="40,30,40,20" Spacing="20">
+        <StackPanel Margin="40,30,40,40" Spacing="20" MaxWidth="800" HorizontalAlignment="Left">
             
             <TextBlock Text="Application Settings" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-            <TextBlock Text="Customize Centriku to fit your teaching environment." Foreground="{DynamicResource TextMutedBrush}" FontSize="14" Margin="0,-15,0,20"/>
+            <TextBlock Text="Configure how Centriku handles and imports your data." Foreground="{DynamicResource TextMutedBrush}" FontSize="14" Margin="0,-15,0,10"/>
             
-            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25" MaxWidth="600" HorizontalAlignment="Left">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Localization &amp; Terminology" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
-                    
-                    <TextBlock Text="Classroom Grouping Structure" FontWeight="SemiBold"/>
-                    <TextBlock Text="How do you organize your students? This will update the labels used when creating new classes and reports." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
-                    
-                    <ComboBox ItemsSource="{Binding AvailableTerminologies}" 
-                              SelectedItem="{Binding ClassroomTerminology}" 
-                              HorizontalAlignment="Stretch" 
-                              Background="{DynamicResource AppBackground}"
-                              Margin="0,5,0,0"/>
+            <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                <Button Grid.Column="1" Command="{Binding SaveSettingsCommand}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="25,10">
+                    <Panel>
+                        <TextBlock Text="💾 Save Settings" IsVisible="{Binding !IsSaving}"/>
+                        <TextBlock Text="Saving..." IsVisible="{Binding IsSaving}" FontStyle="Italic"/>
+                    </Panel>
+                </Button>
+            </Grid>
 
-                    <TextBlock Text="Student ID Format" FontWeight="SemiBold"/>
-                    <TextBlock Text="What does your school or region call a student's unique identification number?" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Excel / CSV Column Mapping" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <TextBlock Text="Tell Centriku where to find your data. If your Excel file puts Last Name in Column B, select 'Column B (2)' below." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,-10,0,10"/>
                     
-                    <ComboBox ItemsSource="{Binding AvailableIdTerminologies}" 
-                              SelectedItem="{Binding IdTerminology}" 
-                              HorizontalAlignment="Stretch" 
-                              Background="{DynamicResource AppBackground}"
-                              Margin="0,5,0,0"/>
+                    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto, Auto" Margin="0,10,0,0">
+                        
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,20,15">
+                            <TextBlock Text="LRN / Student ID*" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding LrnSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,20,15">
+                            <TextBlock Text="First Name*" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding FirstNameSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,20,15">
+                            <TextBlock Text="Gender" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding GenderSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,20,0">
+                            <TextBlock Text="Grade/Year Level" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding GradeSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,15">
+                            <TextBlock Text="Last Name*" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding LastNameSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,15">
+                            <TextBlock Text="Middle Name" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding MiddleNameSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,15">
+                            <TextBlock Text="Section / Block" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding SectionSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,0,0,0">
+                            <TextBlock Text="Enrollment Status" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableColumns}" SelectedIndex="{Binding StatusSelectedIndex}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Import Rules" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <CheckBox Content="Skip First Row (Headers)" IsChecked="{Binding CurrentSettings.SkipFirstRow}" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                    <TextBlock Text="Check this if your Excel/CSV file has a title row (e.g. 'Student Name', 'Age') so it isn't accidentally imported as a student." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="25,-5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Fallback Defaults" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <TextBlock Text="If a student's record is missing an optional field, or if you chose 'Ignore' in the mapping above, Centriku will automatically fill it with these default values." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,-10,0,10"/>
+                    
+                    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" Margin="0,10,0,0">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,20,15">
+                            <TextBlock Text="Default Gender" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableGenders}" SelectedItem="{Binding CurrentSettings.DefaultGender}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,15">
+                            <TextBlock Text="Default Enrollment Status" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding CurrentSettings.DefaultEnrollmentStatus}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,20,0">
+                            <TextBlock Text="Default Grade/Year Level" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding CurrentSettings.DefaultGradeLevel}" PlaceholderText="e.g. Grade 11" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,0">
+                            <TextBlock Text="Default Section/Block" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding CurrentSettings.DefaultSection}" PlaceholderText="e.g. BSCS-1A" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
             
