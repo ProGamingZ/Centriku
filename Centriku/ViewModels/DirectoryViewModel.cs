@@ -14,6 +14,19 @@ namespace Centriku.ViewModels
     {
         [ObservableProperty] public partial ObservableCollection<StudentClassPerformanceViewModel> SelectedStudentClasses { get; set; } = new();
         [ObservableProperty] public partial bool HasEnrolledClasses { get; set; } = false;
+        [ObservableProperty] public partial bool IsMasterRecordVisible { get; set; } = true;
+        [ObservableProperty] public partial ObservableCollection<MasterGradeRowViewModel> MasterGrades { get; set; } = new();
+        
+        // The 5 Quarterly Average Trackers
+        [ObservableProperty] public partial string Q1Average { get; set; } = "--";
+        [ObservableProperty] public partial string Q2Average { get; set; } = "--";
+        [ObservableProperty] public partial string Q3Average { get; set; } = "--";
+        [ObservableProperty] public partial string Q4Average { get; set; } = "--";
+        [ObservableProperty] public partial string FinalGeneralAverage { get; set; } = "--";
+
+        public IRelayCommand SaveMasterRecordCommand { get; }
+        public IRelayCommand AddBlankMasterSubjectCommand { get; }
+        public IRelayCommand<MasterGradeRowViewModel> DeleteMasterSubjectCommand { get; } 
         
         private List<StudentRowViewModel> _allStudents = [];
         private List<StudentRowViewModel> _allArchivedStudents = [];
@@ -79,6 +92,9 @@ namespace Centriku.ViewModels
             ArchiveStudentCommand = new RelayCommand<StudentRowViewModel>(ArchiveStudent!); 
             RestoreStudentCommand = new RelayCommand<StudentRowViewModel>(RestoreStudent!); 
             DeleteStudentCommand = new RelayCommand<StudentRowViewModel>(DeleteStudent!);
+            SaveMasterRecordCommand = new RelayCommand(SaveMasterRecord);
+            AddBlankMasterSubjectCommand = new RelayCommand(AddBlankMasterSubject);
+            DeleteMasterSubjectCommand = new RelayCommand<MasterGradeRowViewModel>(DeleteMasterSubject!);
             CloseProfileCommand = new RelayCommand(() => IsProfileOpen = false); 
 
             LoadStudents();
@@ -321,7 +337,6 @@ namespace Centriku.ViewModels
                 if (tClass == null) continue;
 
                 var template = await db.Table<Centriku.Models.GradingTemplate>().Where(t => t.TemplateID == tClass.GradingTemplateID).FirstOrDefaultAsync();
-                
                 var attendance = await db.Table<Centriku.Models.AttendanceRecord>().Where(a => a.ClassID == roster.ClassID && a.StudentID == studentId).ToListAsync();
                 int absences = attendance.Count(a => a.Status == "Absent" || a.Status == "A");
                 int lates = attendance.Count(a => a.Status == "Late" || a.Status == "L");
@@ -335,15 +350,11 @@ namespace Centriku.ViewModels
                     Lates = lates
                 };
 
-                // Helper func to convert the raw absolute percentage to the final string format
                 string FormatGrade(double? raw)
                 {
                     if (raw == null) return "--";
                     double val = raw.Value;
-                    if (template?.CalculationMode == "NRFG")
-                    {
-                        val = (val / 100.0) * (100.0 - template.NrfgBaseValue) + template.NrfgBaseValue;
-                    }
+                    if (template?.CalculationMode == "NRFG") val = (val / 100.0) * (100.0 - template.NrfgBaseValue) + template.NrfgBaseValue;
                     return $"{val.ToString("0.##")}%";
                 }
 
@@ -351,19 +362,17 @@ namespace Centriku.ViewModels
                 {
                     double? mid = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Midterm");
                     double? fin = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Final");
-                    
                     perf.MidtermGrade = FormatGrade(mid);
                     perf.FinalTermGrade = FormatGrade(fin);
                     perf.SemesterAverage = (mid != null && fin != null) ? FormatGrade((mid + fin) / 2.0) : "--";
                     perf.AverageScorePercentage = perf.SemesterAverage;
                 }
-                else // Quarterly
+                else 
                 {
                     double? q1 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q1");
                     double? q2 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q2");
                     double? q3 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q3");
                     double? q4 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q4");
-                    
                     perf.Q1Grade = FormatGrade(q1);
                     perf.Q2Grade = FormatGrade(q2);
                     perf.Q3Grade = FormatGrade(q3);
@@ -374,13 +383,142 @@ namespace Centriku.ViewModels
 
                 var allAssessments = await db.Table<Centriku.Models.Assessment>().Where(a => a.ClassID == roster.ClassID).ToListAsync();
                 perf.GradedTasksCount = allAssessments.Count;
-
                 performanceList.Add(perf);
             }
 
             SelectedStudentClasses = new System.Collections.ObjectModel.ObservableCollection<StudentClassPerformanceViewModel>(performanceList);
             SelectedStudentClassPerformance = performanceList.FirstOrDefault();
             HasEnrolledClasses = performanceList.Any();
+
+            // --- MASTER ACADEMIC RECORD LOGIC ---
+            bool hasSemestral = performanceList.Any(p => p.EducationMode == "Semestral");
+            bool hasQuarterly = performanceList.Any(p => p.EducationMode == "Quarterly");
+
+            // Hide the SF9 Tab ONLY if they are exclusively enrolled in Semestral/College classes!
+            IsMasterRecordVisible = !(hasSemestral && !hasQuarterly);
+
+            if (IsMasterRecordVisible) await LoadMasterRecordAsync(studentId, performanceList);
+        }
+
+        private async Task LoadMasterRecordAsync(string studentId, List<StudentClassPerformanceViewModel> activeClasses)
+        {
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            await db.CreateTableAsync<Centriku.Models.MasterQuarterlyGrade>();
+            var savedGrades = await db.Table<Centriku.Models.MasterQuarterlyGrade>().Where(g => g.StudentID == studentId).ToListAsync();
+
+            var masterList = new List<MasterGradeRowViewModel>();
+
+            // 1. Auto-pull Quarterly classes (Ignore Semestral entirely!)
+            var activeQuarterly = activeClasses.Where(c => c.EducationMode == "Quarterly").ToList();
+            foreach(var aq in activeQuarterly)
+            {
+                string cleanVal(string val) => val.Replace("%", "").Trim();
+                var row = new MasterGradeRowViewModel 
+                {
+                    SubjectName = aq.SubjectName,
+                    Q1Text = cleanVal(aq.Q1Grade), Q2Text = cleanVal(aq.Q2Grade), Q3Text = cleanVal(aq.Q3Grade), Q4Text = cleanVal(aq.Q4Grade),
+                    IsFromActiveGradebook = true, // Lock editing!
+                    TriggerParentRecalc = RecalculateGeneralAverage
+                };
+                row.ForceRecalc();
+                masterList.Add(row);
+            }
+
+            // 2. Add manually encoded external subjects from SQLite
+            foreach(var sg in savedGrades)
+            {
+                var row = new MasterGradeRowViewModel
+                {
+                    GradeId = sg.GradeID,
+                    SubjectName = sg.SubjectName ?? "Unknown",
+                    Q1Text = sg.Quarter1Grade?.ToString() ?? "", Q2Text = sg.Quarter2Grade?.ToString() ?? "", Q3Text = sg.Quarter3Grade?.ToString() ?? "", Q4Text = sg.Quarter4Grade?.ToString() ?? "",
+                    IsFromActiveGradebook = false,
+                    TriggerParentRecalc = RecalculateGeneralAverage
+                };
+                row.ForceRecalc();
+                masterList.Add(row);
+            }
+
+            MasterGrades = new ObservableCollection<MasterGradeRowViewModel>(masterList);
+            RecalculateGeneralAverage();
+        }
+
+        private void RecalculateGeneralAverage()
+        {
+            // Helper function to safely average a specific quarter across all subjects
+            double CalculateColumnAverage(Func<MasterGradeRowViewModel, string> selector)
+            {
+                var validRows = MasterGrades.Where(r => double.TryParse(selector(r), out _)).ToList();
+                if (!validRows.Any()) return -1;
+                return validRows.Sum(r => double.Parse(selector(r))) / validRows.Count;
+            }
+
+            double q1 = CalculateColumnAverage(r => r.Q1Text);
+            double q2 = CalculateColumnAverage(r => r.Q2Text);
+            double q3 = CalculateColumnAverage(r => r.Q3Text);
+            double q4 = CalculateColumnAverage(r => r.Q4Text);
+            double fin = CalculateColumnAverage(r => r.FinalGrade);
+
+            Q1Average = q1 >= 0 ? q1.ToString("0.##") : "--";
+            Q2Average = q2 >= 0 ? q2.ToString("0.##") : "--";
+            Q3Average = q3 >= 0 ? q3.ToString("0.##") : "--";
+            Q4Average = q4 >= 0 ? q4.ToString("0.##") : "--";
+            FinalGeneralAverage = fin >= 0 ? fin.ToString("0.##") : "--";
+        }
+
+        private async void DeleteMasterSubject(MasterGradeRowViewModel row)
+        {
+            if (row == null || row.IsFromActiveGradebook) return; // Prevent deleting app-controlled classes!
+
+            MasterGrades.Remove(row); // 1. Remove from UI instantly
+            
+            if (row.GradeId != 0) // 2. If it was previously saved, delete it from SQLite
+            {
+                var db = new Centriku.Services.DatabaseService().GetConnection();
+                var dbRecord = await db.Table<Centriku.Models.MasterQuarterlyGrade>().Where(g => g.GradeID == row.GradeId).FirstOrDefaultAsync();
+                if (dbRecord != null)
+                {
+                    await db.DeleteAsync(dbRecord);
+                }
+            }
+            RecalculateGeneralAverage(); // 3. Fix the averages!
+        }
+        private void AddBlankMasterSubject() => MasterGrades.Add(new MasterGradeRowViewModel { SubjectName = "New Subject", IsFromActiveGradebook = false, TriggerParentRecalc = RecalculateGeneralAverage });
+
+        private async void SaveMasterRecord()
+        {
+            if (SelectedProfile == null) return;
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var existingRecords = await db.Table<Centriku.Models.MasterQuarterlyGrade>().Where(g => g.StudentID == SelectedProfile.StudentID).ToListAsync();
+
+            foreach(var row in MasterGrades)
+            {
+                if (row.IsFromActiveGradebook) continue; // App data manages itself!
+
+                var dbRecord = existingRecords.FirstOrDefault(e => e.GradeID == row.GradeId);
+                if (dbRecord != null)
+                {
+                    dbRecord.SubjectName = row.SubjectName;
+                    dbRecord.Quarter1Grade = double.TryParse(row.Q1Text, out double q1) ? q1 : null;
+                    dbRecord.Quarter2Grade = double.TryParse(row.Q2Text, out double q2) ? q2 : null;
+                    dbRecord.Quarter3Grade = double.TryParse(row.Q3Text, out double q3) ? q3 : null;
+                    dbRecord.Quarter4Grade = double.TryParse(row.Q4Text, out double q4) ? q4 : null;
+                    await db.UpdateAsync(dbRecord);
+                }
+                else
+                {
+                    var newRec = new Centriku.Models.MasterQuarterlyGrade
+                    {
+                        StudentID = SelectedProfile.StudentID, SubjectName = row.SubjectName,
+                        Quarter1Grade = double.TryParse(row.Q1Text, out double nq1) ? nq1 : null,
+                        Quarter2Grade = double.TryParse(row.Q2Text, out double nq2) ? nq2 : null,
+                        Quarter3Grade = double.TryParse(row.Q3Text, out double nq3) ? nq3 : null,
+                        Quarter4Grade = double.TryParse(row.Q4Text, out double nq4) ? nq4 : null
+                    };
+                    await db.InsertAsync(newRec);
+                    row.GradeId = newRec.GradeID; 
+                }
+            }
         }
 
         private async Task<double?> CalculateTermGradeRawAsync(SQLite.SQLiteAsyncConnection db, string studentId, int classId, int templateId, string term)
@@ -506,5 +644,51 @@ namespace Centriku.ViewModels
         public string AverageScorePercentage { get; set; } = "--";
         public int Absences { get; set; }
         public int Lates { get; set; }
+    }
+
+    public partial class MasterGradeRowViewModel : ObservableObject
+    {
+        public int GradeId { get; set; } 
+        public bool IsFromActiveGradebook { get; set; } // If true, it locks the UI so you can't overwrite app data!
+        
+        [ObservableProperty] public partial string SubjectName { get; set; } = string.Empty;
+        
+        // We use strings for inputs so the Avalonia TextBoxes behave perfectly without crashing on empty values
+        [ObservableProperty] public partial string Q1Text { get; set; } = string.Empty;
+        [ObservableProperty] public partial string Q2Text { get; set; } = string.Empty;
+        [ObservableProperty] public partial string Q3Text { get; set; } = string.Empty;
+        [ObservableProperty] public partial string Q4Text { get; set; } = string.Empty;
+
+        partial void OnQ1TextChanged(string value) { UpdateMath(); }
+        partial void OnQ2TextChanged(string value) { UpdateMath(); }
+        partial void OnQ3TextChanged(string value) { UpdateMath(); }
+        partial void OnQ4TextChanged(string value) { UpdateMath(); }
+
+        [ObservableProperty] public partial string FinalGrade { get; set; } = "--";
+        [ObservableProperty] public partial string Remarks { get; set; } = "--";
+
+        public Action? TriggerParentRecalc { get; set; }
+
+        public void ForceRecalc() => UpdateMath();
+
+        private void UpdateMath()
+        {
+            // If all 4 quarters have numbers typed in, calculate the Final Rating automatically!
+            if (double.TryParse(Q1Text, out double q1) &&
+                double.TryParse(Q2Text, out double q2) &&
+                double.TryParse(Q3Text, out double q3) &&
+                double.TryParse(Q4Text, out double q4))
+            {
+                double avg = (q1 + q2 + q3 + q4) / 4.0;
+                FinalGrade = Math.Round(avg, 0).ToString("0.##"); // Standard K-12 Rounding
+                Remarks = avg >= 75 ? "Passed" : "Failed";
+            }
+            else
+            {
+                FinalGrade = "--";
+                Remarks = "--";
+            }
+            TriggerParentRecalc?.Invoke(); // Tell the General Average at the bottom of the screen to update!
+        }
     }
 }
