@@ -129,7 +129,7 @@
                             </CheckBox>
                             
                             <CheckBox IsChecked="{Binding CurrentSettings.SkipIncompleteRows}" Margin="0,0,0,0">
-                                <TextBlock Text="Skip incomplete rows (Missing LRN, Last, First, or Middle Name)" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="Skip incomplete rows (Missing LRN, Last, or First Name)" FontWeight="SemiBold" TextWrapping="Wrap"/>
                             </CheckBox>
                             
                             <StackPanel Margin="0,10,0,0">

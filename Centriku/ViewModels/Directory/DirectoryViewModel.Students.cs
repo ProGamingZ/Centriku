@@ -13,12 +13,14 @@ namespace Centriku.ViewModels
    // Handles everything related to managing the master school roster, bulk imports, filtering, and archiving
     public partial class DirectoryViewModel 
     {
-        public class StagedStudent
+        public partial class StagedStudent : ObservableObject
         {
             public Centriku.Models.Student DbModel { get; set; } = new();
-            public bool IsDuplicate { get; set; }
-            public string ImportStatus { get; set; } = string.Empty;
-            public string StatusColor { get; set; } = "#FFFFFF";
+            
+            [ObservableProperty] public partial bool IsDuplicate { get; set; }
+            [ObservableProperty] public partial bool IsError { get; set; } 
+            [ObservableProperty] public partial string ImportStatus { get; set; } = string.Empty;
+            [ObservableProperty] public partial string StatusColor { get; set; } = "#FFFFFF";
             
             public StagedStudent(Centriku.Models.Student student) { DbModel = student; }
         }
@@ -140,6 +142,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool HasStagedStudents { get; set; } = false;
         [ObservableProperty] public partial bool HasImportError { get; set; } = false;
         [ObservableProperty] public partial string ImportSummaryMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool IsLoading { get; set; } = false;
         [RelayCommand]
         public static void NavigateToSettings()
         {
@@ -153,112 +156,177 @@ namespace Centriku.ViewModels
                 StagedStudents.Clear();
                 HasImportError = false;
                 HasStagedStudents = false;
-                ImportSummaryMessage = "Reading file...";
+                IsLoading = true; // TRIGGER THE LOADING SCREEN!
+                ImportSummaryMessage = string.Empty;
 
                 var db = new Centriku.Services.DatabaseService().GetConnection();
                 var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
-
-                var newStudents = new List<Centriku.Models.Student>();
-                string extension = Path.GetExtension(filePath).ToLower();
-                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
-                int ghostCount = 0;
-
-                if (extension == ".csv")
-                {
-                    var lines = await File.ReadAllLinesAsync(filePath);
-                    int startRow = settings.SkipFirstRow ? 1 : 0; 
-                    for (int i = startRow; i < lines.Length; i++) 
-                    {
-                        var cols = lines[i].Split(',');
-                        if (cols.Length == 0) continue; 
-                        
-                        var parsed = ParseStudentRow(cols, settings);
-
-                        bool isGhost = false;
-                        if (settings.SkipIncompleteRows)
-                        {
-                            if (settings.LrnColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
-                            if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) isGhost = true;
-                            if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) isGhost = true;
-                            // Note: Removed MiddleName ghost check because some students don't have middle names!
-                        }
-
-                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
-
-                        if (isGhost) { ghostCount++; continue; }
-                        newStudents.Add(parsed);
-                    }
-                }
-                else if (extension == ".xlsx" || extension == ".xls")
-                {
-                    using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
-                    using var reader = ExcelReaderFactory.CreateReader(stream);
-                    if (settings.SkipFirstRow) reader.Read(); 
-                    while (reader.Read())
-                    {
-                        var cols = new string[reader.FieldCount];
-                        for (int i = 0; i < reader.FieldCount; i++) cols[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
-                        
-                        if (cols.Length == 0) continue;
-                        
-                        var parsed = ParseStudentRow(cols, settings);
-
-                        bool isGhost = false;
-                        if (settings.SkipIncompleteRows)
-                        {
-                            if (settings.LrnColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
-                            if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) isGhost = true;
-                            if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) isGhost = true;
-                        }
-
-                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
-
-                        if (isGhost) { ghostCount++; continue; }
-                        newStudents.Add(parsed);
-                    }
-                }
-
-                // If 100% of rows were ghosts or empty, trigger Error State!
-                if (!newStudents.Any())
-                {
-                    HasImportError = true;
-                    ImportSummaryMessage = $"Error: No valid students found in the file. {ghostCount} rows were skipped because they were missing LRNs or Names. Please check your File Mapping in Settings.";
-                    return;
-                }
-
-                // The Duplicate Checker!
+                
+                // Fetch existing LRNs first so we can check for duplicates safely
                 var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
                 var existingLrns = existingStudents.Select(s => s.StudentID).ToHashSet();
 
-                var stagedList = new List<StagedStudent>();
-
-                foreach (var student in newStudents)
+                // Run the heavy Excel parsing in a background thread so the UI doesn't freeze!
+                var stagedList = await Task.Run(() =>
                 {
-                    bool isDup = existingLrns.Contains(student.StudentID);
-                    string status = "New Student";
-                    string color = "#22C55E"; // Success Green
+                    var tempList = new List<StagedStudent>();
+                    string extension = Path.GetExtension(filePath).ToLower();
+                    System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-                    if (isDup)
+                    void ProcessRow(string[] cols)
                     {
-                        if (settings.DuplicateHandlingRule == "Skip") { status = "Will Skip"; color = "#6B7280"; } // Ignore Gray
-                        else { status = "Will Update"; color = "#EAB308"; } // Warning Yellow
+                        if (cols.Length == 0) return;
+                        var parsed = ParseStudentRow(cols, settings);
+                        var staged = new StagedStudent(parsed);
+
+                        bool isError = false;
+                        string errorMsg = "";
+
+                        // Rule 1: It is an error if there is absolutely no LRN
+                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) { isError = true; errorMsg = "Error: Missing LRN"; }
+                        
+                        // Rule 2: Check Ghost Row rules from Settings
+                        else if (settings.SkipIncompleteRows)
+                        {
+                            if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) { isError = true; errorMsg = "Error: Missing Last Name"; }
+                            else if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) { isError = true; errorMsg = "Error: Missing First Name"; }
+                        }
+
+                        // Apply the Badges!
+                        if (isError)
+                        {
+                            staged.IsError = true;
+                            staged.ImportStatus = errorMsg;
+                            staged.StatusColor = "#EF4444"; // Error Red
+                        }
+                        else
+                        {
+                            bool isDup = existingLrns.Contains(parsed.StudentID);
+                            if (isDup)
+                            {
+                                staged.IsDuplicate = true;
+                                if (settings.DuplicateHandlingRule == "Skip") { staged.ImportStatus = "Will Skip"; staged.StatusColor = "#6B7280"; } 
+                                else { staged.ImportStatus = "Will Update"; staged.StatusColor = "#EAB308"; } 
+                            }
+                            else
+                            {
+                                staged.ImportStatus = "New Student";
+                                staged.StatusColor = "#22C55E"; // Success Green
+                            }
+                        }
+                        tempList.Add(staged);
                     }
 
-                    stagedList.Add(new StagedStudent(student) { IsDuplicate = isDup, ImportStatus = status, StatusColor = color });
+                    // Parse CSV
+                    if (extension == ".csv")
+                    {
+                        var lines = File.ReadAllLines(filePath);
+                        int startRow = settings.SkipFirstRow ? 1 : 0; 
+                        for (int i = startRow; i < lines.Length; i++) ProcessRow(lines[i].Split(','));
+                    }
+                    // Parse Excel
+                    else if (extension == ".xlsx" || extension == ".xls")
+                    {
+                        using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
+                        using var reader = ExcelReaderFactory.CreateReader(stream);
+                        if (settings.SkipFirstRow) reader.Read(); 
+                        while (reader.Read())
+                        {
+                            var cols = new string[reader.FieldCount];
+                            for (int i = 0; i < reader.FieldCount; i++) cols[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
+                            ProcessRow(cols);
+                        }
+                    }
+                    
+                    return tempList;
+                });
+
+                if (!stagedList.Any())
+                {
+                    HasImportError = true;
+                    ImportSummaryMessage = "Error: The file appears to be empty or unreadable.";
+                }
+                else
+                {
+                    StagedStudents = new ObservableCollection<StagedStudent>(stagedList);
+                    HasStagedStudents = true;
+                    
+                    int errors = stagedList.Count(s => s.IsError);
+                    string dupMsg = stagedList.Any(s => s.IsDuplicate) ? $" ({stagedList.Count(s => s.IsDuplicate)} duplicates)" : "";
+                    
+                    // Dynamic messaging based on whether errors were found!
+                    if (errors > 0) ImportSummaryMessage = $"Warning: Found {stagedList.Count} rows, but {errors} have missing information. Please fix the red rows below.";
+                    else ImportSummaryMessage = $"Success! Read {stagedList.Count} valid students{dupMsg}. Please review the table below.";
+                }
+            }
+            catch (Exception ex) { HasImportError = true; ImportSummaryMessage = $"File Error: {ex.Message}"; }
+            finally { IsLoading = false; }
+        }
+
+        [RelayCommand]
+        public async Task RecheckStagedDataAsync()
+        {
+            if (!StagedStudents.Any()) return;
+
+            IsLoading = true;
+            ImportSummaryMessage = "Re-evaluating data...";
+
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
+            
+            var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
+            var existingLrns = existingStudents.Select(s => s.StudentID).ToHashSet();
+
+            int errorCount = 0;
+
+            // Re-scan every student in the table to see if the user fixed them!
+            foreach (var staged in StagedStudents)
+            {
+                var parsed = staged.DbModel;
+                bool isError = false;
+                string errorMsg = "";
+
+                if (string.IsNullOrWhiteSpace(parsed.StudentID)) { isError = true; errorMsg = "Error: Missing LRN"; }
+                else if (settings.SkipIncompleteRows)
+                {
+                    if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) { isError = true; errorMsg = "Error: Missing Last Name"; }
+                    else if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) { isError = true; errorMsg = "Error: Missing First Name"; }
                 }
 
-                StagedStudents = new ObservableCollection<StagedStudent>(stagedList);
-                HasStagedStudents = true;
-                
-                string dupMsg = existingLrns.Any() ? $" ({stagedList.Count(s => s.IsDuplicate)} are duplicates)" : "";
-                ImportSummaryMessage = $"Success! Read {stagedList.Count} valid students{dupMsg}. {ghostCount} incomplete ghost rows were ignored. Please review the table below.";
+                if (isError)
+                {
+                    staged.IsError = true;
+                    staged.ImportStatus = errorMsg;
+                    staged.StatusColor = "#EF4444"; // Still broken (Red)
+                    errorCount++;
+                }
+                else
+                {
+                    staged.IsError = false; // Fixed!
+                    bool isDup = existingLrns.Contains(parsed.StudentID);
+                    if (isDup)
+                    {
+                        staged.IsDuplicate = true;
+                        if (settings.DuplicateHandlingRule == "Skip") { staged.ImportStatus = "Will Skip"; staged.StatusColor = "#6B7280"; } 
+                        else { staged.ImportStatus = "Will Update"; staged.StatusColor = "#EAB308"; } 
+                    }
+                    else
+                    {
+                        staged.IsDuplicate = false;
+                        staged.ImportStatus = "New Student";
+                        staged.StatusColor = "#22C55E"; // Success Green!
+                    }
+                }
             }
-            catch (Exception ex) 
-            { 
-                HasImportError = true;
-                ImportSummaryMessage = $"File Error: The file might be corrupted or open in another program. Details: {ex.Message}";
-            }
+
+            int total = StagedStudents.Count;
+            int dupes = StagedStudents.Count(s => s.IsDuplicate);
+            string dupMsg = dupes > 0 ? $" ({dupes} duplicates)" : "";
+
+            if (errorCount > 0) ImportSummaryMessage = $"Warning: Found {total} rows, but {errorCount} still have missing information. Please fix the red rows.";
+            else ImportSummaryMessage = $"Success! All {total} students are valid{dupMsg}. Ready to save.";
+
+            IsLoading = false;
         }
 
         [RelayCommand]
@@ -274,6 +342,8 @@ namespace Centriku.ViewModels
 
             foreach(var staged in StagedStudents)
             {
+                if (staged.IsError) continue; 
+
                 if (staged.IsDuplicate)
                 {
                     if (settings.DuplicateHandlingRule == "Update") toUpdate.Add(staged.DbModel);
@@ -287,9 +357,10 @@ namespace Centriku.ViewModels
             if (toInsert.Any()) await db.InsertAllAsync(toInsert, runInTransaction: true);
             if (toUpdate.Any()) await db.UpdateAllAsync(toUpdate, runInTransaction: true);
 
-            CancelBulkImport(); // Clear the waiting room
-            LoadStudents();     // Refresh the main directory
+            CancelBulkImport(); 
+            LoadStudents();     
         }
+        
         [RelayCommand]
         public void CancelBulkImport()
         {
