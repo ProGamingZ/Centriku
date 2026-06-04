@@ -34,10 +34,10 @@
                               <CheckBox Content="First Name" IsChecked="{Binding ShowFirstNameColumn}"/>
                               <CheckBox Content="Middle Name" IsChecked="{Binding ShowMiddleNameColumn}"/>
                               <CheckBox Content="Suffix" IsChecked="{Binding ShowSuffixColumn}"/>
-                              <CheckBox Content="Grade / Year" IsChecked="{Binding ShowGradeYearLevelColumn}"/>
-                              <CheckBox Content="Section / Block" IsChecked="{Binding ShowSectionBlockColumn}"/>
-                              <CheckBox Content="Status" IsChecked="{Binding ShowEnrollmentStatusColumn}"/>
                               <CheckBox Content="Gender" IsChecked="{Binding ShowGenderColumn}"/>
+                              <CheckBox Content="Grade/Year" IsChecked="{Binding ShowGradeYearLevelColumn}"/>
+                              <CheckBox Content="Section/Block" IsChecked="{Binding ShowSectionBlockColumn}"/>
+                              <CheckBox Content="Status" IsChecked="{Binding ShowEnrollmentStatusColumn}"/>
                            </StackPanel>
                      </Flyout>
                   </Button.Flyout>
@@ -167,6 +167,20 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
+                  <DataGridTemplateColumn Header="Gender" SortMemberPath="Gender" MinWidth="90" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGenderColumn}">
+                     <DataGridTemplateColumn.CellTemplate>
+                           <DataTemplate>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding Gender}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                 <ComboBox SelectedItem="{Binding Gender}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch">
+                                       <x:String>Male</x:String>
+                                       <x:String>Female</x:String>
+                                 </ComboBox>
+                              </Panel>
+                           </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+
                   <DataGridTemplateColumn Header="Grade/Year" SortMemberPath="GradeYearLevel" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGradeYearLevelColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
@@ -203,21 +217,7 @@
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
-                                                                  
-                  <DataGridTemplateColumn Header="Gender" SortMemberPath="Gender" MinWidth="90" MaxWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGenderColumn}">
-                     <DataGridTemplateColumn.CellTemplate>
-                           <DataTemplate>
-                              <Panel Margin="10,0">
-                                 <TextBlock Text="{Binding Gender}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
-                                 <ComboBox SelectedItem="{Binding Gender}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch">
-                                       <x:String>Male</x:String>
-                                       <x:String>Female</x:String>
-                                 </ComboBox>
-                              </Panel>
-                           </DataTemplate>
-                     </DataGridTemplateColumn.CellTemplate>
-                  </DataGridTemplateColumn>
-                                       
+                                                                                                         
                   <DataGridTemplateColumn Header="Actions" Width="160" CanUserSort="False" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
