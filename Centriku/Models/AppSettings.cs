@@ -14,6 +14,7 @@ namespace Centriku.Models
         public int LastNameColumnIndex { get; set; } = 1;
         public int FirstNameColumnIndex { get; set; } = 2;
         public int MiddleNameColumnIndex { get; set; } = 3;
+        public int SuffixColumnIndex { get; set; } = -1;
         
         // Let's default these optional ones to -1 (Ignore) so the app doesn't crash if they are missing
         public int GenderColumnIndex { get; set; } = -1;

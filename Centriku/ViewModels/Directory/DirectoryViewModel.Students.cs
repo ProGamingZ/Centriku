@@ -176,7 +176,7 @@ namespace Centriku.ViewModels
                     }
                 }
 
-                if (newStudents.Any())
+                if (newStudents.Count != 0)
                 {
                     await db.InsertAllAsync(newStudents, runInTransaction: true);
                     LoadStudents(); 
@@ -206,6 +206,7 @@ namespace Centriku.ViewModels
                 LastName = GetColValue(settings.LastNameColumnIndex, string.Empty),
                 FirstName = GetColValue(settings.FirstNameColumnIndex, string.Empty),
                 MiddleName = GetColValue(settings.MiddleNameColumnIndex, string.Empty),
+                Suffix = GetColValue(settings.SuffixColumnIndex, string.Empty),
                 Gender = GetColValue(settings.GenderColumnIndex, settings.DefaultGender),
                 GradeYearLevel = GetColValue(settings.GradeLevelColumnIndex, settings.DefaultGradeLevel),
                 SectionBlock = GetColValue(settings.SectionColumnIndex, settings.DefaultSection),

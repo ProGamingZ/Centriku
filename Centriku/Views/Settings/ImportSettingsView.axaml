@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Centriku.ViewModels.Settings"
+             x:Class="Centriku.Views.Settings.ImportSettingsView"
+             x:DataType="vm:ImportSettingsViewModel">
+             
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid RowDefinitions="Auto,Auto, *" Margin="0,0,25,0">
+            
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="💡" FontSize="20" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="How to use this screen:" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="Open your Excel or CSV file. Look at the order of your columns (Column A, Column B, etc.) and match them below so Centriku knows how to read your file." Foreground="{DynamicResource TextMainBrush}" FontSize="12" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
+                
+                <Border Margin="0,0,20,20" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
+                                <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Match Your Excel Columns" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Match the columns from your file to Centriku's fields. If a column has data Centriku doesn't need, just select 'Ignore'." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-5,0,15" MaxWidth="400" TextWrapping="Wrap"/>
+                        
+                        <Grid ColumnDefinitions="Auto, Auto, Auto" RowDefinitions="Auto, Auto, Auto" Margin="0,5,0,0">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,15">
+                                <TextBlock Text="Column 1 (A)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col1Options}" SelectedItem="{Binding Col1Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,10,15">
+                                <TextBlock Text="Column 2 (B)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col2Options}" SelectedItem="{Binding Col2Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,15">
+                                <TextBlock Text="Column 3 (C)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col3Options}" SelectedItem="{Binding Col3Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,15">
+                                <TextBlock Text="Column 4 (D)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col4Options}" SelectedItem="{Binding Col4Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,10,15">
+                                <TextBlock Text="Column 5 (E)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col5Options}" SelectedItem="{Binding Col5Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,15">
+                                <TextBlock Text="Column 6 (F)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col6Options}" SelectedItem="{Binding Col6Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,0">
+                                <TextBlock Text="Column 7 (G)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col7Options}" SelectedItem="{Binding Col7Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,10,0">
+                                <TextBlock Text="Column 8 (H)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col8Options}" SelectedItem="{Binding Col8Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,0">
+                                <TextBlock Text="Column 9 (I)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col9Options}" SelectedItem="{Binding Col9Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,0,20,20" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
+                                <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Handle Missing Information" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="If your file is missing a student's Section or Gender, what should Centriku automatically fill in for them?" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" MaxWidth="250" TextWrapping="Wrap" Margin="0,-5,0,5"/>
+                        
+                        <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto, Auto" Margin="0,5,0,0">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
+                                <TextBlock Text="Gender" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding AvailableGenders}" SelectedItem="{Binding DefaultGender}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
+                                <TextBlock Text="Status" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding DefaultEnrollmentStatus}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,0">
+                                <TextBlock Text="Grade/Year" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding DefaultGradeLevel}" MinWidth="120" MaxWidth="250" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,0">
+                                <TextBlock Text="Section/Block" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding DefaultSection}" MinWidth="120" MaxWidth="250" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Margin="0,0,20,20" Spacing="20">
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                        <StackPanel Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
+                                    <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Final Rules" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <CheckBox Content="My file has a Title Row (Skip Row 1)" IsChecked="{Binding CurrentSettings.SkipFirstRow}" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    
+                    <Button Command="{Binding SaveSettingsCommand}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,15" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                        <Panel>
+                            <TextBlock Text="💾 Save Settings" IsVisible="{Binding !IsSaving}"/>
+                            <TextBlock Text="Saving..." IsVisible="{Binding IsSaving}" FontStyle="Italic"/>
+                        </Panel>
+                    </Button>
+                </StackPanel>
+
+            </WrapPanel>
+
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="12" Padding="20" VerticalAlignment="Top">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="👁️ How Centriku will read your empty cells:" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                    
+                    <DataGrid ItemsSource="{Binding PreviewRows}" AutoGenerateColumns="False" IsReadOnly="True" 
+                              GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
+                              CornerRadius="8" Height="110">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{Binding Col1Header}" Binding="{Binding Col1Text}" IsVisible="{Binding Col1Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col2Header}" Binding="{Binding Col2Text}" IsVisible="{Binding Col2Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col3Header}" Binding="{Binding Col3Text}" IsVisible="{Binding Col3Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col4Header}" Binding="{Binding Col4Text}" IsVisible="{Binding Col4Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col5Header}" Binding="{Binding Col5Text}" IsVisible="{Binding Col5Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col6Header}" Binding="{Binding Col6Text}" IsVisible="{Binding Col6Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col7Header}" Binding="{Binding Col7Text}" IsVisible="{Binding Col7Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col8Header}" Binding="{Binding Col8Text}" IsVisible="{Binding Col8Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col9Header}" Binding="{Binding Col9Text}" IsVisible="{Binding Col9Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
+        </Grid>
+    </ScrollViewer>
+    
+</UserControl>
