@@ -207,13 +207,26 @@ namespace Centriku.ViewModels
                 return string.IsNullOrWhiteSpace(val) ? fallbackValue : val;
             }
 
+            string FormatName(string name)
+            {
+                if (string.IsNullOrWhiteSpace(name)) return string.Empty;
+                
+                // If the user turned it off, just return the raw text
+                if (!settings.AutoCapitalizeNames) return name;
+                
+                // C# requires converting to lowercase first to fix "ALL CAPS" typing, then to Title Case!
+                var textInfo = System.Globalization.CultureInfo.CurrentCulture.TextInfo;
+                return textInfo.ToTitleCase(name.ToLower());
+            }
+
             return new Centriku.Models.Student
             {
                 StudentID = GetColValue(settings.LrnColumnIndex, string.Empty),
-                LastName = GetColValue(settings.LastNameColumnIndex, string.Empty),
-                FirstName = GetColValue(settings.FirstNameColumnIndex, string.Empty),
-                MiddleName = GetColValue(settings.MiddleNameColumnIndex, string.Empty),
-                Suffix = GetColValue(settings.SuffixColumnIndex, string.Empty),
+                LastName = FormatName(GetColValue(settings.LastNameColumnIndex, string.Empty)),
+                FirstName = FormatName(GetColValue(settings.FirstNameColumnIndex, string.Empty)),
+                MiddleName = FormatName(GetColValue(settings.MiddleNameColumnIndex, string.Empty)),
+                Suffix = FormatName(GetColValue(settings.SuffixColumnIndex, string.Empty)),
+                
                 Gender = GetColValue(settings.GenderColumnIndex, settings.DefaultGender),
                 GradeYearLevel = GetColValue(settings.GradeLevelColumnIndex, settings.DefaultGradeLevel),
                 SectionBlock = GetColValue(settings.SectionColumnIndex, settings.DefaultSection),
