@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Centriku.ViewModels
@@ -5,6 +6,7 @@ namespace Centriku.ViewModels
     // sets up the class, the commands, and calls the initialization tasks.
     public partial class DirectoryViewModel : ViewModelBase
     {
+        [ObservableProperty] public partial int SelectedTabIndex { get; set; } = 0;
         // Roster Commands
         public IRelayCommand ToggleAddStudentFormCommand { get; }
         public IRelayCommand SaveStudentCommand { get; }

@@ -6,7 +6,7 @@
              x:DataType="vm:DirectoryViewModel">
 
     <Grid>
-        <TabControl Margin="10">
+        <TabControl Margin="10" SelectedIndex="{Binding SelectedTabIndex}">
             
             <TabItem Header="Master Roster" FontSize="16" FontWeight="SemiBold">
                 <dir:MasterRosterTab />

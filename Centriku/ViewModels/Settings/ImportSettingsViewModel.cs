@@ -225,5 +225,14 @@ namespace Centriku.ViewModels.Settings
          await Task.Delay(600); 
          IsSaving = false;
       }
+   
+      [RelayCommand]
+      public void NavigateBack()
+      {
+          OnNavigateToDirectoryBulkImportTab?.Invoke();
+      }
+
+      public static event System.Action? OnNavigateToDirectoryBulkImportTab;
+   
    }
 }

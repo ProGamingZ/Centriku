@@ -12,7 +12,7 @@
             <TextBlock Text="Configure how Centriku handles and imports your data." Foreground="{DynamicResource TextMutedBrush}" FontSize="14" Margin="0,-5,0,0"/>
         </StackPanel>
 
-        <TabControl Grid.Row="1" Margin="30,10,40,40">
+        <TabControl Grid.Row="1" Margin="30,10,40,40" SelectedIndex="{Binding SelectedTabIndex}">
             
             <TabItem Header="General" FontSize="16" FontWeight="SemiBold">
                 <Grid>

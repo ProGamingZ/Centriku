@@ -5,9 +5,16 @@
              x:DataType="vm:ImportSettingsViewModel">
              
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid RowDefinitions="Auto,Auto, *" Margin="0,0,25,0">
+        <Grid RowDefinitions="Auto,Auto,Auto, *" Margin="0,0,25,0">
             
-            <Border Grid.Row="0" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+            <Button Grid.Row="0" Command="{Binding NavigateBackCommand}" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" CornerRadius="8" Padding="15,10" HorizontalAlignment="Right" Margin="0,0,0,15" ToolTip.Tip="Open the Bulk Import Tool">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="📥" VerticalAlignment="Center"/>
+                    <TextBlock Text="Bulk Import" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Border Grid.Row="1" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,20">
                 <Grid ColumnDefinitions="Auto, *">
                     <TextBlock Grid.Column="0" Text="💡" FontSize="20" VerticalAlignment="Center" Margin="0,0,15,0"/>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -17,7 +24,7 @@
                 </Grid>
             </Border>
 
-            <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
+            <WrapPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,20">
                 
                 <Border Margin="0,0,20,20" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="10">
@@ -142,7 +149,7 @@
 
             </WrapPanel>
 
-            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="12" Padding="20" VerticalAlignment="Top">
+            <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="12" Padding="20" VerticalAlignment="Top">
                 <StackPanel Spacing="10">
                     <TextBlock Text="👁️ How Centriku will read your empty cells:" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                     

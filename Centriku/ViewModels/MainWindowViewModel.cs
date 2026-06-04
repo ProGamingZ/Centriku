@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Avalonia;
 using Avalonia.Styling;
-using Centriku.Services; // === NEW: Added so we can access DatabaseService! ===
+using Centriku.Services; 
 
 namespace Centriku.ViewModels
 {
@@ -17,6 +17,14 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial WindowState CurrentWindowState { get; set; } = WindowState.Normal;
         [ObservableProperty] public partial bool IsDarkTheme { get; set; } = true;
         
+        // --- 1. CACHE ALL VIEWMODELS HERE ---
+        private readonly DashboardViewModel _dashboardViewModel;
+        private readonly MyClassesViewModel _myClassesViewModel;
+        private readonly PoliciesViewModel _policiesViewModel;
+        private readonly DirectoryViewModel _directoryViewModel;
+        private readonly SettingsViewModel _settingsViewModel;
+        // ------------------------------------
+
         public IRelayCommand ToggleSidebarCommand { get; }
         public IRelayCommand ToggleThemeCommand { get; }
         public IRelayCommand NavigateToDashboardCommand { get; }
@@ -27,27 +35,48 @@ namespace Centriku.ViewModels
 
         public MainWindowViewModel()
         {
+            // 2. INITIALIZE THEM EXACTLY ONCE
+            _dashboardViewModel = new DashboardViewModel(Navigate);
+            _myClassesViewModel = new MyClassesViewModel(Navigate);
+            _policiesViewModel = new PoliciesViewModel();
+            _directoryViewModel = new DirectoryViewModel();
+            _settingsViewModel = new SettingsViewModel();
+
             ToggleSidebarCommand = new RelayCommand(() => IsSidebarOpen = !IsSidebarOpen);
             ToggleThemeCommand = new RelayCommand(() => 
             {
                 IsDarkTheme = !IsDarkTheme;
                 Application.Current?.RequestedThemeVariant = IsDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light;
             });
-            NavigateToDashboardCommand = new RelayCommand(() => Navigate(new DashboardViewModel(Navigate)));
-            NavigateToMyClassesCommand = new RelayCommand(() => Navigate(new MyClassesViewModel(Navigate)));
-            NavigateToPoliciesCommand = new RelayCommand(() => Navigate(new PoliciesViewModel()));
-            NavigateToDirectoryCommand = new RelayCommand(() => Navigate(new DirectoryViewModel()));
-            NavigateToSettingsCommand = new RelayCommand(() => Navigate(new SettingsViewModel()));
+            
+            // 3. UPDATE ALL BUTTONS TO USE THE CACHED VARIABLES
+            NavigateToDashboardCommand = new RelayCommand(() => Navigate(_dashboardViewModel));
+            NavigateToMyClassesCommand = new RelayCommand(() => Navigate(_myClassesViewModel));
+            NavigateToPoliciesCommand = new RelayCommand(() => Navigate(_policiesViewModel));
+            NavigateToDirectoryCommand = new RelayCommand(() => Navigate(_directoryViewModel));
+            NavigateToSettingsCommand = new RelayCommand(() => Navigate(_settingsViewModel));
+
+            // Global Navigation Glue
+            Centriku.ViewModels.DirectoryViewModel.OnNavigateToSettingsBulkImportTab += () => 
+            {
+                _settingsViewModel.SelectedTabIndex = 1;
+                Navigate(_settingsViewModel);
+            };
+
+            Centriku.ViewModels.Settings.ImportSettingsViewModel.OnNavigateToDirectoryBulkImportTab += () => 
+            {
+                _directoryViewModel.SelectedTabIndex = 1;
+                Navigate(_directoryViewModel);
+            };
+
             BootUpApplication();
         }
 
         private async void BootUpApplication()
         {
-            // 1. Ensure the database and all tables are created first!
             var dbService = new DatabaseService();
             await dbService.InitializeDatabaseAsync();
-            // 2. Now that the tables exist, it is 100% safe to load the Dashboard!
-            Navigate(new DashboardViewModel(Navigate));
+            Navigate(_dashboardViewModel);
             
             StartGlobalSecuritySweep();
         }
@@ -63,11 +92,7 @@ namespace Centriku.ViewModels
             securityTimer.Tick += (s, e) =>
             {
                 bool isLicenseValid = true; 
-                
-                if (!isLicenseValid)
-                {
-                    // Navigate(new LicenseExpiredViewModel());
-                }
+                if (!isLicenseValid) { }
             };
             securityTimer.Start();
         }
