@@ -8,13 +8,13 @@
         <Grid RowDefinitions="Auto,Auto, *" Margin="0,0,25,0">
             
             <Border Grid.Row="0" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,20">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="💡" FontSize="20" VerticalAlignment="Center"/>
-                    <StackPanel>
+                <Grid ColumnDefinitions="Auto, *">
+                    <TextBlock Grid.Column="0" Text="💡" FontSize="20" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="How to use this screen:" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                         <TextBlock Text="Open your Excel or CSV file. Look at the order of your columns (Column A, Column B, etc.) and match them below so Centriku knows how to read your file." Foreground="{DynamicResource TextMainBrush}" FontSize="12" TextWrapping="Wrap"/>
                     </StackPanel>
-                </StackPanel>
+                </Grid>
             </Border>
 
             <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
@@ -29,46 +29,46 @@
                         </StackPanel>
                         <TextBlock Text="Match the columns from your file to Centriku's fields. If a column has data Centriku doesn't need, just select 'Ignore'." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-5,0,15" MaxWidth="400" TextWrapping="Wrap"/>
                         
-                        <Grid ColumnDefinitions="Auto, Auto, Auto" RowDefinitions="Auto, Auto, Auto" Margin="0,5,0,0">
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,15">
+                        <WrapPanel Margin="0,5,0,0" MaxWidth="420">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 1 (A)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col1Options}" SelectedItem="{Binding Col1Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,10,15">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 2 (B)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col2Options}" SelectedItem="{Binding Col2Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,15">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 3 (C)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col3Options}" SelectedItem="{Binding Col3Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,15">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 4 (D)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col4Options}" SelectedItem="{Binding Col4Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,10,15">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 5 (E)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col5Options}" SelectedItem="{Binding Col5Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,15">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 6 (F)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col6Options}" SelectedItem="{Binding Col6Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,10,0">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 7 (G)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col7Options}" SelectedItem="{Binding Col7Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,10,0">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 8 (H)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col8Options}" SelectedItem="{Binding Col8Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,0">
+                            <StackPanel Margin="0,0,0,15">
                                 <TextBlock Text="Column 9 (I)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col9Options}" SelectedItem="{Binding Col9Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                        </Grid>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 
@@ -82,30 +82,28 @@
                         </StackPanel>
                         <TextBlock Text="If your file is missing a student's Section or Gender, what should Centriku automatically fill in for them?" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" MaxWidth="250" TextWrapping="Wrap" Margin="0,-5,0,5"/>
                         
-                        <Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto, Auto" Margin="0,5,0,0">
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
+                        <WrapPanel Margin="0,5,0,0" MaxWidth="300">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Gender" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
                                 <ComboBox ItemsSource="{Binding AvailableGenders}" SelectedItem="{Binding DefaultGender}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Status" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
                                 <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding DefaultEnrollmentStatus}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,0">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Grade/Year" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
                                 <TextBox Text="{Binding DefaultGradeLevel}" MinWidth="120" MaxWidth="250" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,0">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Section/Block" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
                                 <TextBox Text="{Binding DefaultSection}" MinWidth="120" MaxWidth="250" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                        </Grid>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 
-                <StackPanel Margin="0,0,20,20" Spacing="20">
-                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                        <StackPanel Margin="0,0,20,20" Spacing="20">
+                <StackPanel Margin="0,0,20,20" Spacing="20" MaxWidth="350">
                     <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                         <StackPanel Spacing="10">
                             <StackPanel Orientation="Horizontal" Spacing="10">
@@ -115,24 +113,23 @@
                                 <TextBlock Text="Final Rules" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                             
-                            <CheckBox Content="My file has a Title Row (Skip Row 1)" IsChecked="{Binding CurrentSettings.SkipFirstRow}" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                            <CheckBox IsChecked="{Binding CurrentSettings.SkipFirstRow}" Margin="0,5,0,0">
+                                <TextBlock Text="My file has a Title Row (Skip Row 1)" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            </CheckBox>
                             
-                            <CheckBox Content="Auto-capitalize names (e.g., 'juan' to 'Juan')" IsChecked="{Binding CurrentSettings.AutoCapitalizeNames}" FontWeight="SemiBold" Margin="0,0,0,0"/>
+                            <CheckBox IsChecked="{Binding CurrentSettings.AutoCapitalizeNames}" Margin="0,0,0,0">
+                                <TextBlock Text="Auto-capitalize names (e.g., 'juan' to 'Juan')" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            </CheckBox>
+                            
+                            <CheckBox IsChecked="{Binding CurrentSettings.SkipIncompleteRows}" Margin="0,0,0,0">
+                                <TextBlock Text="Skip incomplete rows (Missing LRN, Last, First, or Middle Name)" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            </CheckBox>
                             
                             <StackPanel Margin="0,10,0,0">
-                                <TextBlock Text="If a student (LRN) already exists:" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <TextBlock Text="If a student (LRN) already exists:" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                                 <ComboBox ItemsSource="{Binding AvailableDuplicateRules}" SelectedItem="{Binding SelectedDuplicateRule}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
                         </StackPanel>
-                    </Border>
-                    
-                    <Button Command="{Binding SaveSettingsCommand}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,15" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                        <Panel>
-                            <TextBlock Text="💾 Save Settings" IsVisible="{Binding !IsSaving}"/>
-                            <TextBlock Text="Saving..." IsVisible="{Binding IsSaving}" FontStyle="Italic"/>
-                        </Panel>
-                    </Button>
-                </StackPanel>
                     </Border>
                     
                     <Button Command="{Binding SaveSettingsCommand}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,15" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">

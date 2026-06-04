@@ -26,6 +26,7 @@ namespace Centriku.Models
         public bool SkipFirstRow { get; set; } = true;
         public string DuplicateHandlingRule { get; set; } = "Update";
         public bool AutoCapitalizeNames { get; set; } = true;
+        public bool SkipIncompleteRows { get; set; } = true;
 
         // 3. Fallback Defaults (What to inject if the column is blank or ignored)
         public string DefaultGender { get; set; } = "Unspecified";

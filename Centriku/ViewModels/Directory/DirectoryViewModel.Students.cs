@@ -143,8 +143,24 @@ namespace Centriku.ViewModels
                     for (int i = startRow; i < lines.Length; i++) 
                     {
                         var cols = lines[i].Split(',');
-                        if (cols.Length == 0 || settings.LrnColumnIndex == -1) continue; 
-                        newStudents.Add(ParseStudentRow(cols, settings));
+                        if (cols.Length == 0) continue; 
+                        
+                        var parsed = ParseStudentRow(cols, settings);
+                        
+                        bool isGhost = false;
+                        if (settings.SkipIncompleteRows)
+                        {
+                            // Only fail the row if the user ACTUALLY mapped the column, but the Excel cell was completely blank
+                            if (settings.LrnColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
+                            if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) isGhost = true;
+                            if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) isGhost = true;
+                            if (settings.MiddleNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.MiddleName)) isGhost = true;
+                        }
+                        
+                        // Critical safety net: NEVER import a student without an LRN, regardless of settings
+                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
+
+                        if (!isGhost) newStudents.Add(parsed);
                     }
                 }
                 else if (extension == ".xlsx" || extension == ".xls")
@@ -156,14 +172,30 @@ namespace Centriku.ViewModels
                     {
                         var cols = new string[reader.FieldCount];
                         for (int i = 0; i < reader.FieldCount; i++) cols[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
-                        if (cols.Length == 0 || settings.LrnColumnIndex == -1 || string.IsNullOrWhiteSpace(cols[settings.LrnColumnIndex])) continue;
-                        newStudents.Add(ParseStudentRow(cols, settings));
+                        
+                        if (cols.Length == 0) continue;
+                        
+                        var parsed = ParseStudentRow(cols, settings);
+
+                        bool isGhost = false;
+                        if (settings.SkipIncompleteRows)
+                        {
+                            if (settings.LrnColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
+                            if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) isGhost = true;
+                            if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) isGhost = true;
+                            if (settings.MiddleNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.MiddleName)) isGhost = true;
+                        }
+
+                        // Critical safety net: NEVER import a student without an LRN, regardless of settings
+                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) isGhost = true;
+
+                        if (!isGhost) newStudents.Add(parsed);
                     }
                 }
 
                 if (newStudents.Any())
                 {
-                    // PHASE 1: THE DUPLICATE STUDENT ENGINE
+                    // PHASE 1: Duplicate Handler
                     var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
                     var existingLrns = existingStudents.Select(s => s.StudentID).ToHashSet();
 
@@ -174,21 +206,14 @@ namespace Centriku.ViewModels
                     {
                         if (existingLrns.Contains(student.StudentID))
                         {
-                            // It's a duplicate! Obey the user's settings.
-                            if (settings.DuplicateHandlingRule == "Update")
-                            {
-                                studentsToUpdate.Add(student);
-                            }
-                            // If it's set to "Skip", it does absolutely nothing and gets ignored!
+                            if (settings.DuplicateHandlingRule == "Update") studentsToUpdate.Add(student);
                         }
                         else
                         {
-                            // Brand new student!
                             studentsToInsert.Add(student);
                         }
                     }
 
-                    // Execute database commands based on our separated buckets
                     if (studentsToInsert.Any()) await db.InsertAllAsync(studentsToInsert, runInTransaction: true);
                     if (studentsToUpdate.Any()) await db.UpdateAllAsync(studentsToUpdate, runInTransaction: true);
                     
