@@ -113,6 +113,10 @@
                                 <TextBlock Text="Final Rules" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                             <CheckBox Content="My file has a Title Row (Skip Row 1)" IsChecked="{Binding CurrentSettings.SkipFirstRow}" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                            <StackPanel Margin="0,10,0,0">
+                                <TextBlock Text="If a student (LRN) already exists:" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding AvailableDuplicateRules}" SelectedItem="{Binding SelectedDuplicateRule}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                     

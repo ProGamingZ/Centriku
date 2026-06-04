@@ -130,10 +130,7 @@ namespace Centriku.ViewModels
             try
             {
                 var db = new Centriku.Services.DatabaseService().GetConnection();
-                
-                // Fetch settings, or fallback to defaults if table is empty
-                var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() 
-                               ?? new Centriku.Models.AppSettings();
+                var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
 
                 var newStudents = new List<Centriku.Models.Student>();
                 string extension = Path.GetExtension(filePath).ToLower();
@@ -142,17 +139,11 @@ namespace Centriku.ViewModels
                 if (extension == ".csv")
                 {
                     var lines = await File.ReadAllLinesAsync(filePath);
-                    
-                    // Respect the "Skip First Row" setting
                     int startRow = settings.SkipFirstRow ? 1 : 0; 
-                    
                     for (int i = startRow; i < lines.Length; i++) 
                     {
                         var cols = lines[i].Split(',');
-                        
-                        // If they didn't map an LRN, or the row is totally blank, skip it
                         if (cols.Length == 0 || settings.LrnColumnIndex == -1) continue; 
-                        
                         newStudents.Add(ParseStudentRow(cols, settings));
                     }
                 }
@@ -160,27 +151,48 @@ namespace Centriku.ViewModels
                 {
                     using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read);
                     using var reader = ExcelReaderFactory.CreateReader(stream);
-                    
-                    // Respect the "Skip First Row" setting
                     if (settings.SkipFirstRow) reader.Read(); 
-                    
                     while (reader.Read())
                     {
                         var cols = new string[reader.FieldCount];
                         for (int i = 0; i < reader.FieldCount; i++) cols[i] = reader.GetValue(i)?.ToString() ?? string.Empty;
-                        
-                        // Make sure the row isn't blank and they mapped an LRN column
                         if (cols.Length == 0 || settings.LrnColumnIndex == -1 || string.IsNullOrWhiteSpace(cols[settings.LrnColumnIndex])) continue;
-                        
                         newStudents.Add(ParseStudentRow(cols, settings));
                     }
                 }
 
-                if (newStudents.Count != 0)
+                if (newStudents.Any())
                 {
-                    await db.InsertAllAsync(newStudents, runInTransaction: true);
+                    // PHASE 1: THE DUPLICATE STUDENT ENGINE
+                    var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
+                    var existingLrns = existingStudents.Select(s => s.StudentID).ToHashSet();
+
+                    var studentsToInsert = new List<Centriku.Models.Student>();
+                    var studentsToUpdate = new List<Centriku.Models.Student>();
+
+                    foreach (var student in newStudents)
+                    {
+                        if (existingLrns.Contains(student.StudentID))
+                        {
+                            // It's a duplicate! Obey the user's settings.
+                            if (settings.DuplicateHandlingRule == "Update")
+                            {
+                                studentsToUpdate.Add(student);
+                            }
+                            // If it's set to "Skip", it does absolutely nothing and gets ignored!
+                        }
+                        else
+                        {
+                            // Brand new student!
+                            studentsToInsert.Add(student);
+                        }
+                    }
+
+                    // Execute database commands based on our separated buckets
+                    if (studentsToInsert.Any()) await db.InsertAllAsync(studentsToInsert, runInTransaction: true);
+                    if (studentsToUpdate.Any()) await db.UpdateAllAsync(studentsToUpdate, runInTransaction: true);
+                    
                     LoadStudents(); 
-                    Console.WriteLine($"Successfully imported {newStudents.Count} students.");
                 }
             }
             catch (Exception ex) { Console.WriteLine($"Bulk Import failed: {ex.Message}"); }
@@ -188,15 +200,10 @@ namespace Centriku.ViewModels
 
         private static Centriku.Models.Student ParseStudentRow(string[] cols, Centriku.Models.AppSettings settings)
         {
-            // A helper function to safely extract data without crashing
             string GetColValue(int mappedIndex, string fallbackValue)
             {
-                // If the user set it to "Ignore (-1)" OR the Excel row is shorter than expected, use the fallback
                 if (mappedIndex < 0 || mappedIndex >= cols.Length) return fallbackValue;
-                
                 string val = cols[mappedIndex].Trim();
-                
-                // If the cell exists but is completely empty, inject the fallback
                 return string.IsNullOrWhiteSpace(val) ? fallbackValue : val;
             }
 

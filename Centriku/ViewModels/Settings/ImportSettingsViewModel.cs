@@ -28,6 +28,18 @@ namespace Centriku.ViewModels.Settings
       // Genders restricted to just Male/Female
       public ObservableCollection<string> AvailableGenders { get; } = ["Male", "Female"];
       public ObservableCollection<string> AvailableStatuses { get; } = ["Regular", "Irregular", "Transferee"];
+      public ObservableCollection<string> AvailableDuplicateRules { get; } = ["Update Existing Student", "Skip Duplicate (Do not import)"];
+
+      public string SelectedDuplicateRule
+      {
+         get => CurrentSettings.DuplicateHandlingRule == "Skip" ? AvailableDuplicateRules[1] : AvailableDuplicateRules[0];
+         set
+         {
+            if (value == null) return;
+            CurrentSettings.DuplicateHandlingRule = value == AvailableDuplicateRules[1] ? "Skip" : "Update";
+            OnPropertyChanged();
+         }
+      }
 
       [ObservableProperty] public partial ObservableCollection<string> Col1Options { get; set; } = new();
       [ObservableProperty] public partial ObservableCollection<string> Col2Options { get; set; } = new();
@@ -106,8 +118,11 @@ namespace Centriku.ViewModels.Settings
          SetCol(CurrentSettings.GradeLevelColumnIndex, "Grade/Year"); SetCol(CurrentSettings.SectionColumnIndex, "Section/Block");
          SetCol(CurrentSettings.EnrollmentStatusColumnIndex, "Status");
 
-         OnPropertyChanged(nameof(DefaultGender)); OnPropertyChanged(nameof(DefaultGradeLevel));
-         OnPropertyChanged(nameof(DefaultSection)); OnPropertyChanged(nameof(DefaultEnrollmentStatus));
+         OnPropertyChanged(nameof(DefaultGender)); 
+         OnPropertyChanged(nameof(DefaultGradeLevel));
+         OnPropertyChanged(nameof(DefaultSection)); 
+         OnPropertyChanged(nameof(DefaultEnrollmentStatus));
+         OnPropertyChanged(nameof(SelectedDuplicateRule));
          
          _isUpdating = false;
          UpdateMappingState();
