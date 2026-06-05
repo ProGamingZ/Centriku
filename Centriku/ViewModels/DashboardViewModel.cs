@@ -18,7 +18,6 @@ namespace Centriku.ViewModels
 
         [ObservableProperty] public partial ObservableCollection<DashboardClassCardViewModel> ClassCards { get; set; } = new();
 
-        // === NEW: Navigation commands match MyClasses pattern ===
         public IRelayCommand<DashboardClassCardViewModel> OpenClassCommand { get; }
 
         public DashboardViewModel(System.Action<ViewModelBase> navigateAction)
@@ -26,7 +25,6 @@ namespace Centriku.ViewModels
             _navigateAction = navigateAction;
             OpenClassCommand = new RelayCommand<DashboardClassCardViewModel>(OpenClass!);
         }
-        // ========================================================
 
         public async Task LoadDashboardDataAsync()
         {
@@ -118,7 +116,6 @@ namespace Centriku.ViewModels
             NeedsAttention = riskCounter;
         }
 
-        // === NEW: Spawns the gradebook workspace matching MyClassesView ===
         private void OpenClass(DashboardClassCardViewModel selectedClass)
         {
             if (selectedClass != null)
@@ -128,7 +125,6 @@ namespace Centriku.ViewModels
                 _navigateAction(gradebookVM);
             }
         }
-        // ==================================================================
     }
 
     public partial class DashboardClassCardViewModel : ObservableObject

@@ -46,7 +46,7 @@ namespace Centriku.ViewModels
 
         public PoliciesViewModel()
         {
-            Categories = new ObservableCollection<PolicyCategoryItem>();
+            Categories = [];
             
             AddCategoryCommand = new RelayCommand(() => AddCategory("New Category", 0m));
             AddBoundaryCommand = new RelayCommand(AddBoundary);
@@ -59,7 +59,6 @@ namespace Centriku.ViewModels
             ResetFormCommand = new RelayCommand(ResetForm);
 
             ResetForm(); 
-            LoadSavedTemplates();
         }
 
         private async void EditTemplate(Centriku.Models.GradingTemplate template)
@@ -96,7 +95,7 @@ namespace Centriku.ViewModels
             await db.Table<Centriku.Models.GradeBoundary>().Where(b => b.TemplateID == template.TemplateID).DeleteAsync();
             if (_editingTemplateId == template.TemplateID) ResetForm();
 
-            LoadSavedTemplates();
+            await LoadSavedTemplatesAsync();
         }
 
         private async void SavePolicy()
@@ -148,7 +147,7 @@ namespace Centriku.ViewModels
                     System.Console.WriteLine($"SUCCESS: Created New Template #{newTemplate.TemplateID}!");
                 }
 
-                LoadSavedTemplates();
+                await LoadSavedTemplatesAsync();
             }
         }
 
@@ -178,10 +177,14 @@ namespace Centriku.ViewModels
             if (boundary != null && Boundaries.Contains(boundary)) Boundaries.Remove(boundary);
         }
 
-        private async void LoadSavedTemplates()
+        public async Task LoadSavedTemplatesAsync()
         {
             var db = new Centriku.Services.DatabaseService().GetConnection();
+        
+            await db.CreateTableAsync<Centriku.Models.GradingTemplate>();
+            await db.CreateTableAsync<Centriku.Models.GradingCategory>();
             await db.CreateTableAsync<Centriku.Models.GradeBoundary>();
+            
             var templates = await db.Table<Centriku.Models.GradingTemplate>().ToListAsync();
             SavedTemplates.Clear();
             foreach (var t in templates) { SavedTemplates.Add(t); }

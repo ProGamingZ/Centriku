@@ -50,9 +50,9 @@ namespace Centriku.ViewModels
             });
             
             // 3. UPDATE ALL BUTTONS TO USE THE CACHED VARIABLES
-            NavigateToDashboardCommand = new RelayCommand(() => Navigate(_dashboardViewModel));
-            NavigateToMyClassesCommand = new RelayCommand(() => Navigate(_myClassesViewModel));
-            NavigateToPoliciesCommand = new RelayCommand(() => Navigate(_policiesViewModel));
+            NavigateToDashboardCommand = new RelayCommand(OnNavigateToDashboard);
+            NavigateToMyClassesCommand = new RelayCommand(OnNavigateToMyClasses);
+            NavigateToPoliciesCommand = new RelayCommand(OnNavigateToPolicies);
             NavigateToDirectoryCommand = new RelayCommand(() => Navigate(_directoryViewModel));
             NavigateToSettingsCommand = new RelayCommand(() => Navigate(_settingsViewModel));
 
@@ -95,6 +95,24 @@ namespace Centriku.ViewModels
                 if (!isLicenseValid) { }
             };
             securityTimer.Start();
+        }
+    
+        private async void OnNavigateToDashboard()
+        {
+            await _dashboardViewModel.LoadDashboardDataAsync(); 
+            Navigate(_dashboardViewModel);
+        }
+
+        private async void OnNavigateToMyClasses()
+        {
+            await _myClassesViewModel.RefreshDataAsync(); 
+            Navigate(_myClassesViewModel);
+        }
+
+        private async void OnNavigateToPolicies()
+        {
+            await _policiesViewModel.LoadSavedTemplatesAsync(); 
+            Navigate(_policiesViewModel);
         }
     }
 }

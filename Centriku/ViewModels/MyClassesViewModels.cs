@@ -25,6 +25,7 @@ namespace Centriku.ViewModels
 
         
         private int? _editingClassId = null;
+        private static readonly System.Collections.Generic.Dictionary<int, GradebookViewModel> _gradebookCache = [];
 
         public IRelayCommand ToggleAddClassFormCommand { get; }
         public IRelayCommand SaveClassCommand { get; }
@@ -46,9 +47,6 @@ namespace Centriku.ViewModels
             EditClassCommand = new RelayCommand<ClassCardViewModel>(EditClass!);
             DeleteClassCommand = new RelayCommand<ClassCardViewModel>(DeleteClass!);
             OpenClassCommand = new RelayCommand<ClassCardViewModel>(OpenClass!);
-
-            // Load data from SQLite when the window opens
-            InitializeData();
         }
 
         private async void InitializeData()
@@ -60,6 +58,7 @@ namespace Centriku.ViewModels
         private async Task LoadTemplates()
         {
             var db = new DatabaseService().GetConnection();
+            await db.CreateTableAsync<GradingTemplate>();
             var templates = await db.Table<GradingTemplate>().ToListAsync();
             AvailableTemplates = new ObservableCollection<GradingTemplate>(templates);
         }
@@ -67,6 +66,7 @@ namespace Centriku.ViewModels
         private async Task LoadClasses()
         {
             var db = new DatabaseService().GetConnection();
+            await db.CreateTableAsync<TeacherClass>();
             var classes = await db.Table<TeacherClass>().ToListAsync();
             ActiveClasses.Clear();
             foreach (var c in classes)
@@ -149,13 +149,27 @@ namespace Centriku.ViewModels
         {
             if (selectedClass != null)
             {
-                var gradebookVM = new GradebookViewModel();
-                
-                gradebookVM.Initialize(selectedClass.DbModel.ClassID, selectedClass.SubjectName);
-                
-                _navigateAction(gradebookVM);
+                int classId = selectedClass.DbModel.ClassID;
+
+                if (!_gradebookCache.TryGetValue(classId, out GradebookViewModel? value))
+                {
+                    var newGradebook = new GradebookViewModel();
+                    newGradebook.Initialize(classId, selectedClass.SubjectName);
+                    _gradebookCache[classId] = newGradebook;
+                }
+                else
+                {
+                    value.RecalculateFinalGrades();
+                }
+                _navigateAction(_gradebookCache[classId]);
             }
         }
+        public async Task RefreshDataAsync()
+        {
+            await LoadTemplates();
+            await LoadClasses();
+        }
+
     }
 
     public partial class ClassCardViewModel : ObservableObject
