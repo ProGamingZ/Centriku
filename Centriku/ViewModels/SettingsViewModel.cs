@@ -8,8 +8,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial int SelectedTabIndex { get; set; } = 0;
         public ImportSettingsViewModel ImportSettings { get; } = new();
 
-        // In the future, we will add:
-        // public GeneralSettingsViewModel GeneralSettings { get; } = new();
+        public ExportSettingsViewModel ExportSettings { get; } = new();
         // public ExportSettingsViewModel ExportSettings { get; } = new();
     }
 }

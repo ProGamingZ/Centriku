@@ -33,5 +33,21 @@ namespace Centriku.Models
         public string DefaultGradeLevel { get; set; } = "";
         public string DefaultSection { get; set; } = "";
         public string DefaultEnrollmentStatus { get; set; } = "Regular";
+
+        // 4. Export Settings 
+        // File & Directory
+        public string DefaultExportFolderPath { get; set; } = "";
+        public string FileNamingFormat { get; set; } = "[Class]_[Term]_[Date]"; 
+
+        // Data & Privacy
+        public bool ExportIncludeLRN { get; set; } = true;
+        public bool ExportIncludeArchived { get; set; } = false;
+
+        // Gradebook Formatting
+        public string ExportMissingScoreRule { get; set; } = "Zero"; // Options: "Zero", "Blank", "Dash"
+        public string ExportDecimalPrecision { get; set; } = "Exact"; // Options: "Exact", "Rounded"
+
+        // Attendance Formatting
+        public string ExportAttendanceDetail { get; set; } = "Detailed"; // Options: "Detailed", "SummaryOnly"
     }
 }
