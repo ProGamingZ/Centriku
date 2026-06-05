@@ -54,6 +54,27 @@ namespace Centriku.ViewModels
          }
          return academicGrade;
       }
+      
+      private string FormatSummaryGrade(double rawGrade, bool hasAssessments)
+      {
+         if (!hasAssessments) return "--";
+
+         if (CalculationMode == "NRFG")
+         {
+               double transmuted = (rawGrade / 100.0) * (100.0 - NrfgBaseValue) + NrfgBaseValue;
+               return $"{transmuted.ToString("0.##")}%";
+         }
+         else if (CalculationMode == "CRG")
+         {
+               if (ClassGradeBoundaries != null && ClassGradeBoundaries.Count != 0)
+               {
+                  var matchingBand = ClassGradeBoundaries.FirstOrDefault(b => rawGrade >= b.MinScore && rawGrade <= b.MaxScore);
+                  if (matchingBand != null) return matchingBand.Label ?? "";
+               }
+         }
+         
+         return $"{rawGrade.ToString("0.##")}%";
+      }
       public void RecalculateFinalGrades()
       {
          if (GradebookRows == null || AttendanceGridRows == null) return;
@@ -75,9 +96,8 @@ namespace Centriku.ViewModels
                   bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
                   bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
 
-                  // UPGRADED FORMATTING: .ToString("0.##")
-                  row.MidtermGradeDisplay = hasMidterm ? $"{midterm.ToString("0.##")}%" : "--";
-                  row.FinalTermGradeDisplay = hasFinal ? $"{final.ToString("0.##")}%" : "--";
+                  row.MidtermGradeDisplay = FormatSummaryGrade(midterm, hasMidterm);
+                  row.FinalTermGradeDisplay = FormatSummaryGrade(final, hasFinal);
                   row.MidtermGradeNumeric = midterm;
                   row.FinalTermGradeNumeric = final;
 
@@ -99,11 +119,10 @@ namespace Centriku.ViewModels
                   bool hasQ3 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q3");
                   bool hasQ4 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q4");
 
-                  // UPGRADED FORMATTING: .ToString("0.##")
-                  row.Q1GradeDisplay = hasQ1 ? $"{q1.ToString("0.##")}%" : "--";
-                  row.Q2GradeDisplay = hasQ2 ? $"{q2.ToString("0.##")}%" : "--";
-                  row.Q3GradeDisplay = hasQ3 ? $"{q3.ToString("0.##")}%" : "--";
-                  row.Q4GradeDisplay = hasQ4 ? $"{q4.ToString("0.##")}%" : "--";
+                  row.Q1GradeDisplay = FormatSummaryGrade(q1, hasQ1);
+                  row.Q2GradeDisplay = FormatSummaryGrade(q2, hasQ2);
+                  row.Q3GradeDisplay = FormatSummaryGrade(q3, hasQ3);
+                  row.Q4GradeDisplay = FormatSummaryGrade(q4, hasQ4);
                   
                   row.Q1GradeNumeric = q1;
                   row.Q2GradeNumeric = q2;
