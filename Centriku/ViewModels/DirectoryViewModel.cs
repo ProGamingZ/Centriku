@@ -7,6 +7,7 @@ namespace Centriku.ViewModels
     public partial class DirectoryViewModel : ViewModelBase
     {
         [ObservableProperty] public partial int SelectedTabIndex { get; set; } = 0;
+        public static event System.Action? OnStudentRosterChanged;
         // Roster Commands
         public IRelayCommand ToggleAddStudentFormCommand { get; }
         public IRelayCommand SaveStudentCommand { get; }

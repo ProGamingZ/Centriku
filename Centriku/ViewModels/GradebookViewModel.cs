@@ -207,6 +207,12 @@ namespace Centriku.ViewModels
                 await LoadCategories();
                 await LoadAttendanceData();
             }
+
+            public async Task RefreshRostersAsync()
+            {
+                await LoadGradebookData();
+                await LoadAttendanceData();
+            }
             private async Task LoadGradebookData()
             {
                 var db = new DatabaseService().GetConnection();
@@ -259,7 +265,7 @@ namespace Centriku.ViewModels
                 // 2. Get the Students in this Class
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                 var studentIds = roster.Select(r => r.StudentID).ToList();
-                var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync();
+                var enrolled = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync()).Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").ToList();
 
                 // 3. Get the Scores for this Class
                 var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
@@ -318,7 +324,7 @@ namespace Centriku.ViewModels
                 // 2. Get students & ALL attendance records
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                 var studentIds = roster.Select(r => r.StudentID).ToList();
-                var enrolled = await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).OrderBy(s => s.LastName).ToListAsync();
+                var enrolled = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync()).Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").OrderBy(s => s.LastName).ToList();
                 var allRecords = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId).ToListAsync();
 
                 // 3. Find unique dates to build our Columns

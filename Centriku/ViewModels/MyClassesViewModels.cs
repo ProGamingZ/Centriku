@@ -47,6 +47,14 @@ namespace Centriku.ViewModels
             EditClassCommand = new RelayCommand<ClassCardViewModel>(EditClass!);
             DeleteClassCommand = new RelayCommand<ClassCardViewModel>(DeleteClass!);
             OpenClassCommand = new RelayCommand<ClassCardViewModel>(OpenClass!);
+
+            DirectoryViewModel.OnStudentRosterChanged += () =>
+            {
+                foreach (var cachedGradebook in _gradebookCache.Values)
+                {
+                    _ = cachedGradebook.RefreshRostersAsync();
+                }
+            };
         }
 
         private async void InitializeData()

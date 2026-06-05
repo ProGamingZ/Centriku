@@ -119,6 +119,7 @@ namespace Centriku.ViewModels
             row.DbModel.IsArchived = true;
             await db.UpdateAsync(row.DbModel);
             LoadStudents(); 
+            OnStudentRosterChanged?.Invoke();
         }
 
         private async void RestoreStudent(StudentRowViewModel row)
@@ -128,6 +129,7 @@ namespace Centriku.ViewModels
             row.DbModel.IsArchived = false;
             await db.UpdateAsync(row.DbModel);
             LoadStudents(); 
+            OnStudentRosterChanged?.Invoke();
         }
 
         private async void DeleteStudent(StudentRowViewModel row)
