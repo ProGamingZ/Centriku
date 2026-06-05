@@ -27,10 +27,41 @@
 
                             <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
                                 
-                                <Button Command="{Binding ExportCsvCommand}" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,10" Margin="0,0,15,15" FontWeight="Bold">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <TextBlock Classes="Icon" Text="📥" FontSize="14"/> <TextBlock Text="Export CSV" VerticalAlignment="Center"/>
-                                    </StackPanel>
+                                <Button Content="📥 Export CSV" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,10" Margin="0,0,15,15" FontWeight="Bold">
+                                    <Button.Flyout>
+                                        <Flyout Placement="BottomEdgeAlignedRight">
+                                            <StackPanel Spacing="10" Width="260" Margin="10">
+                                                <TextBlock Text="Export Options" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                                <TextBlock Text="Select tabs to include in spreadsheet:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+
+                                                <StackPanel IsVisible="{Binding IsQuarterlyMode}">
+                                                    <CheckBox Content="Q1 Grades" IsChecked="{Binding ExportQ1}"/>
+                                                    <CheckBox Content="Q2 Grades" IsChecked="{Binding ExportQ2}"/>
+                                                    <CheckBox Content="Q3 Grades" IsChecked="{Binding ExportQ3}"/>
+                                                    <CheckBox Content="Q4 Grades" IsChecked="{Binding ExportQ4}"/>
+                                                    <CheckBox Content="Final Average Summary" IsChecked="{Binding ExportFinalAverage}"/>
+                                                </StackPanel>
+
+                                                <StackPanel IsVisible="{Binding IsSemestralMode}">
+                                                    <CheckBox Content="Midterm Grades" IsChecked="{Binding ExportMidterm}"/>
+                                                    <CheckBox Content="Final Grades" IsChecked="{Binding ExportFinal}"/>
+                                                    <CheckBox Content="Semester Average Summary" IsChecked="{Binding ExportSemesterAverage}"/>
+                                                </StackPanel>
+
+                                                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
+                                                
+                                                <CheckBox Content="Include Attendance Roster" IsChecked="{Binding ExportAttendance}" FontWeight="Bold"/>
+
+                                                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
+                                                
+                                                <TextBlock Text="Export Location:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                <TextBlock Text="{Binding ExportFolderDisplay}" FontSize="11" TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
+                                                <Button Content="Change Folder..." Click="OnChangeExportFolderClicked" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
+
+                                                <Button Command="{Binding ExportCsvCommand}" Content="💾 Confirm Export" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,15,0,0"/>
+                                            </StackPanel>
+                                        </Flyout>
+                                    </Button.Flyout>
                                 </Button>
 
                                 <Button Content="👁️ View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15">

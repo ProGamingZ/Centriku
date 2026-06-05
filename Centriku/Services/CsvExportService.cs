@@ -13,6 +13,10 @@ namespace Centriku.Services
    {
       public static async Task<(bool Success, string Message)> ExportClassDataAsync(
          string classTitle, 
+         string educationMode,
+         bool exportAttendance,
+         string customFolderPath,
+         List<string> termsToExport,
          IEnumerable<StudentGradeRow> gradebookRows, 
          IEnumerable<Assessment> assessments,
          IEnumerable<AttendanceGridRowViewModel> attendanceRows,
@@ -20,83 +24,96 @@ namespace Centriku.Services
       {
          try
          {
-               // 1. Sanitize the class title for safe file naming (remove invalid characters)
-               string safeTitle = string.Join("_", classTitle.Split(Path.GetInvalidFileNameChars()));
-               string exportFolder = StorageService.GetExportsFolderPath();
-               string dateSuffix = DateTime.Now.ToString("yyyy-MM-dd_HHmm");
-               string gradesFilePath = Path.Combine(exportFolder, $"{safeTitle}_Grades_{dateSuffix}.csv");
-               string attendanceFilePath = Path.Combine(exportFolder, $"{safeTitle}_Attendance_{dateSuffix}.csv");
+            string safeTitle = string.Join("_", classTitle.Split(Path.GetInvalidFileNameChars()));
+            string exportFolder = string.IsNullOrWhiteSpace(customFolderPath) ? StorageService.GetExportsFolderPath() : customFolderPath;
+            string dateSuffix = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+            
+            int filesGenerated = 0;
 
-               // === 2. BUILD THE GRADES CSV ===
-               var gradesCsv = new StringBuilder();
+            foreach (var term in termsToExport)
+            {
+               var termCsv = new StringBuilder();
+               var headers = new List<string> { "LRN", "Last Name", "First Name" };
                
-               // Grades Headers
-               var gradeHeaders = new List<string> { "LRN", "Last Name", "First Name" };
-               foreach (var a in assessments) gradeHeaders.Add(a.Title?.Replace(",", "") ?? "Quiz");
-               gradeHeaders.Add("Final Grade");
-               gradesCsv.AppendLine(string.Join(",", gradeHeaders));
-
-               // Grades Rows
-               foreach (var row in gradebookRows)
+               // Determine the Headers based on what specific tab we are exporting right now
+               if (term == "Final Average" || term == "Semester Average")
                {
-                  var rowData = new List<string> 
-                  { 
-                     row.StudentID, 
-                     row.StudentInfo.LastName?.Replace(",", "") ?? "", 
-                     row.StudentInfo.FirstName?.Replace(",", "") ?? "" 
-                  };
-
-                  foreach (var a in assessments)
-                  {
-                     if (row.Scores.TryGetValue(a.AssessmentID, out var scoreCell))
-                           rowData.Add(scoreCell.PointsEarned.ToString("0.##"));
-                     else
-                           rowData.Add("0");
-                  }
-                  rowData.Add(row.FinalGrade);
-                  gradesCsv.AppendLine(string.Join(",", rowData));
+                  if (educationMode == "Semestral") { headers.Add("Midterm Average"); headers.Add("Final Average"); }
+                  else { headers.Add("Q1 Average"); headers.Add("Q2 Average"); headers.Add("Q3 Average"); headers.Add("Q4 Average"); }
+                  headers.Add("Overall Final Grade");
+               }
+               else
+               {
+                  var termAssessments = assessments.Where(a => a.GradingPeriod == term).OrderBy(a => a.DateGiven).ToList();
+                  foreach (var a in termAssessments) headers.Add(a.Title?.Replace(",", "") ?? "Quiz");
+                  headers.Add($"{term} Average");
                }
 
-               // === 3. BUILD THE ATTENDANCE CSV ===
-               var attendanceCsv = new StringBuilder();
+               termCsv.AppendLine(string.Join(",", headers));
+
+               // Build the Rows
+               foreach (var row in gradebookRows)
+               {
+                  var rowData = new List<string> { row.StudentID, row.StudentInfo.LastName?.Replace(",", "") ?? "", row.StudentInfo.FirstName?.Replace(",", "") ?? "" };
+
+                  if (term == "Final Average" || term == "Semester Average")
+                  {
+                     if (educationMode == "Semestral") { rowData.Add(row.MidtermGradeDisplay); rowData.Add(row.FinalTermGradeDisplay); }
+                     else { rowData.Add(row.Q1GradeDisplay); rowData.Add(row.Q2GradeDisplay); rowData.Add(row.Q3GradeDisplay); rowData.Add(row.Q4GradeDisplay); }
+                     rowData.Add(row.FinalGrade);
+                  }
+                  else
+                  {
+                     var termAssessments = assessments.Where(a => a.GradingPeriod == term).OrderBy(a => a.DateGiven).ToList();
+                     foreach (var a in termAssessments)
+                     {
+                           if (row.Scores.TryGetValue(a.AssessmentID, out var scoreCell)) rowData.Add(scoreCell.PointsEarned.ToString("0.##"));
+                           else rowData.Add("0");
+                     }
+                     
+                     string summary = term switch { "Q1" => row.Q1GradeDisplay, "Q2" => row.Q2GradeDisplay, "Q3" => row.Q3GradeDisplay, "Q4" => row.Q4GradeDisplay, "Midterm" => row.MidtermGradeDisplay, "Final" => row.FinalTermGradeDisplay, _ => "--" };
+                     rowData.Add(summary);
+                  }
+                  termCsv.AppendLine(string.Join(",", rowData));
+               }
+
+               // Format a clean file name (e.g., "Math101_Q1Grades_2026-06-05.csv")
+               string termFileName = term.Replace(" ", ""); // Removes space for "FinalAverage"
+               string termFilePath = Path.Combine(exportFolder, $"{safeTitle}_{termFileName}Grades_{dateSuffix}.csv");
                
-               // Attendance Headers
-               var attHeaders = new List<string> { "Last Name", "First Name", "Total P", "Total L", "Total A" };
+               // Save this specific tab's file!
+               await File.WriteAllTextAsync(termFilePath, termCsv.ToString());
+               filesGenerated++;
+            }
+
+            if (exportAttendance)
+            {
+               var attendanceCsv = new StringBuilder();
+               var attHeaders = new List<string> { "Last Name", "First Name", "Total P", "Total L", "Total A", "Total E" };
                foreach (var d in attendanceDates) attHeaders.Add(d.ToString("yyyy-MM-dd"));
                attendanceCsv.AppendLine(string.Join(",", attHeaders));
 
-               // Attendance Rows
                foreach (var row in attendanceRows)
                {
-                  var rowData = new List<string>
-                  {
-                     row.LastName.Replace(",", ""),
-                     row.FirstName.Replace(",", ""),
-                     row.TotalP.ToString(),
-                     row.TotalL.ToString(),
-                     row.TotalA.ToString()
-                  };
-
+                  var rowData = new List<string> { row.LastName.Replace(",", ""), row.FirstName.Replace(",", ""), row.TotalP.ToString(), row.TotalL.ToString(), row.TotalA.ToString(), row.TotalE.ToString() };
                   foreach (var d in attendanceDates)
                   {
-                     string dateKey = d.ToString("yyyy-MM-dd");
-                     if (row.Cells.TryGetValue(dateKey, out var cell))
-                           rowData.Add(cell.Status);
-                     else
-                           rowData.Add("");
+                     if (row.Cells.TryGetValue(d.ToString("yyyy-MM-dd"), out var cell)) rowData.Add(cell.Status);
+                     else rowData.Add("");
                   }
                   attendanceCsv.AppendLine(string.Join(",", rowData));
                }
-
-               // 4. Save both files to disk!
-               await File.WriteAllTextAsync(gradesFilePath, gradesCsv.ToString());
+               
+               string attendanceFilePath = Path.Combine(exportFolder, $"{safeTitle}_Attendance_{dateSuffix}.csv");
                await File.WriteAllTextAsync(attendanceFilePath, attendanceCsv.ToString());
+               filesGenerated++;
+            }
 
-               return (true, $"Exported successfully to:\n{exportFolder}");
+            return (true, $"Success: Generated {filesGenerated} files to:\n{exportFolder}");
          }
          catch (Exception ex)
          {
-               return (false, $"Export Failed: {ex.Message}");
+            return (false, $"Export Failed: {ex.Message}");
          }
       }
    }

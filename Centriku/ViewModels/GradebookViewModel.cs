@@ -10,7 +10,7 @@ namespace Centriku.ViewModels
 {
     public partial class GradebookViewModel : ViewModelBase
     {
-      #region Core Properties & UI Toggles
+        #region Core Properties & UI Toggles
 
             [ObservableProperty] public partial int ClassId { get; set; }
             [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
@@ -128,19 +128,48 @@ namespace Centriku.ViewModels
 
         #region Setup& Data Loading
 
+            [ObservableProperty] public partial bool ExportQ1 { get; set; } = true;
+            [ObservableProperty] public partial bool ExportQ2 { get; set; } = true;
+            [ObservableProperty] public partial bool ExportQ3 { get; set; } = true;
+            [ObservableProperty] public partial bool ExportQ4 { get; set; } = true;
+            [ObservableProperty] public partial bool ExportFinalAverage { get; set; } = true;
+            [ObservableProperty] public partial bool ExportMidterm { get; set; } = true;
+            [ObservableProperty] public partial bool ExportFinal { get; set; } = true;
+            [ObservableProperty] public partial bool ExportSemesterAverage { get; set; } = true;
+            [ObservableProperty] public partial bool ExportAttendance { get; set; } = true;
+            [ObservableProperty] public partial string ExportFolderPath { get; set; } = string.Empty;
+            [ObservableProperty] public partial string ExportFolderDisplay { get; set; } = "Default Downloads Folder";
             public IRelayCommand ExportCsvCommand { get; }
             private async void ExportToCsv()
             {
+                if (!ExportAttendance && !ExportQ1 && !ExportQ2 && !ExportQ3 && !ExportQ4 && !ExportFinalAverage && !ExportMidterm && !ExportFinal && !ExportSemesterAverage)
+                {
+                    ShowToastMessage?.Invoke("Please select at least one tab to export."); return;
+                }
+
                 ShowToastMessage?.Invoke("Generating CSV files...");
 
+                var selectedTerms = new System.Collections.Generic.List<string>();
+                if (EducationMode == "Semestral")
+                {
+                    if (ExportMidterm) selectedTerms.Add("Midterm");
+                    if (ExportFinal) selectedTerms.Add("Final");
+                    if (ExportSemesterAverage) selectedTerms.Add("Semester Average");
+                }
+                else
+                {
+                    if (ExportQ1) selectedTerms.Add("Q1");
+                    if (ExportQ2) selectedTerms.Add("Q2");
+                    if (ExportQ3) selectedTerms.Add("Q3");
+                    if (ExportQ4) selectedTerms.Add("Q4");
+                    if (ExportFinalAverage) selectedTerms.Add("Final Average");
+                }
+
                 var result = await CsvExportService.ExportClassDataAsync(
-                    ClassTitle,
-                    GradebookRows,
-                    ClassAssessments,
-                    AttendanceGridRows,
-                    AttendanceDates
+                    ClassTitle, EducationMode, ExportAttendance, ExportFolderPath, selectedTerms,
+                    GradebookRows, ClassAssessments, AttendanceGridRows, AttendanceDates
                 );
-                // Pop the toast letting the teacher know exactly where it saved!
+                
                 ShowToastMessage?.Invoke(result.Message); 
             }
             public GradebookViewModel()
