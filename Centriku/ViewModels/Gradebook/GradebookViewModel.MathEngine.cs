@@ -75,76 +75,74 @@ namespace Centriku.ViewModels
          
          return $"{rawGrade.ToString("0.##")}%";
       }
+     
       public void RecalculateFinalGrades()
       {
-         if (GradebookRows == null || AttendanceGridRows == null) return;
+         RecalculateFinalGradesForList(GradebookRows, AttendanceGridRows);
+      }
 
-         foreach (var row in GradebookRows)
+      public void RecalculateFinalGradesForList(System.Collections.Generic.IEnumerable<StudentGradeRow> targetGradeRows, System.Collections.Generic.IEnumerable<AttendanceGridRowViewModel> targetAttRows)
+      {
+         if (targetGradeRows == null || targetAttRows == null) return;
+
+         foreach (var row in targetGradeRows)
          {
-            // 1. HYBRID TERM AVERAGING MATH 
+            // === 1. ALWAYS CALCULATE EVERY TERM ===
+            bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
+            double midterm = CalculateAcademicGrade(row, "Midterm");
+            row.MidtermGradeDisplay = FormatSummaryGrade(midterm, hasMidterm);
+            row.MidtermGradeNumeric = midterm;
+
+            bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
+            double final = CalculateAcademicGrade(row, "Final");
+            row.FinalTermGradeDisplay = FormatSummaryGrade(final, hasFinal);
+            row.FinalTermGradeNumeric = final;
+
+            bool hasQ1 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q1");
+            double q1 = CalculateAcademicGrade(row, "Q1");
+            row.Q1GradeDisplay = FormatSummaryGrade(q1, hasQ1);
+            row.Q1GradeNumeric = q1;
+
+            bool hasQ2 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q2");
+            double q2 = CalculateAcademicGrade(row, "Q2");
+            row.Q2GradeDisplay = FormatSummaryGrade(q2, hasQ2);
+            row.Q2GradeNumeric = q2;
+
+            bool hasQ3 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q3");
+            double q3 = CalculateAcademicGrade(row, "Q3");
+            row.Q3GradeDisplay = FormatSummaryGrade(q3, hasQ3);
+            row.Q3GradeNumeric = q3;
+
+            bool hasQ4 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q4");
+            double q4 = CalculateAcademicGrade(row, "Q4");
+            row.Q4GradeDisplay = FormatSummaryGrade(q4, hasQ4);
+            row.Q4GradeNumeric = q4;
+
+            // === 2. DETERMINE THE 'ACTIVE' FINAL GRADE FOR THE UI ===
             double finalAcademicGrade = 100.0;
             bool isFinalMathComplete = false; 
 
-            // Check if the user is viewing the "Overall Average" column
-            if (SelectedTermView == "Semester Average" || SelectedTermView == "Final Average")
+            if (SelectedTermView == "Semester Average")
             {
-               if (EducationMode == "Semestral")
-               {
-                  double midterm = CalculateAcademicGrade(row, "Midterm");
-                  double final = CalculateAcademicGrade(row, "Final");
-
-                  bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
-                  bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
-
-                  row.MidtermGradeDisplay = FormatSummaryGrade(midterm, hasMidterm);
-                  row.FinalTermGradeDisplay = FormatSummaryGrade(final, hasFinal);
-                  row.MidtermGradeNumeric = midterm;
-                  row.FinalTermGradeNumeric = final;
-
-                  if (hasMidterm && hasFinal)
-                  {
-                     finalAcademicGrade = (midterm + final) / 2.0;
-                     isFinalMathComplete = true;
-                  }
-               }
-               else // "Quarterly" Mode
-               {
-                  double q1 = CalculateAcademicGrade(row, "Q1");
-                  double q2 = CalculateAcademicGrade(row, "Q2");
-                  double q3 = CalculateAcademicGrade(row, "Q3");
-                  double q4 = CalculateAcademicGrade(row, "Q4");
-
-                  bool hasQ1 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q1");
-                  bool hasQ2 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q2");
-                  bool hasQ3 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q3");
-                  bool hasQ4 = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Q4");
-
-                  row.Q1GradeDisplay = FormatSummaryGrade(q1, hasQ1);
-                  row.Q2GradeDisplay = FormatSummaryGrade(q2, hasQ2);
-                  row.Q3GradeDisplay = FormatSummaryGrade(q3, hasQ3);
-                  row.Q4GradeDisplay = FormatSummaryGrade(q4, hasQ4);
-                  
-                  row.Q1GradeNumeric = q1;
-                  row.Q2GradeNumeric = q2;
-                  row.Q3GradeNumeric = q3;
-                  row.Q4GradeNumeric = q4;
-
-                  if (hasQ1 && hasQ2 && hasQ3 && hasQ4)
-                  {
-                     finalAcademicGrade = (q1 + q2 + q3 + q4) / 4.0;
-                     isFinalMathComplete = true;
-                  }
-               }
+               if (hasMidterm && hasFinal) { finalAcademicGrade = (midterm + final) / 2.0; isFinalMathComplete = true; }
+            }
+            else if (SelectedTermView == "Final Average")
+            {
+               if (hasQ1 && hasQ2 && hasQ3 && hasQ4) { finalAcademicGrade = (q1 + q2 + q3 + q4) / 4.0; isFinalMathComplete = true; }
             }
             else
             {
-               // If viewing just a specific single term (e.g., viewing only Q1), the math is always "complete"
-               finalAcademicGrade = CalculateAcademicGrade(row, SelectedTermView);
-               isFinalMathComplete = true;
+               // If viewing a single term, grab its pre-calculated value!
+               finalAcademicGrade = SelectedTermView switch {
+                   "Q1" => q1, "Q2" => q2, "Q3" => q3, "Q4" => q4, "Midterm" => midterm, "Final" => final, _ => 100.0
+               };
+               isFinalMathComplete = SelectedTermView switch {
+                   "Q1" => hasQ1, "Q2" => hasQ2, "Q3" => hasQ3, "Q4" => hasQ4, "Midterm" => hasMidterm, "Final" => hasFinal, _ => false
+               };
             }
 
-            // === 2. ATTENDANCE PENALTIES ===
-            var attendanceRow = AttendanceGridRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
+            // === 3. ATTENDANCE PENALTIES ===
+            var attendanceRow = targetAttRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
             int totalDays = attendanceRow?.Cells.Count ?? 0;
             int excusedDays = attendanceRow?.TotalE ?? 0;
             int activeDays = totalDays - excusedDays;
@@ -193,7 +191,7 @@ namespace Centriku.ViewModels
                          break;
                 }
 
-                // 3. NRFG / CRG TRANSMUTATION 
+                // NRFG / CRG TRANSMUTATION 
                 if (finalNumeric == -1)
                 {
                     finalOutput = "FA"; // Failure due to Absences

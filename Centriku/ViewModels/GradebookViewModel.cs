@@ -149,6 +149,9 @@ namespace Centriku.ViewModels
 
                 ShowToastMessage?.Invoke("Generating CSV files...");
 
+                var db = new DatabaseService().GetConnection();
+                var appSettings = await db.Table<AppSettings>().FirstOrDefaultAsync() ?? new AppSettings();
+
                 var selectedTerms = new System.Collections.Generic.List<string>();
                 if (EducationMode == "Semestral")
                 {
@@ -165,13 +168,81 @@ namespace Centriku.ViewModels
                     if (ExportFinalAverage) selectedTerms.Add("Final Average");
                 }
 
+                // === 1. Prepare Active Students ===
+                var finalGradeRows = GradebookRows.ToList();
+                var finalAttRows = AttendanceGridRows.ToList();
+
+                // === 2. Fetch Archived Students (If the Global Setting is turned on!) ===
+                if (appSettings.ExportIncludeArchived)
+                {
+                    var archivedData = await FetchArchivedExportDataAsync();
+                    finalGradeRows.AddRange(archivedData.Grades);
+                    finalAttRows.AddRange(archivedData.Attendance);
+                }
+
                 var result = await CsvExportService.ExportClassDataAsync(
                     ClassTitle, EducationMode, ExportAttendance, ExportFolderPath, selectedTerms,
-                    GradebookRows, ClassAssessments, AttendanceGridRows, AttendanceDates
+                    finalGradeRows, ClassAssessments, finalAttRows, AttendanceDates, appSettings
                 );
                 
                 ShowToastMessage?.Invoke(result.Message); 
             }
+
+            private async Task<(System.Collections.Generic.List<StudentGradeRow> Grades, System.Collections.Generic.List<AttendanceGridRowViewModel> Attendance)> FetchArchivedExportDataAsync()
+            {
+                var db = new DatabaseService().GetConnection();
+                var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+                var studentIds = roster.Select(r => r.StudentID).ToList();
+
+                // 1. Find ONLY the Archived/Dropped students for this class
+                var archivedStudents = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync())
+                                       .Where(s => s.IsArchived || s.EnrollmentStatus == "Dropped").ToList();
+
+                var archivedGrades = new System.Collections.Generic.List<StudentGradeRow>();
+                var archivedAtt = new System.Collections.Generic.List<AttendanceGridRowViewModel>();
+
+                if (!archivedStudents.Any()) return (archivedGrades, archivedAtt);
+
+                var scores = await db.Table<Score>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync();
+                var attendance = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId).ToListAsync();
+
+                // 2. Build their invisible rows
+                foreach (var student in archivedStudents)
+                {
+                    // Add a visual tag to their name so the teacher knows WHY they are at the bottom of the CSV!
+                    student.LastName = $"[ARCHIVED] {student.LastName}";
+
+                    var gradeRow = new StudentGradeRow(student);
+                    var studentScores = scores.Where(s => s.StudentID == student.StudentID).ToList();
+                    
+                    foreach (var assessment in ClassAssessments)
+                    {
+                        var existingScore = studentScores.FirstOrDefault(s => s.AssessmentID == assessment.AssessmentID);
+                        if (existingScore != null) 
+                            gradeRow.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore, () => {});
+                        else 
+                            gradeRow.Scores[assessment.AssessmentID] = new ScoreCellViewModel(new Score { AssessmentID = assessment.AssessmentID, StudentID = student.StudentID, PointsEarned = 0 }, assessment.MaxScore, () => {});
+                    }
+                    archivedGrades.Add(gradeRow);
+
+                    var attRow = new AttendanceGridRowViewModel(student);
+                    var studentAtt = attendance.Where(a => a.StudentID == student.StudentID).ToList();
+                    
+                    foreach (var date in AttendanceDates)
+                    {
+                        var existingAtt = studentAtt.FirstOrDefault(a => a.Date.Date == date);
+                        if (existingAtt == null) existingAtt = new AttendanceRecord { Status = "" };
+                        attRow.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(existingAtt, () => {}, msg => {});
+                    }
+                    archivedAtt.Add(attRow);
+                }
+
+                // 3. Run the Math Engine strictly on these invisible rows!
+                RecalculateFinalGradesForList(archivedGrades, archivedAtt);
+
+                return (archivedGrades, archivedAtt);
+            }
+
             public GradebookViewModel()
             {
                 ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
