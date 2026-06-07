@@ -158,7 +158,7 @@ namespace Centriku.ViewModels
                 StagedStudents.Clear();
                 HasImportError = false;
                 HasStagedStudents = false;
-                IsLoading = true; // TRIGGER THE LOADING SCREEN!
+                IsLoading = true; 
                 ImportSummaryMessage = string.Empty;
 
                 var db = new Centriku.Services.DatabaseService().GetConnection();

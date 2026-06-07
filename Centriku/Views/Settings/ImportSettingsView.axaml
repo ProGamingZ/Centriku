@@ -34,7 +34,7 @@
                             </Border>
                             <TextBlock Text="Match Your Excel Columns" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock Text="Match the columns from your file to Centriku's fields. If a column has data Centriku doesn't need, just select 'Ignore'." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-5,0,15" MaxWidth="400" TextWrapping="Wrap"/>
+                        <TextBlock Text="Match the columns from your file to Centriku's fields. To reorder the columns first select 'ignore' so it will show in the dropdown of other columns." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-5,0,15" MaxWidth="400" TextWrapping="Wrap"/>
                         
                         <WrapPanel Margin="0,5,0,0" MaxWidth="420">
                             <StackPanel Margin="0,0,15,15">
@@ -85,9 +85,9 @@
                             <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
                                 <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="Handle Missing Information" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Auto Fill Information" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <TextBlock Text="If your file is missing a student's Section or Gender, what should Centriku automatically fill in for them?" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" MaxWidth="250" TextWrapping="Wrap" Margin="0,-5,0,5"/>
+                        <TextBlock Text="What should Centriku automatically fill in these four columns" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" MaxWidth="250" TextWrapping="Wrap" Margin="0,-5,0,5"/>
                         
                         <WrapPanel Margin="0,5,0,0" MaxWidth="300">
                             <StackPanel Margin="0,0,15,15">
@@ -125,11 +125,11 @@
                             </CheckBox>
                             
                             <CheckBox IsChecked="{Binding CurrentSettings.AutoCapitalizeNames}" Margin="0,0,0,0">
-                                <TextBlock Text="Auto-capitalize names (e.g., 'juan' to 'Juan')" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="Auto-capitalize names (e.g., juan or JUAN to Juan)" FontWeight="SemiBold" TextWrapping="Wrap"/>
                             </CheckBox>
                             
                             <CheckBox IsChecked="{Binding CurrentSettings.SkipIncompleteRows}" Margin="0,0,0,0">
-                                <TextBlock Text="Skip incomplete rows (Missing LRN, Last, or First Name)" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="Skip rows without Last or First Name" FontWeight="SemiBold" TextWrapping="Wrap"/>
                             </CheckBox>
                             
                             <StackPanel Margin="0,10,0,0">
