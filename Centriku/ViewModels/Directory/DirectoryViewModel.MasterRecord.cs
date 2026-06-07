@@ -154,17 +154,38 @@ namespace Centriku.ViewModels
             }
         }
 
-        private void GenerateSf9()
+        private async void GenerateSf9()
         {
             if (SelectedProfile == null) return;
-            string safeName = $"{SelectedProfile.LastName}_{SelectedProfile.FirstName}_SF9".Replace(" ", "_");
-            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string fullPath = System.IO.Path.Combine(desktopPath, $"{safeName}.pdf");
+            
+            // 1. Fetch the absolute latest SF9 Settings right before printing!
+            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
+
+            // 2. Apply the Custom Naming Format
+            string safeName = settings.Sf9FileNamingFormat
+                .Replace("[LastName]", SelectedProfile.LastName ?? "")
+                .Replace("[FirstName]", SelectedProfile.FirstName ?? "")
+                .Replace("[LRN]", SelectedProfile.StudentID ?? "")
+                .Replace(" ", "_");
+
+            // 3. Apply the Custom Save Folder
+            string exportFolder = string.IsNullOrWhiteSpace(settings.Sf9DefaultExportPath) 
+                ? Environment.GetFolderPath(Environment.SpecialFolder.Desktop) 
+                : settings.Sf9DefaultExportPath;
+
+            string fullPath = System.IO.Path.Combine(exportFolder, $"{safeName}.pdf");
 
             try
             {
-                Centriku.Services.Sf9Generator.GenerateReportCard(this, fullPath);
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fullPath) { UseShellExecute = true });
+                // Pass the settings into the Generator!
+                Centriku.Services.Sf9Generator.GenerateReportCard(this, fullPath, settings);
+                
+                // 4. Obey the Auto-Open rule
+                if (settings.Sf9AutoOpenPdf)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fullPath) { UseShellExecute = true });
+                }
             }
             catch (Exception ex) { Console.WriteLine($"Failed to generate PDF: {ex.Message}"); }
         }
