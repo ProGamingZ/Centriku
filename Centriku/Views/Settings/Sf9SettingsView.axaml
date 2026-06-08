@@ -159,77 +159,77 @@
                <TabControl>
                   
                   <TabItem Header="Header &amp; Signatures" FontSize="14" FontWeight="SemiBold">
-                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="30" Margin="0,10,0,0" Background="{DynamicResource AppBackground}">
-                           <StackPanel>
-                              <TextBlock Text="Republic of the Philippines" HorizontalAlignment="Center" FontSize="12"/>
-                              <TextBlock Text="Department of Education" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                              <TextBlock Text="{Binding Region}" HorizontalAlignment="Center" FontSize="12" IsVisible="{Binding Region, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                              <TextBlock Text="{Binding Division, StringFormat='Division of {0}'}" HorizontalAlignment="Center" FontSize="12" IsVisible="{Binding Division, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                              <TextBlock Text="{Binding SchoolName, TargetNullValue='Learner Progress Report Card (SF9)'}" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold" Margin="0,10,0,0"/>
-                              
-                              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15" Margin="0,5,0,0">
-                                    <TextBlock Text="{Binding SchoolId, StringFormat='School ID: {0}'}" FontSize="12"/>
-                                    <TextBlock Text="{Binding District, StringFormat='District: {0}'}" FontSize="12"/>
-                              </StackPanel>
-
-                              <Line StartPoint="0,0" EndPoint="10,0" Stretch="Fill" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" StrokeDashArray="4,4" Margin="0,30,0,20"/>
-                              <TextBlock Text="CERTIFICATE OF TRANSFER" FontSize="12" FontWeight="Bold"/>
-                              <Grid ColumnDefinitions="1*, 1*" Margin="0,30,0,0">
-                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                                       <TextBlock Text="{Binding DefaultTeacherName, TargetNullValue='________________________'}" FontWeight="Bold" TextDecorations="Underline" HorizontalAlignment="Center"/>
-                                       <TextBlock Text="Teacher / Adviser" FontSize="12" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                                       <TextBlock Text="{Binding PrincipalName, TargetNullValue='________________________'}" FontWeight="Bold" TextDecorations="Underline" HorizontalAlignment="Center"/>
-                                       <TextBlock Text="{Binding PrincipalTitle}" FontSize="12" HorizontalAlignment="Center"/>
-                                    </StackPanel>
-                              </Grid>
+                     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="30" Margin="0,10,0,0" Background="{DynamicResource AppBackground}">
+                        <StackPanel>
+                           <TextBlock Text="Republic of the Philippines" HorizontalAlignment="Center" FontSize="12"/>
+                           <TextBlock Text="Department of Education" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                           <TextBlock Text="{Binding Region}" HorizontalAlignment="Center" FontSize="12" IsVisible="{Binding Region, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                           <TextBlock Text="{Binding Division, StringFormat='Division of {0}'}" HorizontalAlignment="Center" FontSize="12" IsVisible="{Binding Division, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                           <TextBlock Text="{Binding SchoolName, TargetNullValue='Learner Progress Report Card (SF9)'}" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold" Margin="0,10,0,0"/>
+                           
+                           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15" Margin="0,5,0,0">
+                              <TextBlock Text="{Binding SchoolId, StringFormat='School ID: {0}'}" FontSize="12"/>
+                              <TextBlock Text="{Binding District, StringFormat='District: {0}'}" FontSize="12"/>
                            </StackPanel>
-                        </Border>
+
+                           <Line StartPoint="0,0" EndPoint="10,0" Stretch="Fill" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" StrokeDashArray="4,4" Margin="0,30,0,20"/>
+                           <TextBlock Text="CERTIFICATE OF TRANSFER" FontSize="12" FontWeight="Bold"/>
+                           <Grid ColumnDefinitions="1*, 1*" Margin="0,30,0,0">
+                              <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                 <TextBlock Text="{Binding DefaultTeacherName, TargetNullValue='________________________'}" FontWeight="Bold" TextDecorations="Underline" HorizontalAlignment="Center"/>
+                                 <TextBlock Text="Teacher / Adviser" FontSize="12" HorizontalAlignment="Center"/>
+                              </StackPanel>
+                              <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                 <TextBlock Text="{Binding PrincipalName, TargetNullValue='________________________'}" FontWeight="Bold" TextDecorations="Underline" HorizontalAlignment="Center"/>
+                                 <TextBlock Text="{Binding PrincipalTitle}" FontSize="12" HorizontalAlignment="Center"/>
+                              </StackPanel>
+                           </Grid>
+                        </StackPanel>
+                     </Border>
                   </TabItem>
 
                   <TabItem Header="Grades &amp; Remarks" FontSize="14" FontWeight="SemiBold">
-                        <DataGrid ItemsSource="{Binding PreviewGrades}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Height="150" Margin="0,10,0,0">
-                           <DataGrid.Columns>
-                              <DataGridTextColumn Header="Learning Areas" Binding="{Binding Subject}" Width="*"/>
-                              <DataGridTextColumn Header="1" Binding="{Binding Q1}" Width="60"/>
-                              <DataGridTextColumn Header="2" Binding="{Binding Q2}" Width="60"/>
-                              <DataGridTextColumn Header="3" Binding="{Binding Q3}" Width="60"/>
-                              <DataGridTextColumn Header="4" Binding="{Binding Q4}" Width="60"/>
-                              <DataGridTextColumn Header="Final Grade" Binding="{Binding Final}" Width="90"/>
-                              <DataGridTextColumn Header="Remarks" Binding="{Binding Remarks}" Width="90"/>
-                           </DataGrid.Columns>
-                        </DataGrid>
+                     <DataGrid ItemsSource="{Binding PreviewGrades}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Height="150" Margin="0,10,0,0">
+                        <DataGrid.Columns>
+                           <DataGridTextColumn Header="Learning Areas" Binding="{Binding Subject}" Width="*"/>
+                           <DataGridTextColumn Header="1" Binding="{Binding Q1}" Width="60"/>
+                           <DataGridTextColumn Header="2" Binding="{Binding Q2}" Width="60"/>
+                           <DataGridTextColumn Header="3" Binding="{Binding Q3}" Width="60"/>
+                           <DataGridTextColumn Header="4" Binding="{Binding Q4}" Width="60"/>
+                           <DataGridTextColumn Header="Final Grade" Binding="{Binding Final}" Width="90"/>
+                           <DataGridTextColumn Header="Remarks" Binding="{Binding Remarks}" Width="90"/>
+                        </DataGrid.Columns>
+                     </DataGrid>
                   </TabItem>
 
                   <TabItem Header="Grading Legend" FontSize="14" FontWeight="SemiBold">
-                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,10,0,0" Padding="15" Background="{DynamicResource AppBackground}">
-                           <Grid ColumnDefinitions="2*, 1*, 1*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-                              <TextBlock Grid.Row="0" Grid.Column="0" Text="Descriptors" FontWeight="Bold" Margin="0,0,0,10"/>
-                              <TextBlock Grid.Row="0" Grid.Column="1" Text="Grading Scale" FontWeight="Bold" Margin="0,0,0,10"/>
-                              <TextBlock Grid.Row="0" Grid.Column="2" Text="Remarks" FontWeight="Bold" Margin="0,0,0,10"/>
+                     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="0,10,0,0" Padding="15" Background="{DynamicResource AppBackground}">
+                        <Grid ColumnDefinitions="2*, 1*, 1*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                           <TextBlock Grid.Row="0" Grid.Column="0" Text="Descriptors" FontWeight="Bold" Margin="0,0,0,10"/>
+                           <TextBlock Grid.Row="0" Grid.Column="1" Text="Grading Scale" FontWeight="Bold" Margin="0,0,0,10"/>
+                           <TextBlock Grid.Row="0" Grid.Column="2" Text="Remarks" FontWeight="Bold" Margin="0,0,0,10"/>
 
-                              <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding LegDesc1}" Margin="0,0,0,5"/>
-                              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LegScale1}"/>
-                              <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding LegRem1}"/>
+                           <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding LegDesc1}" Margin="0,0,0,5"/>
+                           <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LegScale1}"/>
+                           <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding LegRem1}"/>
 
-                              <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding LegDesc2}" Margin="0,0,0,5"/>
-                              <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LegScale2}"/>
-                              <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding LegRem2}"/>
+                           <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding LegDesc2}" Margin="0,0,0,5"/>
+                           <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LegScale2}"/>
+                           <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding LegRem2}"/>
 
-                              <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding LegDesc3}" Margin="0,0,0,5"/>
-                              <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding LegScale3}"/>
-                              <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding LegRem3}"/>
+                           <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding LegDesc3}" Margin="0,0,0,5"/>
+                           <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding LegScale3}"/>
+                           <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding LegRem3}"/>
 
-                              <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding LegDesc4}" Margin="0,0,0,5"/>
-                              <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding LegScale4}"/>
-                              <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding LegRem4}"/>
+                           <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding LegDesc4}" Margin="0,0,0,5"/>
+                           <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding LegScale4}"/>
+                           <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding LegRem4}"/>
 
-                              <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding LegDesc5}"/>
-                              <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding LegScale5}"/>
-                              <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding LegRem5}"/>
-                           </Grid>
-                        </Border>
+                           <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding LegDesc5}"/>
+                           <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding LegScale5}"/>
+                           <TextBlock Grid.Row="5" Grid.Column="2" Text="{Binding LegRem5}"/>
+                        </Grid>
+                     </Border>
                   </TabItem>
 
                </TabControl>
