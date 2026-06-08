@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Centriku.Services;
 using Centriku.Models;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Centriku.ViewModels
 {
@@ -12,11 +13,28 @@ namespace Centriku.ViewModels
     {
         private readonly System.Action<ViewModelBase> _navigateAction;
 
+        // KPI PROPERTIES 
         [ObservableProperty] public partial int TotalStudents { get; set; } = 0;
         [ObservableProperty] public partial int ActiveClasses { get; set; } = 0;
         [ObservableProperty] public partial int NeedsAttention { get; set; } = 0;
-
         [ObservableProperty] public partial ObservableCollection<DashboardClassCardViewModel> ClassCards { get; set; } = new();
+
+        // GLOBAL FILTER PROPERTIES 
+        [ObservableProperty] public partial ObservableCollection<string> AvailableYears { get; set; } = new();
+        [ObservableProperty] public partial string SelectedYear { get; set; } = "All Years";
+        partial void OnSelectedYearChanged(string value) => _ = CalculateDashboardMetricsAsync();
+
+        [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = new();
+        [ObservableProperty] public partial string SelectedTerm { get; set; } = "All Terms";
+        partial void OnSelectedTermChanged(string value) => _ = CalculateDashboardMetricsAsync();
+
+        // IN-MEMORY CACHE (Prevents database lag!) 
+        private List<TeacherClass> _allClasses = new();
+        private List<ClassRoster> _allRosters = new();
+        private List<GradingTemplate> _allTemplates = new();
+        private List<Assessment> _allAssessments = new();
+        private List<Score> _allScores = new();
+        private List<AttendanceRecord> _allAttendance = new();
 
         public IRelayCommand<DashboardClassCardViewModel> OpenClassCommand { get; }
 
@@ -28,37 +46,77 @@ namespace Centriku.ViewModels
 
         public async Task LoadDashboardDataAsync()
         {
+            // 1. Fetch ALL data exactly ONCE when the dashboard loads
             var db = new DatabaseService().GetConnection();
+            _allClasses = await db.Table<TeacherClass>().ToListAsync();
+            _allRosters = await db.Table<ClassRoster>().ToListAsync();
+            _allTemplates = await db.Table<GradingTemplate>().ToListAsync();
+            _allAssessments = await db.Table<Assessment>().ToListAsync();
+            _allScores = await db.Table<Score>().ToListAsync();
+            _allAttendance = await db.Table<AttendanceRecord>().ToListAsync();
 
-            ActiveClasses = await db.Table<TeacherClass>().CountAsync();
+            // 2. Dynamically extract the unique Years and Terms from the teacher's classes
+            var years = _allClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
+            AvailableYears.Clear(); 
+            AvailableYears.Add("All Years");
+            foreach (var y in years) AvailableYears.Add(y!);
+            if (!AvailableYears.Contains(SelectedYear)) SelectedYear = "All Years";
 
-            var rosters = await db.Table<ClassRoster>().ToListAsync();
-            TotalStudents = rosters.Select(r => r.StudentID).Distinct().Count();
+            var terms = _allClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
+            AvailableTerms.Clear(); 
+            AvailableTerms.Add("All Terms");
+            foreach (var t in terms) AvailableTerms.Add(t!);
+            if (!AvailableTerms.Contains(SelectedTerm)) SelectedTerm = "All Terms";
 
-            var classes = await db.Table<TeacherClass>().ToListAsync();
-            var templates = await db.Table<GradingTemplate>().ToListAsync();
-            var allAssessments = await db.Table<Assessment>().ToListAsync();
-            var allScores = await db.Table<Score>().ToListAsync();
-            var allAttendance = await db.Table<AttendanceRecord>().ToListAsync();
+            // 3. Run the math engine using our new cache
+            await CalculateDashboardMetricsAsync();
+        }
+
+        private async Task CalculateDashboardMetricsAsync()
+        {
+            // Yield the UI thread briefly so the dropdown animation finishes smoothly
+            await Task.Delay(20);
+
+            // 1. FILTER THE CLASSES BASED ON DROPDOWNS!
+            var filteredClasses = _allClasses.AsEnumerable();
             
-            ClassCards.Clear();
-            foreach (var teacherClass in classes)
-            {
-                int studentCount = rosters.Count(r => r.ClassID == teacherClass.ClassID);
-                ClassCards.Add(new DashboardClassCardViewModel(teacherClass, studentCount));
-            }
+            if (SelectedYear != "All Years") 
+                filteredClasses = filteredClasses.Where(c => c.AcademicYear == SelectedYear);
+            
+            if (SelectedTerm != "All Terms") 
+                filteredClasses = filteredClasses.Where(c => c.Term == SelectedTerm);
 
-            int riskCounter = 0;
-            foreach (var teacherClass in classes)
+            var activeClassList = filteredClasses.ToList();
+            var activeClassIds = activeClassList.Select(c => c.ClassID).ToList();
+
+            // 2. Calculate KPI: Active Classes
+            ActiveClasses = activeClassList.Count;
+
+            // 3. Calculate KPI: Total Students (Only counts students in the filtered classes!)
+            var activeRosters = _allRosters.Where(r => activeClassIds.Contains(r.ClassID)).ToList();
+            TotalStudents = activeRosters.Select(r => r.StudentID).Distinct().Count();
+
+            // 4. Generate the Quick Access Cards
+            var newCards = new ObservableCollection<DashboardClassCardViewModel>();
+            foreach (var teacherClass in activeClassList)
             {
-                var template = templates.FirstOrDefault(t => t.TemplateID == teacherClass.GradingTemplateID);
+                int studentCount = activeRosters.Count(r => r.ClassID == teacherClass.ClassID);
+                newCards.Add(new DashboardClassCardViewModel(teacherClass, studentCount));
+            }
+            ClassCards = newCards; // Assigning a fresh list prevents UI glitches!
+
+            // 5. Calculate KPI: Needs Attention (The Math Engine)
+            int riskCounter = 0;
+            foreach (var teacherClass in activeClassList)
+            {
+                var template = _allTemplates.FirstOrDefault(t => t.TemplateID == teacherClass.GradingTemplateID);
                 double passingScore = template?.PassingGrade ?? 75.0;
 
-                var classAssessments = allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
+                var classAssessments = _allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 var classAssessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-                var classScores = allScores.Where(s => classAssessmentIds.Contains(s.AssessmentID)).ToList();
-                var classAttendance = allAttendance.Where(a => a.ClassID == teacherClass.ClassID).ToList();
-                var classStudents = rosters.Where(r => r.ClassID == teacherClass.ClassID).Select(r => r.StudentID).ToList();
+                var classScores = _allScores.Where(s => classAssessmentIds.Contains(s.AssessmentID)).ToList();
+                var classAttendance = _allAttendance.Where(a => a.ClassID == teacherClass.ClassID).ToList();
+                var classStudents = activeRosters.Where(r => r.ClassID == teacherClass.ClassID).Select(r => r.StudentID).ToList();
 
                 foreach (var studentId in classStudents)
                 {
