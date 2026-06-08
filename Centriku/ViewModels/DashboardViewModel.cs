@@ -12,6 +12,8 @@ namespace Centriku.ViewModels
     public partial class DashboardViewModel : ViewModelBase
     {
         private readonly System.Action<ViewModelBase> _navigateAction;
+        [ObservableProperty] public partial ObservableCollection<AttentionAlertViewModel> AttentionAlerts { get; set; } = new();
+        private List<Student> _allStudents = new();
 
         // KPI PROPERTIES 
         [ObservableProperty] public partial int TotalStudents { get; set; } = 0;
@@ -49,6 +51,7 @@ namespace Centriku.ViewModels
             // 1. Fetch ALL data exactly ONCE when the dashboard loads
             var db = new DatabaseService().GetConnection();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
+            _allStudents = await db.Table<Student>().ToListAsync();
             _allRosters = await db.Table<ClassRoster>().ToListAsync();
             _allTemplates = await db.Table<GradingTemplate>().ToListAsync();
             _allAssessments = await db.Table<Assessment>().ToListAsync();
@@ -106,6 +109,7 @@ namespace Centriku.ViewModels
             ClassCards = newCards; // Assigning a fresh list prevents UI glitches!
 
             // 5. Calculate KPI: Needs Attention (The Math Engine)
+            var newAlerts = new List<AttentionAlertViewModel>();
             int riskCounter = 0;
             foreach (var teacherClass in activeClassList)
             {
@@ -168,10 +172,23 @@ namespace Centriku.ViewModels
                             break;
                     }
 
-                    if (isFailing) riskCounter++;
+                    if (isFailing)
+                    {
+                        riskCounter++;
+                        var student = _allStudents.FirstOrDefault(s => s.StudentID == studentId);
+                        string studentName = student != null ? $"{student.LastName}, {student.FirstName}" : studentId;
+                        
+                        newAlerts.Add(new AttentionAlertViewModel
+                        {
+                            StudentName = studentName,
+                            ClassName = $"{teacherClass.SubjectName} ({teacherClass.SectionLabel})",
+                            StatusDetails = $"Grade: {academicGrade:0.##}% | Absences: {effectiveAbsences}"
+                        });
+                    }
                 }
             }
             NeedsAttention = riskCounter;
+            AttentionAlerts = new ObservableCollection<AttentionAlertViewModel>(newAlerts);
         }
 
         private void OpenClass(DashboardClassCardViewModel selectedClass)
@@ -198,5 +215,11 @@ namespace Centriku.ViewModels
             ClassRecord = teacherClass;
             StudentCountText = $"{studentCount} Students Enrolled";
         }
+    }
+    public partial class AttentionAlertViewModel : ObservableObject
+    {
+        public string StudentName { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public string StatusDetails { get; set; } = string.Empty;
     }
 }

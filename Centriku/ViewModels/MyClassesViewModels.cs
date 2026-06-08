@@ -18,7 +18,8 @@ namespace Centriku.ViewModels
         [ObservableProperty]  public partial string NewSubjectName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewSectionLabel { get; set; } = string.Empty;   
         [ObservableProperty] public partial string NewAcademicYear { get; set; } = "2025-2026";        
-        [ObservableProperty] public partial string NewTerm { get; set; } = "Q1"; 
+        [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = [];
+        [ObservableProperty] public partial string NewTerm { get; set; } = string.Empty;     
         [ObservableProperty] public partial string NewEducationMode { get; set; } = "Quarterly";
         public ObservableCollection<string> AvailableEducationModes { get; } = ["Quarterly", "Semestral"];
         [ObservableProperty] public partial GradingTemplate? SelectedTemplate { get; set; }
@@ -32,6 +33,27 @@ namespace Centriku.ViewModels
         public IRelayCommand<ClassCardViewModel> EditClassCommand { get; } 
         public IRelayCommand<ClassCardViewModel> DeleteClassCommand { get; }
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
+
+        partial void OnNewEducationModeChanged(string value)
+        {
+            UpdateAvailableTerms(value);
+        }
+        private void UpdateAvailableTerms(string mode)
+        {
+            AvailableTerms.Clear();
+
+            if (mode == "Semestral")
+            {
+                AvailableTerms.Add("1st Sem");
+                AvailableTerms.Add("2nd Sem");
+                NewTerm = "1st Sem"; 
+            }
+            else // Quarterly
+            {
+                AvailableTerms.Add("Q1-Q4");
+                NewTerm = "Q1-Q4"; 
+            }
+        }
 
         public MyClassesViewModel(Action<ViewModelBase> navigateAction)
         {
@@ -152,7 +174,7 @@ namespace Centriku.ViewModels
             NewEducationMode = "Quarterly";
         }
 
-        
+       
         private void OpenClass(ClassCardViewModel selectedClass)
         {
             if (selectedClass != null)

@@ -8,7 +8,6 @@
     <Grid RowDefinitions="Auto, *">
         
         <StackPanel Grid.Row="0" Spacing="20" Margin="40,30,40,0">
-            
             <Grid ColumnDefinitions="*, Auto">
                 <TextBlock Grid.Column="0" Text="Welcome back, Teacher!"
                            FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
@@ -54,46 +53,68 @@
             </Grid>
         </StackPanel>
 
-        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="40,0,40,40"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-            <StackPanel>
-                <TextBlock Text="Quick Access" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-                
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding ClassCards}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="20" Margin="0,0,15,15" Width="280" 
-                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding FullTitle}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,5,0,5"/>
-                                        <TextBlock Text="{Binding StudentCountText}" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,15"/>
-                                        
-                                        <Button Content="Open Gradebook" 
-                                            Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenClassCommand}"
-                                            CommandParameter="{Binding}"
-                                            Background="{DynamicResource PrimaryBrush}" 
-                                            Foreground="White" 
-                                            FontWeight="SemiBold" 
-                                            CornerRadius="6" 
-                                            HorizontalAlignment="Stretch" 
-                                            HorizontalContentAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+        <Grid Grid.Row="1" ColumnDefinitions="*, 380" Margin="40,0,40,40">
+            
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="0,0,20,0"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Quick Access" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ClassCards}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="20" Margin="0,0,15,15" Width="280" 
+                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding FullTitle}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,5,0,5"/>
+                                            <TextBlock Text="{Binding StudentCountText}" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,15"/>
+                                            <Button Content="Open Gradebook" Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenClassCommand}" CommandParameter="{Binding}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="SemiBold" CornerRadius="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
 
-            </StackPanel>
-        </Border>
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="⚠️ Needs Attention" FontSize="18" FontWeight="Bold" Foreground="#EF4444" Margin="0,0,0,15"/>
+                    
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                            <ItemsControl ItemsSource="{Binding AttentionAlerts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="15" Margin="0,0,0,10"
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="4,1,1,1">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding StudentName}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextMainBrush}"/>
+                                                <TextBlock Text="{Binding ClassName}" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding StatusDetails}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock Text="All students are currently passing!" 
+                            IsVisible="{Binding AttentionAlerts.Count, Converter={x:Static ObjectConverters.IsNull}}"
+                            Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </Grid>
         
     </Grid>
 </UserControl>

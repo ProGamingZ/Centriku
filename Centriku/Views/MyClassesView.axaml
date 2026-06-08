@@ -39,8 +39,12 @@
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="120">
-                            <TextBlock Text="Term" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewTerm}" Background="{DynamicResource AppBackground}"/>
+                            <TextBlock Text="Term*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+    
+                            <ComboBox ItemsSource="{Binding AvailableTerms}" 
+                                SelectedItem="{Binding NewTerm}" 
+                                Background="{DynamicResource AppBackground}" 
+                                HorizontalAlignment="Stretch"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="120">

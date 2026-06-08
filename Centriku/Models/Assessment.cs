@@ -14,7 +14,7 @@ namespace Centriku.Models
 
         public string? Title { get; set; }
         public string? Category { get; set; } // e.g., "Written Work", "Performance Task"
-        public string? GradingPeriod { get; set; } = "Midterm";
+        public string? GradingPeriod { get; set; } = string.Empty;
         public double MaxScore { get; set; }
         public DateTime DateGiven { get; set; }
         public bool IsVisible { get; set; } = true;
