@@ -157,7 +157,7 @@ namespace Centriku.ViewModels
                     {
                         var termAssessments = allClassAssessments.Where(a => a.GradingPeriod == term).ToList();
                         
-                        if (!termAssessments.Any())
+                        if (termAssessments.Count == 0)
                         {
                             termGradesList.Add(new TermGradeItem { TermLabel = term, GradeDisplay = "--" });
                             continue;

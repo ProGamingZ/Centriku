@@ -14,7 +14,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string TemplateName { get; set; } = "Standard High School";
 
         [ObservableProperty] public partial string CalculationMode { get; set; } = "NRFG";
-        public ObservableCollection<string> AvailableCalculationModes { get; } = new() { "CRG", "NRFG" };
+        public ObservableCollection<string> AvailableCalculationModes { get; } = ["CRG", "NRFG"];
         
         public bool IsBoundaryMode => CalculationMode == "CRG";
         public bool IsFormulaMode => CalculationMode == "NRFG"; 
@@ -25,12 +25,12 @@ namespace Centriku.ViewModels
             OnPropertyChanged(nameof(IsFormulaMode)); 
         }
 
-        [ObservableProperty] public partial double NrfgBaseValue { get; set; } = 60.0;   
-        [ObservableProperty] public partial ObservableCollection<Centriku.Models.GradeBoundary> Boundaries { get; set; } = new();     
+        [ObservableProperty] public partial double? NrfgBaseValue { get; set; } = 60.0;   
+        [ObservableProperty] public partial ObservableCollection<PolicyBoundaryItem> Boundaries { get; set; } = new();     
         public IRelayCommand AddBoundaryCommand { get; }
-        public IRelayCommand<Centriku.Models.GradeBoundary> RemoveBoundaryCommand { get; }
+        public IRelayCommand<PolicyBoundaryItem> RemoveBoundaryCommand { get; }
 
-        [ObservableProperty] public partial decimal PassingGrade { get; set; } = 75m;
+        [ObservableProperty] public partial decimal? PassingGrade { get; set; } = 75m;
 
         [ObservableProperty] public partial decimal TotalWeight { get; set; }
 
@@ -50,7 +50,7 @@ namespace Centriku.ViewModels
             
             AddCategoryCommand = new RelayCommand(() => AddCategory("New Category", 0m));
             AddBoundaryCommand = new RelayCommand(AddBoundary);
-            RemoveBoundaryCommand = new RelayCommand<Centriku.Models.GradeBoundary>(RemoveBoundary!);
+            RemoveBoundaryCommand = new RelayCommand<PolicyBoundaryItem>(RemoveBoundary!);
             RemoveCategoryCommand = new RelayCommand<PolicyCategoryItem>(RemoveCategory!);
             SavePolicyCommand = new RelayCommand(SavePolicy, () => IsValidPolicy);
             
@@ -74,7 +74,10 @@ namespace Centriku.ViewModels
 
             var savedBoundaries = await db.Table<Centriku.Models.GradeBoundary>().Where(b => b.TemplateID == template.TemplateID).ToListAsync();
             Boundaries.Clear();
-            foreach (var b in savedBoundaries) Boundaries.Add(b);
+            foreach (var b in savedBoundaries) 
+            {
+                Boundaries.Add(new PolicyBoundaryItem { MinScore = b.MinScore, MaxScore = b.MaxScore, Label = b.Label, GpaValue = b.GpaValue });
+            }
 
             foreach (var cat in Categories) { cat.PropertyChanged -= Category_PropertyChanged; }
             Categories.Clear();
@@ -106,11 +109,14 @@ namespace Centriku.ViewModels
 
                 if (_editingTemplateId.HasValue)
                 {
+                    // === UPDATE MODE ===
                     var templateToUpdate = await db.Table<Centriku.Models.GradingTemplate>().Where(t => t.TemplateID == _editingTemplateId.Value).FirstOrDefaultAsync();
                     templateToUpdate.TemplateName = this.TemplateName;
-                    templateToUpdate.PassingGrade = (double)this.PassingGrade;
+                    
+                    // Safely coalesce nulls to 0 before hitting the DB!
+                    templateToUpdate.PassingGrade = (double)(this.PassingGrade ?? 0m);
                     templateToUpdate.CalculationMode = this.CalculationMode;
-                    templateToUpdate.NrfgBaseValue = this.NrfgBaseValue;
+                    templateToUpdate.NrfgBaseValue = this.NrfgBaseValue ?? 0.0;
                     await db.UpdateAsync(templateToUpdate);
 
                     await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == templateToUpdate.TemplateID).DeleteAsync();
@@ -120,18 +126,30 @@ namespace Centriku.ViewModels
                     }
 
                     await db.Table<Centriku.Models.GradeBoundary>().Where(b => b.TemplateID == templateToUpdate.TemplateID).DeleteAsync();
-                    foreach (var b in Boundaries) { b.TemplateID = templateToUpdate.TemplateID; await db.InsertAsync(b); }
+                    foreach (var b in Boundaries) 
+                    { 
+                        // Map the UI wrapper back to the raw SQLite Database model
+                        await db.InsertAsync(new Centriku.Models.GradeBoundary 
+                        {
+                            TemplateID = templateToUpdate.TemplateID,
+                            MinScore = b.MinScore ?? 0,
+                            MaxScore = b.MaxScore ?? 0,
+                            Label = b.Label,
+                            GpaValue = b.GpaValue ?? 0
+                        }); 
+                    }
 
                     System.Console.WriteLine($"SUCCESS: Updated Template #{templateToUpdate.TemplateID}!");
                 }
                 else
                 {
+                    // === CREATE MODE ===
                     var newTemplate = new Centriku.Models.GradingTemplate 
                     { 
                         TemplateName = this.TemplateName, 
-                        PassingGrade = (double)this.PassingGrade, 
+                        PassingGrade = (double)(this.PassingGrade ?? 0m), 
                         CalculationMode = this.CalculationMode,
-                        NrfgBaseValue = this.NrfgBaseValue 
+                        NrfgBaseValue = this.NrfgBaseValue ?? 0.0 
                     };                    
                     await db.InsertAsync(newTemplate);
 
@@ -142,7 +160,14 @@ namespace Centriku.ViewModels
 
                     foreach (var b in Boundaries) 
                     { 
-                        b.TemplateID = newTemplate.TemplateID; await db.InsertAsync(b); 
+                        await db.InsertAsync(new Centriku.Models.GradeBoundary 
+                        {
+                            TemplateID = newTemplate.TemplateID,
+                            MinScore = b.MinScore ?? 0,
+                            MaxScore = b.MaxScore ?? 0,
+                            Label = b.Label,
+                            GpaValue = b.GpaValue ?? 0
+                        });  
                     }
                     System.Console.WriteLine($"SUCCESS: Created New Template #{newTemplate.TemplateID}!");
                 }
@@ -169,10 +194,10 @@ namespace Centriku.ViewModels
 
         private void AddBoundary()
         {
-            Boundaries.Add(new Centriku.Models.GradeBoundary { MinScore = 90, MaxScore = 100, Label = "A", GpaValue = 4.0 });
+            Boundaries.Add(new PolicyBoundaryItem { MinScore = 90, MaxScore = 100, Label = "A", GpaValue = 4.0 });
         }
 
-        private void RemoveBoundary(Centriku.Models.GradeBoundary boundary)
+        private void RemoveBoundary(PolicyBoundaryItem boundary)
         {
             if (boundary != null && Boundaries.Contains(boundary)) Boundaries.Remove(boundary);
         }
@@ -229,5 +254,12 @@ namespace Centriku.ViewModels
 
         [ObservableProperty]
         public partial decimal? Weight { get; set; }
+    }
+    public partial class PolicyBoundaryItem : ObservableObject
+    {
+        [ObservableProperty] public partial double? MinScore { get; set; }
+        [ObservableProperty] public partial double? MaxScore { get; set; }
+        [ObservableProperty] public partial string? Label { get; set; }
+        [ObservableProperty] public partial double? GpaValue { get; set; }
     }
 }

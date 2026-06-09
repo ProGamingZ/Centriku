@@ -77,6 +77,7 @@ namespace Centriku.ViewModels
                     _ = cachedGradebook.RefreshRostersAsync();
                 }
             };
+            UpdateAvailableTerms(NewEducationMode);
         }
 
         private async void InitializeData()
@@ -172,6 +173,7 @@ namespace Centriku.ViewModels
             SelectedTemplate = null;
             IsAddingClass = false;
             NewEducationMode = "Quarterly";
+            UpdateAvailableTerms("Quarterly");
         }
 
        
