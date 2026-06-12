@@ -42,12 +42,14 @@ namespace Centriku.ViewModels
         private List<GradingCategory> _allCategories = [];
         private List<GradeBoundary> _allBoundaries = [];
 
-        public IRelayCommand<DashboardClassCardViewModel> OpenClassCommand { get; }
+        public IRelayCommand<DashboardClassCardViewModel> OpenGradebookCommand { get; }
+        public IRelayCommand<DashboardClassCardViewModel> OpenAttendanceCommand { get; }
 
         public DashboardViewModel(System.Action<ViewModelBase> navigateAction)
         {
             _navigateAction = navigateAction;
-            OpenClassCommand = new RelayCommand<DashboardClassCardViewModel>(OpenClass!);
+            OpenGradebookCommand = new RelayCommand<DashboardClassCardViewModel>(OpenGradebook!);
+            OpenAttendanceCommand = new RelayCommand<DashboardClassCardViewModel>(OpenAttendance!);
         }
 
         public async Task LoadDashboardDataAsync()
@@ -257,12 +259,22 @@ namespace Centriku.ViewModels
             AttentionAlerts = new ObservableCollection<AttentionAlertViewModel>(newAlerts);
         }
 
-        private void OpenClass(DashboardClassCardViewModel selectedClass)
+        private void OpenGradebook(DashboardClassCardViewModel selectedClass)
         {
             if (selectedClass != null)
             {
                 var gradebookVM = new GradebookViewModel();
-                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty);
+                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 0); // 0 = Grades Tab
+                _navigateAction(gradebookVM);
+            }
+        }
+
+        private void OpenAttendance(DashboardClassCardViewModel selectedClass)
+        {
+            if (selectedClass != null)
+            {
+                var gradebookVM = new GradebookViewModel();
+                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 1); // 1 = Attendance Tab
                 _navigateAction(gradebookVM);
             }
         }

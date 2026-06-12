@@ -11,7 +11,7 @@ namespace Centriku.ViewModels
     public partial class GradebookViewModel : ViewModelBase
     {
         #region Core Properties & UI Toggles
-
+            [ObservableProperty] public partial int SelectedTabIndex { get; set; } = 0;
             [ObservableProperty] public partial int ClassId { get; set; }
             [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
             public System.Action<string>? ShowToastMessage { get; set; } 
@@ -270,10 +270,11 @@ namespace Centriku.ViewModels
                 DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
                 ExportCsvCommand = new RelayCommand(ExportToCsv);
             }
-            public async void Initialize(int classId, string classTitle)
+            public async void Initialize(int classId, string classTitle, int startingTab = 0)
             {
                 ClassId = classId;
                 ClassTitle = classTitle;
+                SelectedTabIndex = startingTab;
                 await LoadGradebookData();
                 await LoadCategories();
                 await LoadAttendanceData();

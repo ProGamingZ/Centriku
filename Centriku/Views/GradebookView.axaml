@@ -5,7 +5,7 @@
              x:Class="Centriku.Views.GradebookView"
              x:DataType="vm:GradebookViewModel">
 
-    <TabControl Margin="10">
+    <TabControl Margin="10" SelectedIndex="{Binding SelectedTabIndex}">
         
         <TabItem Header="Grades" FontSize="16" FontWeight="SemiBold">         
             <gb:GradesTabView DataContext="{Binding}" />

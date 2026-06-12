@@ -55,7 +55,24 @@
                                             <TextBlock Text="{Binding FullTitle}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
                                             <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,5,0,5"/>
                                             <TextBlock Text="{Binding StudentCountText}" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,15"/>
-                                            <Button Content="Open Gradebook" Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenClassCommand}" CommandParameter="{Binding}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="SemiBold" CornerRadius="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                                            
+                                            <Grid ColumnDefinitions="*, *" Margin="0,0,0,0">
+                                                <Button Grid.Column="0" Content="📊 Grades" 
+                                                        Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenGradebookCommand}" 
+                                                        CommandParameter="{Binding}" 
+                                                        Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="SemiBold" 
+                                                        CornerRadius="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                                        Margin="0,0,5,0" FontSize="13"/>
+                                                
+                                                <Button Grid.Column="1" Content="✋ Attendance" 
+                                                        Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenAttendanceCommand}" 
+                                                        CommandParameter="{Binding}" 
+                                                        Background="Transparent" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" 
+                                                        Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" 
+                                                        CornerRadius="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                                        Margin="5,0,0,0" FontSize="13"/>
+                                            </Grid>
+
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
