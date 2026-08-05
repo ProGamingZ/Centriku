@@ -177,7 +177,7 @@ namespace Centriku.ViewModels
         }
 
        
-        private void OpenClass(ClassCardViewModel selectedClass)
+        private async void OpenClass(ClassCardViewModel selectedClass)
         {
             if (selectedClass != null)
             {
@@ -185,14 +185,18 @@ namespace Centriku.ViewModels
 
                 if (!_gradebookCache.TryGetValue(classId, out GradebookViewModel? value))
                 {
+                    // FIRST TIME OPENING: Initialize from scratch
                     var newGradebook = new GradebookViewModel();
                     newGradebook.Initialize(classId, selectedClass.SubjectName);
                     _gradebookCache[classId] = newGradebook;
                 }
                 else
                 {
+                    // OPENING FROM CACHE: Force it to grab the fresh student edits/enrollments!
+                    await value.RefreshRostersAsync(); 
                     value.RecalculateFinalGrades();
                 }
+                
                 _navigateAction(_gradebookCache[classId]);
             }
         }

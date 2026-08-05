@@ -66,7 +66,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewStudentSectionBlock { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentEnrollmentStatus { get; set; } = "Regular";
 
-        private async void LoadStudents()
+        public async void LoadStudents()
         {
             var db = new Centriku.Services.DatabaseService().GetConnection();
             var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();

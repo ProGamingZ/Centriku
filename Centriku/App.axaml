@@ -121,26 +121,34 @@
                 </ResourceDictionary> 
 
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppBackground">#F5F5F5</SolidColorBrush> 
+                    <SolidColorBrush x:Key="AppBackground">#F3F4F6</SolidColorBrush> 
                     <SolidColorBrush x:Key="SurfaceBrush">#FFFFFF</SolidColorBrush>  
-                    <SolidColorBrush x:Key="TextMainBrush">#1A1A1A</SolidColorBrush>   
-                    <SolidColorBrush x:Key="TextMutedBrush">#666666</SolidColorBrush>   
-                    <SolidColorBrush x:Key="BorderBrush">#E5E7EB</SolidColorBrush>   
+                    <SolidColorBrush x:Key="TextMainBrush">#111827</SolidColorBrush>   
+                    <SolidColorBrush x:Key="TextMutedBrush">#4B5563</SolidColorBrush>   
+                    <SolidColorBrush x:Key="BorderBrush">#CBD5E1</SolidColorBrush>   
                     <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush>  
                     
-                    <SolidColorBrush x:Key="SurfaceVariantBrush">#F3F4F6</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridAltRowBrush">#FAFAFA</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceVariantBrush">#E2E8F0</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#F8FAFC</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridHoverBrush">#F3F4F6</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridSelectedBrush">#EDE9FE</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries> 
 
-            
+            <x:String x:Key="IconBooks">&#984067;</x:String>
+            <x:String x:Key="IconGrades">&#986082;</x:String>
+            <x:String x:Key="IconAttendance">&#983345;</x:String>
+            <x:String x:Key="IconEarlyWarning">&#984015;</x:String>
+            <x:String x:Key="IconEmptyState">&#62106;</x:String>
+            <x:String x:Key="IconAtRisk">&#983130;</x:String>
+            <x:String x:Key="IconCritical">&#62319;</x:String>
+
             <x:String x:Key="IconDashboard">&#62563;</x:String>
             <x:String x:Key="IconClasses">&#62154;</x:String>
             <x:String x:Key="IconPolicies">&#983182;</x:String>
             <x:String x:Key="IconDirectory">&#62901;</x:String>
             <x:String x:Key="IconSettings">&#63146;</x:String>
+
             <x:String x:Key="IconSearch">&#63120;</x:String>
             <x:String x:Key="IconExport">&#58599;</x:String>
             <x:String x:Key="IconTheme">&#58450;</x:String>

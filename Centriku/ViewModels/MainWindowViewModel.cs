@@ -53,7 +53,7 @@ namespace Centriku.ViewModels
             NavigateToDashboardCommand = new RelayCommand(OnNavigateToDashboard);
             NavigateToMyClassesCommand = new RelayCommand(OnNavigateToMyClasses);
             NavigateToPoliciesCommand = new RelayCommand(OnNavigateToPolicies);
-            NavigateToDirectoryCommand = new RelayCommand(() => Navigate(_directoryViewModel));
+            NavigateToDirectoryCommand = new RelayCommand(OnNavigateToDirectory);
             NavigateToSettingsCommand = new RelayCommand(() => Navigate(_settingsViewModel));
 
             // Global Navigation Glue
@@ -114,5 +114,11 @@ namespace Centriku.ViewModels
             await _policiesViewModel.LoadSavedTemplatesAsync(); 
             Navigate(_policiesViewModel);
         }
+        private void OnNavigateToDirectory()
+        {
+            _directoryViewModel.LoadStudents(); 
+            Navigate(_directoryViewModel);
+        }
+
     }
 }
