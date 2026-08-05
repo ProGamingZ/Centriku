@@ -29,6 +29,8 @@ namespace Centriku.Services
             await _database.CreateTableAsync<GradingCategory>();
             await _database.CreateTableAsync<AttendanceRecord>();
             await _database.CreateTableAsync<MasterQuarterlyGrade>();
+            await _database.CreateTableAsync<GradeBoundary>();
+            await _database.CreateTableAsync<AppSettings>();
         }
         public SQLiteAsyncConnection GetConnection() => _database;
     }
