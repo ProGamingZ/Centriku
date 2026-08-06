@@ -20,8 +20,6 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewAcademicYear { get; set; } = "2025-2026";        
         [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = [];
         [ObservableProperty] public partial string NewTerm { get; set; } = string.Empty;     
-        [ObservableProperty] public partial string NewEducationMode { get; set; } = "Quarterly";
-        public ObservableCollection<string> AvailableEducationModes { get; } = ["Quarterly", "Semestral"];
         [ObservableProperty] public partial GradingTemplate? SelectedTemplate { get; set; }
 
         
@@ -33,27 +31,6 @@ namespace Centriku.ViewModels
         public IRelayCommand<ClassCardViewModel> EditClassCommand { get; } 
         public IRelayCommand<ClassCardViewModel> DeleteClassCommand { get; }
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
-
-        partial void OnNewEducationModeChanged(string value)
-        {
-            UpdateAvailableTerms(value);
-        }
-        private void UpdateAvailableTerms(string mode)
-        {
-            AvailableTerms.Clear();
-
-            if (mode == "Semestral")
-            {
-                AvailableTerms.Add("1st Sem");
-                AvailableTerms.Add("2nd Sem");
-                NewTerm = "1st Sem"; 
-            }
-            else // Quarterly
-            {
-                AvailableTerms.Add("Q1-Q4");
-                NewTerm = "Q1-Q4"; 
-            }
-        }
 
         public MyClassesViewModel(Action<ViewModelBase> navigateAction)
         {
@@ -77,7 +54,8 @@ namespace Centriku.ViewModels
                     _ = cachedGradebook.RefreshRostersAsync();
                 }
             };
-            UpdateAvailableTerms(NewEducationMode);
+            AvailableTerms = ["1st Sem", "2nd Sem", "Midyear/Summer"];
+            NewTerm = "1st Sem";
         }
 
         private async void InitializeData()
@@ -115,7 +93,6 @@ namespace Centriku.ViewModels
             NewSectionLabel = classCard.SectionLabel;
             NewAcademicYear = classCard.AcademicYear;
             NewTerm = classCard.Term;
-            NewEducationMode = classCard.DbModel.EducationMode ?? "Quarterly";
             SelectedTemplate = AvailableTemplates.FirstOrDefault(t => t.TemplateID == classCard.DbModel.GradingTemplateID);
             
             IsAddingClass = true;
@@ -134,7 +111,6 @@ namespace Centriku.ViewModels
                 classToUpdate.SectionLabel = NewSectionLabel;
                 classToUpdate.AcademicYear = NewAcademicYear;
                 classToUpdate.Term = NewTerm;
-                classToUpdate.EducationMode = NewEducationMode;
                 classToUpdate.GradingTemplateID = SelectedTemplate.TemplateID;
                 
                 await db.UpdateAsync(classToUpdate);
@@ -148,7 +124,6 @@ namespace Centriku.ViewModels
                     SectionLabel = NewSectionLabel,
                     AcademicYear = NewAcademicYear,
                     Term = NewTerm,
-                    EducationMode = NewEducationMode,
                     GradingTemplateID = SelectedTemplate.TemplateID
                 };
                 await db.InsertAsync(newClass);
@@ -172,8 +147,6 @@ namespace Centriku.ViewModels
             NewSectionLabel = string.Empty;
             SelectedTemplate = null;
             IsAddingClass = false;
-            NewEducationMode = "Quarterly";
-            UpdateAvailableTerms("Quarterly");
         }
 
        
@@ -217,7 +190,6 @@ namespace Centriku.ViewModels
         public string SectionLabel => DbModel.SectionLabel ?? string.Empty;
         public string AcademicYear => DbModel.AcademicYear ?? string.Empty;
         public string Term => DbModel.Term ?? string.Empty;
-        public string EducationMode => DbModel.EducationMode ?? "Quarterly";
         public ClassCardViewModel(TeacherClass teacherClass, string templateName)
         {
             DbModel = teacherClass;
