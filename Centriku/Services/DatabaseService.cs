@@ -16,7 +16,7 @@ namespace Centriku.Services
             _database = new SQLiteAsyncConnection(dbPath);
         }
 
-        // 3. This method builds all 8 of your tables
+        // 3. This method builds all your tables (College-ready)
         public async Task InitializeDatabaseAsync()
         {
             await _database.CreateTableAsync<Student>();
@@ -28,10 +28,10 @@ namespace Centriku.Services
             await _database.CreateTableAsync<GradingTemplate>();
             await _database.CreateTableAsync<GradingCategory>();
             await _database.CreateTableAsync<AttendanceRecord>();
-            await _database.CreateTableAsync<MasterQuarterlyGrade>();
             await _database.CreateTableAsync<GradeBoundary>();
             await _database.CreateTableAsync<AppSettings>();
         }
+        
         public SQLiteAsyncConnection GetConnection() => _database;
     }
 }

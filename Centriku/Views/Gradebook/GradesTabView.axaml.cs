@@ -52,7 +52,7 @@ namespace Centriku.Views.Gradebook
          var colActions = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Actions");
 
          // 2. Toggle visibility
-         if (colLRN != null) colLRN.IsVisible = vm.ShowLRN;
+         if (colLRN != null) colLRN.IsVisible = vm.ShowStudentId;
          if (colFirstName != null) colFirstName.IsVisible = vm.ShowFirstName;
          if (colLastName != null) colLastName.IsVisible = vm.ShowLastName;
          
@@ -84,46 +84,13 @@ namespace Centriku.Views.Gradebook
          // 3A. MODE: SEMESTER AVERAGE 
          if (vm.IsSemesterAverageView)
          {
-            if (vm.EducationMode == "Semestral")
-            {
-               // Draw Midterm and Final columns
-               var midColumn = new DataGridTemplateColumn { Header = "Midterm", IsVisible = vm.ShowMidtermGrade, CanUserSort = true, SortMemberPath = "MidtermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay")); return tb; })};
-               grid.Columns.Insert(insertIndex++, midColumn);
+            // Draw Midterm and Final columns
+            var midColumn = new DataGridTemplateColumn { Header = "Midterm", IsVisible = vm.ShowMidtermGrade, CanUserSort = true, SortMemberPath = "MidtermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay")); return tb; })};
+            grid.Columns.Insert(insertIndex++, midColumn);
 
-               var finalColumn = new DataGridTemplateColumn { Header = "Final", IsVisible = vm.ShowFinalTermGrade, CanUserSort = true, SortMemberPath = "FinalTermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay")); return tb; })};
-               grid.Columns.Insert(insertIndex, finalColumn);
-            }
-            else // Quarterly
-            {
-               // Draw Q1, Q2, Q3, Q4 columns automatically!
-               var quarters = new[] 
-               { 
-                  new { Name = "Q1", IsVisible = vm.ShowQ1Grade },
-                  new { Name = "Q2", IsVisible = vm.ShowQ2Grade },
-                  new { Name = "Q3", IsVisible = vm.ShowQ3Grade },
-                  new { Name = "Q4", IsVisible = vm.ShowQ4Grade }
-               };
-
-               foreach (var q in quarters)
-               {
-                  if (!q.IsVisible) continue; 
-
-                  var qCol = new DataGridTemplateColumn 
-                  { 
-                     Header = q.Name, 
-                     CanUserSort = true, 
-                     SortMemberPath = $"{q.Name}GradeNumeric", 
-                     IsReadOnly = true, 
-                     CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => 
-                     { 
-                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; 
-                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"{q.Name}GradeDisplay")); 
-                        return tb; 
-                     })
-                  };
-                  grid.Columns.Insert(insertIndex++, qCol);
-               }
-            }
+            var finalColumn = new DataGridTemplateColumn { Header = "Final", IsVisible = vm.ShowFinalTermGrade, CanUserSort = true, SortMemberPath = "FinalTermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center }; tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay")); return tb; })};
+            grid.Columns.Insert(insertIndex, finalColumn);
+            
             return; 
          }
 
@@ -172,6 +139,17 @@ namespace Centriku.Views.Gradebook
                   {
                      var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
                      box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarnedDisplay") { Mode = Avalonia.Data.BindingMode.TwoWay });
+                     
+                     // Push the cursor to the rightmost side when the textbox loads into the UI
+                     box.AttachedToVisualTree += (sender, args) =>
+                     {
+                        // Using Dispatcher ensures the text binding has finished populating before we measure its length
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                           box.SelectAll();
+                        }, Avalonia.Threading.DispatcherPriority.Input);
+                     };
+
                      return box;
                   })
                };

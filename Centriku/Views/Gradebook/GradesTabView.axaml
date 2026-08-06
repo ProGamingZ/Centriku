@@ -26,15 +26,7 @@
                                  <TextBlock Text="Export Options" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                  <TextBlock Text="Select tabs to include in spreadsheet:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
 
-                                 <StackPanel IsVisible="{Binding IsQuarterlyMode}">
-                                    <CheckBox Content="Q1 Grades" IsChecked="{Binding ExportQ1}"/>
-                                    <CheckBox Content="Q2 Grades" IsChecked="{Binding ExportQ2}"/>
-                                    <CheckBox Content="Q3 Grades" IsChecked="{Binding ExportQ3}"/>
-                                    <CheckBox Content="Q4 Grades" IsChecked="{Binding ExportQ4}"/>
-                                    <CheckBox Content="Final Average Summary" IsChecked="{Binding ExportFinalAverage}"/>
-                                 </StackPanel>
-
-                                 <StackPanel IsVisible="{Binding IsSemestralMode}">
+                                 <StackPanel>
                                     <CheckBox Content="Midterm Grades" IsChecked="{Binding ExportMidterm}"/>
                                     <CheckBox Content="Final Grades" IsChecked="{Binding ExportFinal}"/>
                                     <CheckBox Content="Semester Average Summary" IsChecked="{Binding ExportSemesterAverage}"/>
@@ -60,15 +52,11 @@
                               <Grid RowDefinitions="Auto, *" Width="250" MaxHeight="450" Margin="10">
                                     <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,10">
                                        <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                       <CheckBox Content="Show LRN" IsChecked="{Binding ShowLRN}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="10,0,0,0"/>
+                                       <CheckBox Content="Show Student ID" IsChecked="{Binding ShowStudentId}" Margin="10,0,0,0"/>
                                        <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Midterm" IsChecked="{Binding ShowMidtermGrade}" IsVisible="{Binding IsSemestralSummaryView}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Final" IsChecked="{Binding ShowFinalTermGrade}" IsVisible="{Binding IsSemestralSummaryView}" Margin="10,0,0,0"/>   
-                                       <CheckBox Content="Show Q1" IsChecked="{Binding ShowQ1Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Q2" IsChecked="{Binding ShowQ2Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Q3" IsChecked="{Binding ShowQ3Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Q4" IsChecked="{Binding ShowQ4Grade}" IsVisible="{Binding IsQuarterlySummaryView}" Margin="10,0,0,0"/>
+                                       <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="10,0,0,0"/>
+                                       <CheckBox Content="Show Midterm" IsChecked="{Binding ShowMidtermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="10,0,0,0"/>
+                                       <CheckBox Content="Show Final" IsChecked="{Binding ShowFinalTermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="10,0,0,0"/>   
                                        <CheckBox Content="{Binding DynamicFinalColumnName, StringFormat='Show {0}'}" IsChecked="{Binding ShowFinalGrade}" Margin="10,0,0,0" />
                                     </StackPanel>
 
@@ -169,9 +157,9 @@
             GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
             CornerRadius="8" MinHeight="300" FrozenColumnCount="3">
             <DataGrid.Columns>
-               <DataGridTextColumn Header="LRN" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+               <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+               <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTemplateColumn Header="Final Grade" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="Auto">
                   <DataGridTemplateColumn.CellTemplate>
                      <DataTemplate>

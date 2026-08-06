@@ -14,8 +14,8 @@ namespace Centriku.ViewModels.Settings
         [ObservableProperty] public partial string DefaultExportFolderPath { get; set; } = string.Empty;
         [ObservableProperty] public partial string FileNamingFormat { get; set; } = "[Class]_[Term]_[Date]";
         
-        [ObservableProperty] public partial bool ExportIncludeLRN { get; set; } = true;
-        partial void OnExportIncludeLRNChanged(bool value) => RefreshPreviews();
+        [ObservableProperty] public partial bool ExportIncludeStudentId { get; set; } = true;
+        partial void OnExportIncludeStudentIdChanged(bool value) => RefreshPreviews();
 
         [ObservableProperty] public partial bool ExportIncludeArchived { get; set; } = false;
         partial void OnExportIncludeArchivedChanged(bool value) => RefreshPreviews();
@@ -37,7 +37,6 @@ namespace Centriku.ViewModels.Settings
         [ObservableProperty] public partial bool IsAttendanceDetailed { get; set; } = true;
 
         // === 2. Preview Collections ===
-        [ObservableProperty] public partial ObservableCollection<GradePreviewRow> QuarterlyPreviewRows { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<GradePreviewRow> SemestralPreviewRows { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<AttendancePreviewRow> AttendancePreviewRows { get; set; } = new();
 
@@ -70,7 +69,7 @@ namespace Centriku.ViewModels.Settings
             {
                 DefaultExportFolderPath = settings.DefaultExportFolderPath ?? string.Empty;
                 FileNamingFormat = settings.FileNamingFormat ?? "[Class]_[Term]_[Date]";
-                ExportIncludeLRN = settings.ExportIncludeLRN;
+                ExportIncludeStudentId = settings.ExportIncludeStudentId;
                 ExportIncludeArchived = settings.ExportIncludeArchived;
                 ExportMissingScoreRule = settings.ExportMissingScoreRule ?? "Zero";
                 ExportDecimalPrecision = settings.ExportDecimalPrecision ?? "Exact";
@@ -95,7 +94,7 @@ namespace Centriku.ViewModels.Settings
 
             settings.DefaultExportFolderPath = this.DefaultExportFolderPath;
             settings.FileNamingFormat = this.FileNamingFormat;
-            settings.ExportIncludeLRN = this.ExportIncludeLRN;
+            settings.ExportIncludeStudentId = this.ExportIncludeStudentId;
             settings.ExportIncludeArchived = this.ExportIncludeArchived;
             settings.ExportMissingScoreRule = this.ExportMissingScoreRule;
             settings.ExportDecimalPrecision = this.ExportDecimalPrecision;
@@ -109,7 +108,7 @@ namespace Centriku.ViewModels.Settings
         {
             DefaultExportFolderPath = string.Empty;
             FileNamingFormat = "[Class]_[Term]_[Date]";
-            ExportIncludeLRN = true;
+            ExportIncludeStudentId = true;
             ExportIncludeArchived = false;
             ExportMissingScoreRule = "Zero";
             ExportDecimalPrecision = "Exact";
@@ -124,7 +123,6 @@ namespace Centriku.ViewModels.Settings
         {
 
             await Task.Delay(50);
-            var newQuarterly = new ObservableCollection<GradePreviewRow>();
             var newSemestral = new ObservableCollection<GradePreviewRow>();
             var newAttendance = new ObservableCollection<AttendancePreviewRow>();
 
@@ -143,18 +141,11 @@ namespace Centriku.ViewModels.Settings
                 return rawScore.Value.ToString("0.##");
             }
 
-            // A. Populate Quarterly Fake Data
-            newQuarterly.Add(new GradePreviewRow { Lrn = "102938475612", LastName = "Dela Cruz", FirstName = "Juan", Score1 = FormatScore(85.5), Score2 = FormatScore(null), Average = FormatScore(42.75) + "%" });
-            if (ExportIncludeArchived)
-            {
-                newQuarterly.Add(new GradePreviewRow { Lrn = "987654321098", LastName = "[ARCHIVED] Rizal", FirstName = "Jose", Score1 = FormatScore(92.4), Score2 = FormatScore(90.1), Average = FormatScore(91.25) + "%" });
-            }
-
             // B. Populate Semestral Fake Data
-            newSemestral.Add(new GradePreviewRow { Lrn = "102938475612", LastName = "Dela Cruz", FirstName = "Juan", Score1 = FormatScore(88.8), Score2 = FormatScore(null), Average = FormatScore(44.4) + "%" });
+            newSemestral.Add(new GradePreviewRow { StudentId = "102938475612", LastName = "Dela Cruz", FirstName = "Juan", Score1 = FormatScore(88.8), Score2 = FormatScore(null), Average = FormatScore(44.4) + "%" });
             if (ExportIncludeArchived)
             {
-                newSemestral.Add(new GradePreviewRow { Lrn = "987654321098", LastName = "[ARCHIVED] Rizal", FirstName = "Jose", Score1 = FormatScore(90.0), Score2 = FormatScore(85.0), Average = FormatScore(87.5) + "%" });
+                newSemestral.Add(new GradePreviewRow { StudentId = "987654321098", LastName = "[ARCHIVED] Rizal", FirstName = "Jose", Score1 = FormatScore(90.0), Score2 = FormatScore(85.0), Average = FormatScore(87.5) + "%" });
             }
 
             // C. Populate Attendance Fake Data
@@ -164,7 +155,6 @@ namespace Centriku.ViewModels.Settings
                 newAttendance.Add(new AttendancePreviewRow { LastName = "[ARCHIVED] Rizal", FirstName = "Jose", TotalP = 18, TotalL = 0, TotalA = 0, TotalE = 0, Day1 = "P", Day2 = "P" });
             }
 
-            QuarterlyPreviewRows = newQuarterly;
             SemestralPreviewRows = newSemestral;
             AttendancePreviewRows = newAttendance;
         }
@@ -173,7 +163,7 @@ namespace Centriku.ViewModels.Settings
     // === DATA MODELS FOR THE PREVIEW TABLES ===
     public class GradePreviewRow
     {
-        public string Lrn { get; set; } = string.Empty;
+        public string StudentId { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string FirstName { get; set; } = string.Empty;
         public string Score1 { get; set; } = string.Empty;

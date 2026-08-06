@@ -141,6 +141,13 @@ namespace Centriku.Views.Gradebook
                         }
                      }
                   };
+                  box.AttachedToVisualTree += (sender, args) =>
+                  {
+                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                     {
+                        box.SelectAll();
+                     }, Avalonia.Threading.DispatcherPriority.Input);
+                  };
                   return box;
                })
             };

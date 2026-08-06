@@ -16,7 +16,7 @@
 
          <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="40,0,40,20">
                <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
-                  PlaceholderText="Search by LRN, Name, Grade, or Section..." 
+                  PlaceholderText="Search by Student ID, Name, Grade, or Section..." 
                   Background="{DynamicResource SurfaceBrush}" 
                   BorderBrush="{DynamicResource BorderBrush}" 
                   CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
@@ -29,14 +29,14 @@
                      <Flyout>
                            <StackPanel Spacing="10" MinWidth="150">
                               <TextBlock Text="Toggle Columns" FontWeight="Bold" Margin="0,0,0,5"/>
-                              <CheckBox Content="LRN" IsChecked="{Binding ShowLrnColumn}"/>
+                              <CheckBox Content="Student ID" IsChecked="{Binding ShowStudentIdColumn}"/>
                               <CheckBox Content="Last Name" IsChecked="{Binding ShowLastNameColumn}"/>
                               <CheckBox Content="First Name" IsChecked="{Binding ShowFirstNameColumn}"/>
                               <CheckBox Content="Middle Name" IsChecked="{Binding ShowMiddleNameColumn}"/>
                               <CheckBox Content="Suffix" IsChecked="{Binding ShowSuffixColumn}"/>
                               <CheckBox Content="Gender" IsChecked="{Binding ShowGenderColumn}"/>
-                              <CheckBox Content="Grade/Year" IsChecked="{Binding ShowGradeYearLevelColumn}"/>
-                              <CheckBox Content="Section/Block" IsChecked="{Binding ShowSectionBlockColumn}"/>
+                              <CheckBox Content="Year" IsChecked="{Binding ShowGradeYearLevelColumn}"/>
+                              <CheckBox Content="Section" IsChecked="{Binding ShowSectionBlockColumn}"/>
                               <CheckBox Content="Status" IsChecked="{Binding ShowEnrollmentStatusColumn}"/>
                            </StackPanel>
                      </Flyout>
@@ -56,8 +56,8 @@
                <Grid RowDefinitions="*, Auto">
                   <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
                      <StackPanel Margin="0,0,15,15">
-                           <TextBlock Text="LRN (Student ID)*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                           <TextBox Text="{Binding NewStudentLrn}" Background="{DynamicResource AppBackground}" Width="150"/>
+                           <TextBlock Text="Student ID*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <TextBox Text="{Binding NewStudentId}" Background="{DynamicResource AppBackground}" Width="150"/>
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15">
                            <TextBlock Text="First Name*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
@@ -112,7 +112,7 @@
                GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="300">
                <DataGrid.Columns>
                   
-                  <DataGridTemplateColumn Header="LRN" SortMemberPath="StudentID" MinWidth="120" MaxWidth="250" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowLrnColumn}">
+                  <DataGridTemplateColumn Header="Student ID" SortMemberPath="StudentID" MinWidth="120" MaxWidth="250" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowStudentIdColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">
@@ -181,7 +181,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Grade/Year" SortMemberPath="GradeYearLevel" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGradeYearLevelColumn}">
+                  <DataGridTemplateColumn Header="Year" SortMemberPath="GradeYearLevel" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowGradeYearLevelColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">
@@ -192,7 +192,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Section/Block" SortMemberPath="SectionBlock" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowSectionBlockColumn}">
+                  <DataGridTemplateColumn Header="Section" SortMemberPath="SectionBlock" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowSectionBlockColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">

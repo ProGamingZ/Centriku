@@ -34,20 +34,10 @@ namespace Centriku.ViewModels
     {
         public string SubjectName { get; set; } = string.Empty;
         public string Term { get; set; } = string.Empty;
-        public string EducationMode { get; set; } = "Quarterly";
         
-        public bool IsSemestralMode => EducationMode == "Semestral";
-        public bool IsQuarterlyMode => EducationMode == "Quarterly";
-
         public string MidtermGrade { get; set; } = "--";
         public string FinalTermGrade { get; set; } = "--";
         public string SemesterAverage { get; set; } = "--";
-
-        public string Q1Grade { get; set; } = "--";
-        public string Q2Grade { get; set; } = "--";
-        public string Q3Grade { get; set; } = "--";
-        public string Q4Grade { get; set; } = "--";
-        public string FinalAverage { get; set; } = "--";
 
         public int GradedTasksCount { get; set; }
         public string AverageScorePercentage { get; set; } = "--";
@@ -61,15 +51,11 @@ namespace Centriku.ViewModels
         public bool IsFromActiveGradebook { get; set; } 
         
         [ObservableProperty] public partial string SubjectName { get; set; } = string.Empty;
-        [ObservableProperty] public partial string Q1Text { get; set; } = string.Empty;
-        [ObservableProperty] public partial string Q2Text { get; set; } = string.Empty;
-        [ObservableProperty] public partial string Q3Text { get; set; } = string.Empty;
-        [ObservableProperty] public partial string Q4Text { get; set; } = string.Empty;
+        [ObservableProperty] public partial string MidtermText { get; set; } = string.Empty;
+        [ObservableProperty] public partial string FinalTermText { get; set; } = string.Empty;
 
-        partial void OnQ1TextChanged(string value) { UpdateMath(); }
-        partial void OnQ2TextChanged(string value) { UpdateMath(); }
-        partial void OnQ3TextChanged(string value) { UpdateMath(); }
-        partial void OnQ4TextChanged(string value) { UpdateMath(); }
+        partial void OnMidtermTextChanged(string value) { UpdateMath(); }
+        partial void OnFinalTermTextChanged(string value) { UpdateMath(); }
 
         [ObservableProperty] public partial string FinalGrade { get; set; } = "--";
         [ObservableProperty] public partial string Remarks { get; set; } = "--";
@@ -80,10 +66,9 @@ namespace Centriku.ViewModels
 
         private void UpdateMath()
         {
-            if (double.TryParse(Q1Text, out double q1) && double.TryParse(Q2Text, out double q2) &&
-                double.TryParse(Q3Text, out double q3) && double.TryParse(Q4Text, out double q4))
+            if (double.TryParse(MidtermText, out double mid) && double.TryParse(FinalTermText, out double fin))
             {
-                double avg = (q1 + q2 + q3 + q4) / 4.0;
+                double avg = (mid + fin) / 2.0;
                 FinalGrade = Math.Round(avg, 0).ToString("0.##"); 
                 Remarks = avg >= 75 ? "Passed" : "Failed";
             }

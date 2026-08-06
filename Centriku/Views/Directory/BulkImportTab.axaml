@@ -63,14 +63,14 @@ x:DataType="vm:DirectoryViewModel">
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="LRN" Binding="{Binding DbModel.StudentID}"/>
+                        <DataGridTextColumn Header="Student ID" Binding="{Binding DbModel.StudentID}"/>
                         <DataGridTextColumn Header="Last Name" Binding="{Binding DbModel.LastName}"/>
                         <DataGridTextColumn Header="First Name" Binding="{Binding DbModel.FirstName}"/>
                         <DataGridTextColumn Header="Middle Name" Binding="{Binding DbModel.MiddleName}"/>
                         <DataGridTextColumn Header="Suffix" Binding="{Binding DbModel.Suffix}"/>
                         <DataGridTextColumn Header="Gender" Binding="{Binding DbModel.Gender}"/>
-                        <DataGridTextColumn Header="Grade/Year" Binding="{Binding DbModel.GradeYearLevel}"/>
-                        <DataGridTextColumn Header="Section/Block" Binding="{Binding DbModel.SectionBlock}"/>
+                        <DataGridTextColumn Header="Year" Binding="{Binding DbModel.GradeYearLevel}"/>
+                        <DataGridTextColumn Header="Section" Binding="{Binding DbModel.SectionBlock}"/>
                         <DataGridTextColumn Header="Status" Binding="{Binding DbModel.EnrollmentStatus}"/>
                     </DataGrid.Columns>
                 </DataGrid>

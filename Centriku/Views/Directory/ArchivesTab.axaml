@@ -15,7 +15,7 @@
 
       <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
          <TextBox Grid.Column="0" Text="{Binding ArchiveSearchQuery}" 
-                  PlaceholderText="Search archives by LRN, Name, Grade, or Section..." 
+                  PlaceholderText="Search archives by Student ID, Name, Grade, or Section..." 
                   Background="{DynamicResource SurfaceBrush}" 
                   BorderBrush="{DynamicResource BorderBrush}" 
                   CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
@@ -28,14 +28,14 @@
                   <Flyout>
                      <StackPanel Spacing="10" MinWidth="150">
                            <TextBlock Text="Toggle Columns" FontWeight="Bold" Margin="0,0,0,5"/>
-                           <CheckBox Content="LRN" IsChecked="{Binding ShowArchiveLrnColumn}"/>
+                           <CheckBox Content="Student ID" IsChecked="{Binding ShowArchiveStudentIdColumn}"/>
                            <CheckBox Content="Last Name" IsChecked="{Binding ShowArchiveLastNameColumn}"/>
                            <CheckBox Content="First Name" IsChecked="{Binding ShowArchiveFirstNameColumn}"/>
                            <CheckBox Content="Middle Name" IsChecked="{Binding ShowArchiveMiddleNameColumn}"/>
                            <CheckBox Content="Suffix" IsChecked="{Binding ShowArchiveSuffixColumn}"/>
                            <CheckBox Content="Gender" IsChecked="{Binding ShowArchiveGenderColumn}"/>
-                           <CheckBox Content="Grade/Year" IsChecked="{Binding ShowArchiveGradeYearLevelColumn}"/>
-                           <CheckBox Content="Section/Block" IsChecked="{Binding ShowArchiveSectionBlockColumn}"/>
+                           <CheckBox Content="Year" IsChecked="{Binding ShowArchiveGradeYearLevelColumn}"/>
+                           <CheckBox Content="Section" IsChecked="{Binding ShowArchiveSectionBlockColumn}"/>
                            <CheckBox Content="Status" IsChecked="{Binding ShowArchiveEnrollmentStatusColumn}"/>
                      </StackPanel>
                   </Flyout>
@@ -48,7 +48,7 @@
                GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="300">
                <DataGrid.Columns>
                   
-                  <DataGridTemplateColumn Header="LRN" SortMemberPath="StudentID" MinWidth="120" MaxWidth="250" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveLrnColumn}">
+                  <DataGridTemplateColumn Header="Student ID" SortMemberPath="StudentID" MinWidth="120" MaxWidth="250" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveStudentIdColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">
@@ -117,7 +117,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Grade/Year" SortMemberPath="GradeYearLevel" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveGradeYearLevelColumn}">
+                  <DataGridTemplateColumn Header="Year" SortMemberPath="GradeYearLevel" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveGradeYearLevelColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">
@@ -128,7 +128,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Section/Block" SortMemberPath="SectionBlock" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSectionBlockColumn}">
+                  <DataGridTemplateColumn Header="Section" SortMemberPath="SectionBlock" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSectionBlockColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">

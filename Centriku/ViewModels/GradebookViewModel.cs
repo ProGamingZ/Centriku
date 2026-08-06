@@ -16,30 +16,22 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
             public System.Action<string>? ShowToastMessage { get; set; } 
 
-            [ObservableProperty] public partial bool ShowLRN { get; set; } = true;
+            [ObservableProperty] public partial bool ShowStudentId { get; set; } = true;
             [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
             [ObservableProperty] public partial bool ShowLastName { get; set; } = true;
             [ObservableProperty] public partial bool ShowFinalGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowMidtermGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowFinalTermGrade { get; set; } = true;
-            [ObservableProperty] public partial bool ShowQ1Grade { get; set; } = true;
-            [ObservableProperty] public partial bool ShowQ2Grade { get; set; } = true;
-            [ObservableProperty] public partial bool ShowQ3Grade { get; set; } = true;
-            [ObservableProperty] public partial bool ShowQ4Grade { get; set; } = true;
             [ObservableProperty] public partial string CalculationMode { get; set; } = "Raw Percentage";
             [ObservableProperty] public partial double NrfgBaseValue { get; set; } = 60.0;
             public System.Collections.Generic.List<Centriku.Models.GradeBoundary> ClassGradeBoundaries { get; set; } = new();
             
-            partial void OnShowLRNChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+            partial void OnShowStudentIdChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowLastNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFinalGradeChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowMidtermGradeChanged(bool value) { TriggerGridRedraw(); }
             partial void OnShowFinalTermGradeChanged(bool value) { TriggerGridRedraw(); }
-            partial void OnShowQ1GradeChanged(bool value) { TriggerGridRedraw(); }
-            partial void OnShowQ2GradeChanged(bool value) { TriggerGridRedraw(); }
-            partial void OnShowQ3GradeChanged(bool value) { TriggerGridRedraw(); }
-            partial void OnShowQ4GradeChanged(bool value) { TriggerGridRedraw(); }
 
             [ObservableProperty] public partial int GridRefreshTrigger { get; set; } = 0;
             private void TriggerGridRedraw() => GridRefreshTrigger++;
@@ -50,7 +42,7 @@ namespace Centriku.ViewModels
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass != null)
                 {
-                    currentClass.ShowLRN = ShowLRN;
+                    currentClass.ShowStudentId = ShowStudentId;
                     currentClass.ShowFirstName = ShowFirstName;
                     currentClass.ShowLastName = ShowLastName;
                     currentClass.ShowFinalGrade = ShowFinalGrade;
@@ -65,9 +57,7 @@ namespace Centriku.ViewModels
                     await db.UpdateAsync(currentClass);
                 }
             }
-
-            [ObservableProperty] public partial string EducationMode { get; set; } = "Quarterly";
-        
+     
             [ObservableProperty] public partial ObservableCollection<string> TermViews { get; set; } = new();
             [ObservableProperty] public partial ObservableCollection<string> GradingPeriods { get; set; } = new();
             
@@ -75,18 +65,12 @@ namespace Centriku.ViewModels
             
             public bool ShowAssessmentFilters => SelectedTermView != "Semester Average" && SelectedTermView != "Final Average";
             public bool IsSemesterAverageView => SelectedTermView == "Semester Average" || SelectedTermView == "Final Average";
-            public bool IsSemestralMode => EducationMode == "Semestral";
-            public bool IsQuarterlyMode => EducationMode == "Quarterly";
-            public bool IsSemestralSummaryView => IsSemestralMode && IsSemesterAverageView;
-            public bool IsQuarterlySummaryView => IsQuarterlyMode && IsSemesterAverageView; 
             public string DynamicFinalColumnName => IsSemesterAverageView ? SelectedTermView : $"{SelectedTermView} Grade";
             
             partial void OnSelectedTermViewChanged(string value) 
             { 
                 OnPropertyChanged(nameof(ShowAssessmentFilters)); 
                 OnPropertyChanged(nameof(IsSemesterAverageView));
-                OnPropertyChanged(nameof(IsSemestralSummaryView));
-                OnPropertyChanged(nameof(IsQuarterlySummaryView));
                 OnPropertyChanged(nameof(DynamicFinalColumnName));
                 BuildCategoryFilters();
                 TriggerGridRedraw(); 
@@ -142,7 +126,7 @@ namespace Centriku.ViewModels
             public IRelayCommand ExportCsvCommand { get; }
             private async void ExportToCsv()
             {
-                if (!ExportAttendance && !ExportQ1 && !ExportQ2 && !ExportQ3 && !ExportQ4 && !ExportFinalAverage && !ExportMidterm && !ExportFinal && !ExportSemesterAverage)
+                if (!ExportAttendance && !ExportMidterm && !ExportFinal && !ExportSemesterAverage)
                 {
                     ShowToastMessage?.Invoke("Please select at least one tab to export."); return;
                 }
@@ -153,20 +137,9 @@ namespace Centriku.ViewModels
                 var appSettings = await db.Table<AppSettings>().FirstOrDefaultAsync() ?? new AppSettings();
 
                 var selectedTerms = new System.Collections.Generic.List<string>();
-                if (EducationMode == "Semestral")
-                {
-                    if (ExportMidterm) selectedTerms.Add("Midterm");
-                    if (ExportFinal) selectedTerms.Add("Final");
-                    if (ExportSemesterAverage) selectedTerms.Add("Semester Average");
-                }
-                else
-                {
-                    if (ExportQ1) selectedTerms.Add("Q1");
-                    if (ExportQ2) selectedTerms.Add("Q2");
-                    if (ExportQ3) selectedTerms.Add("Q3");
-                    if (ExportQ4) selectedTerms.Add("Q4");
-                    if (ExportFinalAverage) selectedTerms.Add("Final Average");
-                }
+                if (ExportMidterm) selectedTerms.Add("Midterm");
+                if (ExportFinal) selectedTerms.Add("Final");
+                if (ExportSemesterAverage) selectedTerms.Add("Semester Average");
 
                 // === 1. Prepare Active Students ===
                 var finalGradeRows = GradebookRows.ToList();
@@ -181,7 +154,7 @@ namespace Centriku.ViewModels
                 }
 
                 var result = await CsvExportService.ExportClassDataAsync(
-                    ClassTitle, EducationMode, ExportAttendance, ExportFolderPath, selectedTerms,
+                    ClassTitle, ExportAttendance, ExportFolderPath, selectedTerms,
                     finalGradeRows, ClassAssessments, finalAttRows, AttendanceDates, appSettings
                 );
                 
@@ -293,7 +266,7 @@ namespace Centriku.ViewModels
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass != null)
                 {
-                    ShowLRN = currentClass.ShowLRN;
+                    ShowStudentId = currentClass.ShowStudentId;
                     ShowFirstName = currentClass.ShowFirstName;
                     ShowLastName = currentClass.ShowLastName;
                     ShowFinalGrade = currentClass.ShowFinalGrade;
@@ -311,22 +284,9 @@ namespace Centriku.ViewModels
                     ClassGradeBoundaries = await db.Table<GradeBoundary>().Where(b => b.TemplateID == currentClass.GradingTemplateID).ToListAsync();
                 }
 
-                EducationMode = currentClass?.EducationMode ?? "Quarterly";
-                OnPropertyChanged(nameof(IsSemestralMode));
-                OnPropertyChanged(nameof(IsQuarterlyMode));
-
-                if (EducationMode == "Semestral")
-                {
-                    TermViews = new ObservableCollection<string> { "Midterm", "Final", "Semester Average" };
-                    GradingPeriods = new ObservableCollection<string> { "Midterm", "Final" };
-                    if (!TermViews.Contains(SelectedTermView)) SelectedTermView = "Semester Average";
-                }
-                else // Quarterly (DepEd)
-                {
-                    TermViews = new ObservableCollection<string> { "Q1", "Q2", "Q3", "Q4", "Final Average" };
-                    GradingPeriods = new ObservableCollection<string> { "Q1", "Q2", "Q3", "Q4" };
-                    if (!TermViews.Contains(SelectedTermView)) SelectedTermView = "Final Average";
-                }
+                TermViews = new ObservableCollection<string> { "Midterm", "Final", "Semester Average" };
+                GradingPeriods = new ObservableCollection<string> { "Midterm", "Final" };
+                if (!TermViews.Contains(SelectedTermView)) SelectedTermView = "Semester Average";
 
                 // 2. Get the Columns (Assessments)
                 var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();

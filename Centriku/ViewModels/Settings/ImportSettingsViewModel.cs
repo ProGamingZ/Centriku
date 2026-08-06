@@ -23,7 +23,7 @@ namespace Centriku.ViewModels.Settings
       [ObservableProperty] public partial AppSettings CurrentSettings { get; set; } = new();
       [ObservableProperty] public partial bool IsSaving { get; set; } = false;
 
-      private readonly string[] _allFields = ["LRN", "Last Name", "First Name", "Middle Name", "Suffix", "Gender", "Grade/Year", "Section/Block", "Status"];
+      private readonly string[] _allFields = ["Student ID", "Last Name", "First Name", "Middle Name", "Suffix", "Gender", "Year", "Section", "Status"];
       
       // Genders restricted to just Male/Female
       public ObservableCollection<string> AvailableGenders { get; } = ["Male", "Female"];
@@ -112,10 +112,10 @@ namespace Centriku.ViewModels.Settings
             else if (dbIndex == 8) Col9Selected = field; 
          }
 
-         SetCol(CurrentSettings.LrnColumnIndex, "LRN"); SetCol(CurrentSettings.LastNameColumnIndex, "Last Name");
+         SetCol(CurrentSettings.StudentIdColumnIndex, "Student ID"); SetCol(CurrentSettings.LastNameColumnIndex, "Last Name");
          SetCol(CurrentSettings.FirstNameColumnIndex, "First Name"); SetCol(CurrentSettings.MiddleNameColumnIndex, "Middle Name");
          SetCol(CurrentSettings.SuffixColumnIndex, "Suffix"); SetCol(CurrentSettings.GenderColumnIndex, "Gender");
-         SetCol(CurrentSettings.GradeLevelColumnIndex, "Grade/Year"); SetCol(CurrentSettings.SectionColumnIndex, "Section/Block");
+         SetCol(CurrentSettings.GradeLevelColumnIndex, "Year"); SetCol(CurrentSettings.SectionColumnIndex, "Section");
          SetCol(CurrentSettings.EnrollmentStatusColumnIndex, "Status");
 
          OnPropertyChanged(nameof(DefaultGender)); 
@@ -160,10 +160,10 @@ namespace Centriku.ViewModels.Settings
 
          // 2. SAVE SETTINGS TO DATABASE VARIABLES
          int GetColIndex(string field) => selected.IndexOf(field);
-         CurrentSettings.LrnColumnIndex = GetColIndex("LRN"); CurrentSettings.LastNameColumnIndex = GetColIndex("Last Name");
+         CurrentSettings.StudentIdColumnIndex = GetColIndex("Student ID"); CurrentSettings.LastNameColumnIndex = GetColIndex("Last Name");
          CurrentSettings.FirstNameColumnIndex = GetColIndex("First Name"); CurrentSettings.MiddleNameColumnIndex = GetColIndex("Middle Name");
          CurrentSettings.SuffixColumnIndex = GetColIndex("Suffix"); CurrentSettings.GenderColumnIndex = GetColIndex("Gender");
-         CurrentSettings.GradeLevelColumnIndex = GetColIndex("Grade/Year"); CurrentSettings.SectionColumnIndex = GetColIndex("Section/Block");
+         CurrentSettings.GradeLevelColumnIndex = GetColIndex("Year"); CurrentSettings.SectionColumnIndex = GetColIndex("Section");
          CurrentSettings.EnrollmentStatusColumnIndex = GetColIndex("Status");
 
          // 3. REBUILD PREVIEW DATAGRID COLUMNS
@@ -181,8 +181,8 @@ namespace Centriku.ViewModels.Settings
          string GetPreview(string field)
          {
                if (field == "Gender") return DefaultGender;
-               if (field == "Grade/Year") return DefaultGradeLevel;
-               if (field == "Section/Block") return DefaultSection;
+               if (field == "Year") return DefaultGradeLevel;
+               if (field == "Section") return DefaultSection;
                if (field == "Status") return DefaultEnrollmentStatus;
                return "--"; 
          }

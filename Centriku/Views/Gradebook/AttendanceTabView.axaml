@@ -19,8 +19,8 @@
                            <Flyout Placement="BottomEdgeAlignedRight">
                               <StackPanel Spacing="10" Width="200" Margin="10">
                                  <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                 <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
                                  <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
+                                 <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
                                  
                                  <TextBlock Text="Summary Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                  <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
@@ -99,8 +99,8 @@
             ItemsSource="{Binding AttendanceGridRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
             GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="300" FrozenColumnCount="5">
             <DataGrid.Columns>
-               <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+               <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>

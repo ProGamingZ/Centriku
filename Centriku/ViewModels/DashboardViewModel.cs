@@ -147,9 +147,7 @@ namespace Centriku.ViewModels
                     bool isCriticalFA = false;
 
                     // 1. Determine which terms to show based on Education Mode
-                    var termsToEvaluate = teacherClass.EducationMode == "Semestral" 
-                        ? new List<string> { "Midterm", "Final" } 
-                        : new List<string> { "Q1", "Q2", "Q3", "Q4" };
+                    var termsToEvaluate = new List<string> { "Midterm", "Final" };
 
                     double sumOfRawTerms = 0;
                     int completedTermsCount = 0;
@@ -206,7 +204,7 @@ namespace Centriku.ViewModels
                     double effectiveAbsences = totalA + (totalL * teacherClass.LateValue);
 
                     // 4. Calculate Final Average
-                    string finalLabel = teacherClass.EducationMode == "Semestral" ? "Sem. Avg" : "Final Avg";
+                    string finalLabel = "Sem. Avg";
                     TermGradeItem finalGradeItem = new TermGradeItem { TermLabel = finalLabel, GradeDisplay = "--" };
 
                     // Apply strict Threshold FA failure even if the year isn't over yet

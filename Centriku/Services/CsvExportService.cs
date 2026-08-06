@@ -13,15 +13,14 @@ namespace Centriku.Services
    {
       public static async Task<(bool Success, string Message)> ExportClassDataAsync(
          string classTitle, 
-         string educationMode,
-         bool exportAttendance,
+         bool exportAttendance, // Removed educationMode parameter
          string customFolderPath,
          List<string> termsToExport,
          IEnumerable<StudentGradeRow> gradebookRows, 
          IEnumerable<Assessment> assessments,
          IEnumerable<AttendanceGridRowViewModel> attendanceRows,
          IEnumerable<DateTime> attendanceDates,
-         AppSettings settings) // <--- NEW PARAMETER
+         AppSettings settings) 
       {
          try
          {
@@ -49,41 +48,38 @@ namespace Centriku.Services
                var termCsv = new StringBuilder();
                var headers = new List<string>();
                
-               // PRIVACY RULE: Include LRN?
-               if (settings.ExportIncludeLRN) headers.Add("LRN");
+               // PRIVACY RULE: Include Student ID?
+               if (settings.ExportIncludeStudentId) headers.Add("Student ID");
                headers.Add("Last Name");
                headers.Add("First Name");
                
-               if (term == "Final Average" || term == "Semester Average")
-                   {
-                     // Use "Grade" for the individual terms, and reserve the actual term name for the final column!
-                     if (educationMode == "Semestral") { headers.Add("Midterm Grade"); headers.Add("Final Grade"); }
-                     else { headers.Add("Q1 Grade"); headers.Add("Q2 Grade"); headers.Add("Q3 Grade"); headers.Add("Q4 Grade"); }
-                     
-                     headers.Add(term); // This outputs the literal words "Final Average" or "Semester Average"
-                   }
-                   else
-                  {
-                     var termAssessments = assessments.Where(a => a.GradingPeriod == term).OrderBy(a => a.DateGiven).ToList();
-                     foreach (var a in termAssessments) headers.Add(a.Title?.Replace(",", "") ?? "Assessment");
-                     
-                     // Change "Average" to "Grade"
-                     headers.Add($"{term} Grade");
-                   }
+               if (term == "Semester Average")
+               {
+                  headers.Add("Midterm Grade"); 
+                  headers.Add("Final Grade"); 
+                  headers.Add(term); // Outputs the literal words "Semester Average"
+               }
+               else
+               {
+                  var termAssessments = assessments.Where(a => a.GradingPeriod == term).OrderBy(a => a.DateGiven).ToList();
+                  foreach (var a in termAssessments) headers.Add(a.Title?.Replace(",", "") ?? "Assessment");
+                  
+                  headers.Add($"{term} Grade");
+               }
 
                termCsv.AppendLine(string.Join(",", headers));
 
                foreach (var row in gradebookRows)
                {
                   var rowData = new List<string>();
-                  if (settings.ExportIncludeLRN) rowData.Add(row.StudentID);
+                  if (settings.ExportIncludeStudentId) rowData.Add(row.StudentID ?? "");
                   rowData.Add(row.StudentInfo.LastName?.Replace(",", "") ?? "");
                   rowData.Add(row.StudentInfo.FirstName?.Replace(",", "") ?? "");
 
-                  if (term == "Final Average" || term == "Semester Average")
+                  if (term == "Semester Average")
                   {
-                     if (educationMode == "Semestral") { rowData.Add(row.MidtermGradeDisplay); rowData.Add(row.FinalTermGradeDisplay); }
-                     else { rowData.Add(row.Q1GradeDisplay); rowData.Add(row.Q2GradeDisplay); rowData.Add(row.Q3GradeDisplay); rowData.Add(row.Q4GradeDisplay); }
+                     rowData.Add(row.MidtermGradeDisplay); 
+                     rowData.Add(row.FinalTermGradeDisplay); 
                      rowData.Add(row.FinalGrade);
                   }
                   else
@@ -110,7 +106,8 @@ namespace Centriku.Services
                            rowData.Add(blankOutput);
                         }
                      }
-                     string summary = term switch { "Q1" => row.Q1GradeDisplay, "Q2" => row.Q2GradeDisplay, "Q3" => row.Q3GradeDisplay, "Q4" => row.Q4GradeDisplay, "Midterm" => row.MidtermGradeDisplay, "Final" => row.FinalTermGradeDisplay, _ => "--" };
+                     // Map to Semestral Summaries
+                     string summary = term switch { "Midterm" => row.MidtermGradeDisplay, "Final" => row.FinalTermGradeDisplay, _ => "--" };
                      rowData.Add(summary);
                   }
                   termCsv.AppendLine(string.Join(",", rowData));

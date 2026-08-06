@@ -9,6 +9,5 @@ namespace Centriku.ViewModels
         
         public ImportSettingsViewModel ImportSettings { get; } = new();
         public ExportSettingsViewModel ExportSettings { get; } = new();
-        public Sf9SettingsViewModel Sf9Settings { get; } = new();
     }
 }

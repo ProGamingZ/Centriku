@@ -24,7 +24,6 @@ namespace Centriku.ViewModels
         public IRelayCommand SaveMasterRecordCommand { get; }
         public IRelayCommand AddBlankMasterSubjectCommand { get; }
         public IRelayCommand<MasterGradeRowViewModel> DeleteMasterSubjectCommand { get; } 
-        public IRelayCommand GenerateSf9Command { get; }
 
         public DirectoryViewModel()
         {
@@ -40,7 +39,6 @@ namespace Centriku.ViewModels
             SaveMasterRecordCommand = new RelayCommand(SaveMasterRecord);
             AddBlankMasterSubjectCommand = new RelayCommand(AddBlankMasterSubject);
             DeleteMasterSubjectCommand = new RelayCommand<MasterGradeRowViewModel>(DeleteMasterSubject!);
-            GenerateSf9Command = new RelayCommand(GenerateSf9);
             CloseProfileCommand = new RelayCommand(() => IsProfileOpen = false); 
 
             LoadStudents();

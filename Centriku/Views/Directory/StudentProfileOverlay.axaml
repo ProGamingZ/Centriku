@@ -1,10 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:Centriku.ViewModels"
-             x:Class="Centriku.Views.Directory.StudentProfileOverlay"
-             x:Name="ProfileRootControl"
-             x:DataType="vm:DirectoryViewModel">
-             
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:vm="using:Centriku.ViewModels"
+            x:Class="Centriku.Views.Directory.StudentProfileOverlay"
+            x:Name="ProfileRootControl"
+            x:DataType="vm:DirectoryViewModel">
+            
     <Border IsVisible="{Binding IsProfileOpen}" Background="{DynamicResource AppBackground}" ZIndex="100">
         <Grid RowDefinitions="Auto, Auto, *">
             
@@ -54,99 +54,63 @@
                             <TextBlock Text="Performance in Your Subjects" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                             <TextBlock Text="This data is pulled directly from your active gradebooks." Foreground="{DynamicResource TextMutedBrush}" Margin="0,-15,0,0"/>
 
-                           <ItemsControl ItemsSource="{Binding SelectedStudentClasses}" IsVisible="{Binding HasEnrolledClasses}">
-                              <ItemsControl.ItemTemplate>
-                                 <DataTemplate>
-                                       <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
-                                          <Grid ColumnDefinitions="*, Auto">
-                                             
-                                             <!-- Subject Info -->
-                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                   <TextBlock Text="{Binding SubjectName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                                   <TextBlock Text="{Binding Term, StringFormat='Term: {0}'}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold"/>
-                                                   <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,10,0,0">
-                                                      <TextBlock Text="{Binding GradedTasksCount, StringFormat='Tasks Graded: {0}'}" Foreground="{DynamicResource TextMutedBrush}"/>
-                                                      <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                                                      <TextBlock Text="{Binding Absences, StringFormat='Absences: {0}'}" Foreground="#EF4444"/>
-                                                      <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                                                      <TextBlock Text="{Binding Lates, StringFormat='Lates: {0}'}" Foreground="#F59E0B"/>
-                                                   </StackPanel>
-                                             </StackPanel>
+                        <ItemsControl ItemsSource="{Binding SelectedStudentClasses}" IsVisible="{Binding HasEnrolledClasses}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            
+                                            <!-- Subject Info -->
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding SubjectName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                                <TextBlock Text="{Binding Term, StringFormat='Term: {0}'}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,10,0,0">
+                                                    <TextBlock Text="{Binding GradedTasksCount, StringFormat='Tasks Graded: {0}'}" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                    <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                                                    <TextBlock Text="{Binding Absences, StringFormat='Absences: {0}'}" Foreground="#EF4444"/>
+                                                    <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                                                    <TextBlock Text="{Binding Lates, StringFormat='Lates: {0}'}" Foreground="#F59E0B"/>
+                                                </StackPanel>
+                                            </StackPanel>
 
-                                             <!-- THE HYBRID GRADE TRACKER -->
-                                             <Grid Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
-                                                    
-                                                 <!-- Semestral UI -->
-                                                 <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsSemestralMode}">
-                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding MidtermGrade}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Midterm" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding FinalTermGrade}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Final" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                     <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="6" Padding="15,10">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding SemesterAverage}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Sem Avg" FontSize="10" Foreground="White" Opacity="0.8" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                 </StackPanel>
-
-                                                 <!-- Quarterly UI -->
-                                                 <StackPanel Orientation="Horizontal" Spacing="5" IsVisible="{Binding IsQuarterlyMode}">
-                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="12,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding Q1Grade}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Q1" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="12,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding Q2Grade}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Q2" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="12,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding Q3Grade}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Q3" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="12,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding Q4Grade}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Q4" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                     <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="6" Padding="12,10" Margin="5,0,0,0">
-                                                         <StackPanel>
-                                                             <TextBlock Text="{Binding FinalAverage}" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                             <TextBlock Text="Final" FontSize="10" Foreground="White" Opacity="0.8" HorizontalAlignment="Center"/>
-                                                         </StackPanel>
-                                                     </Border>
-                                                 </StackPanel>
-
-                                             </Grid>
-                                             
-                                          </Grid>
-                                       </Border>
-                                 </DataTemplate>
-                              </ItemsControl.ItemTemplate>
-                           </ItemsControl>
-                           
-                           <Border IsVisible="{Binding !HasEnrolledClasses}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="40" Margin="0,20,0,0">
-                              <StackPanel HorizontalAlignment="Center">
-                                 <TextBlock Text="ℹ️" FontSize="32" HorizontalAlignment="Center"/>
-                                 <TextBlock Text="Student not enrolled in any of your classes." FontWeight="Bold" Margin="0,10,0,0" HorizontalAlignment="Center"/>
-                                 <TextBlock Text="To view this student's master records, click the Master Academic Record tab." Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="300" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                              </StackPanel>
-                           </Border>
+                                            <!-- THE HYBRID GRADE TRACKER -->
+                                            <Grid Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
+                                                <!-- Semestral UI -->
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding MidtermGrade}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                                                            <TextBlock Text="Midterm" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding FinalTermGrade}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                                                            <TextBlock Text="Final" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="6" Padding="15,10">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding SemesterAverage}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                                            <TextBlock Text="Sem Avg" FontSize="10" Foreground="White" Opacity="0.8" HorizontalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                            
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                        <Border IsVisible="{Binding !HasEnrolledClasses}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="40" Margin="0,20,0,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="ℹ️" FontSize="32" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Student not enrolled in any of your classes." FontWeight="Bold" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                                <TextBlock Text="To view this student's master records, click the Master Academic Record tab." Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="300" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
                             
                         </StackPanel>
                     </ScrollViewer>
@@ -162,99 +126,74 @@
                                     <TextBlock Text="DepEd Form 138 / SF9 Data" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                     <TextBlock Text="Compile grades from all subject teachers to generate the official report card." Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding GenerateSf9Command}" Content="📄 Generate SF9 (PDF)" Background="Transparent" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" CornerRadius="6" Padding="15,8"/>
                             </Grid>
 
                             <DataGrid ItemsSource="{Binding MasterGrades}" AutoGenerateColumns="False" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="200">
                                 <DataGrid.Columns>
-                                     <DataGridTemplateColumn Header="Subject" Width="*">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBox Text="{Binding SubjectName}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Header="Q1" Width="70">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBox Text="{Binding Q1Text}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Header="Q2" Width="70">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBox Text="{Binding Q2Text}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Header="Q3" Width="70">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBox Text="{Binding Q3Text}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Header="Q4" Width="70">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBox Text="{Binding Q4Text}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Header="Final Grade" Width="100">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBlock Text="{Binding FinalGrade}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Header="Remarks" Width="100">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <TextBlock Text="{Binding Remarks}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
-                                     <DataGridTemplateColumn Width="50">
-                                         <DataGridTemplateColumn.CellTemplate>
-                                             <DataTemplate>
-                                                 <Button Command="{Binding #ProfileRootControl.((vm:DirectoryViewModel)DataContext).DeleteMasterSubjectCommand}" 
-                                                         CommandParameter="{Binding}" 
-                                                         IsVisible="{Binding !IsFromActiveGradebook}"
-                                                         Background="Transparent" Padding="5">
-                                                     <TextBlock Text="🗑️" FontSize="14" HorizontalAlignment="Center"/>
-                                                 </Button>
-                                             </DataTemplate>
-                                         </DataGridTemplateColumn.CellTemplate>
-                                     </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Subject" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding SubjectName}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Midterm" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding MidtermText}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Final" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding FinalTermText}" IsReadOnly="{Binding IsFromActiveGradebook}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Final Grade" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding FinalGrade}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Remarks" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Remarks}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Width="50">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding #ProfileRootControl.((vm:DirectoryViewModel)DataContext).DeleteMasterSubjectCommand}" 
+                                                        CommandParameter="{Binding}" 
+                                                        IsVisible="{Binding !IsFromActiveGradebook}"
+                                                        Background="Transparent" Padding="5">
+                                                    <TextBlock Text="🗑️" FontSize="14" HorizontalAlignment="Center"/>
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
 
                             <!-- ACTIONS & QUARTERLY SUMMARY -->
                             <Grid ColumnDefinitions="*, Auto" Margin="0,10,0,0">
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                    <Button Command="{Binding AddBlankMasterSubjectCommand}" Content="+ Add External Subject" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold"/>
-                                    <Button Command="{Binding SaveMasterRecordCommand}" Content="💾 Save Master Record" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
                                 </StackPanel>
 
                                 <Border Grid.Column="1" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="30,15">
                                     <StackPanel Orientation="Horizontal" Spacing="30">
                                         <StackPanel>
-                                            <TextBlock Text="Q1 Avg" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Q1Average}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Midterm Avg" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding MidtermAverage}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                         <StackPanel>
-                                            <TextBlock Text="Q2 Avg" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Q2Average}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                        <StackPanel>
-                                            <TextBlock Text="Q3 Avg" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Q3Average}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                        </StackPanel>
-                                        <StackPanel>
-                                            <TextBlock Text="Q4 Avg" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Q4Average}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Final Avg" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding FinalTermAverage}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                         <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="-10,0"/>
                                         <StackPanel>

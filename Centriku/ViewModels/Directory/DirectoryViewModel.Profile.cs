@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Centriku.ViewModels
 {
-   // Handles opening the Student Profile overlay and loading the active Gradebook class data (Tab 1)
     public partial class DirectoryViewModel 
     {
         [ObservableProperty] public partial bool IsProfileOpen { get; set; } = false;
@@ -44,7 +43,7 @@ namespace Centriku.ViewModels
                 var perf = new StudentClassPerformanceViewModel
                 {
                     SubjectName = tClass.SubjectName ?? "Unknown Subject", Term = tClass.Term ?? "Unknown Term",
-                    EducationMode = tClass.EducationMode ?? "Quarterly", Absences = absences, Lates = lates
+                    Absences = absences, Lates = lates
                 };
 
                 string FormatGrade(double? raw)
@@ -55,24 +54,12 @@ namespace Centriku.ViewModels
                     return $"{val.ToString("0.##")}%";
                 }
 
-                if (perf.EducationMode == "Semestral")
-                {
-                    double? mid = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Midterm");
-                    double? fin = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Final");
-                    perf.MidtermGrade = FormatGrade(mid); perf.FinalTermGrade = FormatGrade(fin);
-                    perf.SemesterAverage = (mid != null && fin != null) ? FormatGrade((mid + fin) / 2.0) : "--";
-                    perf.AverageScorePercentage = perf.SemesterAverage;
-                }
-                else 
-                {
-                    double? q1 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q1");
-                    double? q2 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q2");
-                    double? q3 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q3");
-                    double? q4 = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Q4");
-                    perf.Q1Grade = FormatGrade(q1); perf.Q2Grade = FormatGrade(q2); perf.Q3Grade = FormatGrade(q3); perf.Q4Grade = FormatGrade(q4);
-                    perf.FinalAverage = (q1 != null && q2 != null && q3 != null && q4 != null) ? FormatGrade((q1 + q2 + q3 + q4) / 4.0) : "--";
-                    perf.AverageScorePercentage = perf.FinalAverage;
-                }
+                // Strictly College Semestral Calculation
+                double? mid = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Midterm");
+                double? fin = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Final");
+                perf.MidtermGrade = FormatGrade(mid); perf.FinalTermGrade = FormatGrade(fin);
+                perf.SemesterAverage = (mid != null && fin != null) ? FormatGrade((mid + fin) / 2.0) : "--";
+                perf.AverageScorePercentage = perf.SemesterAverage;
 
                 var allAssessments = await db.Table<Centriku.Models.Assessment>().Where(a => a.ClassID == roster.ClassID).ToListAsync();
                 perf.GradedTasksCount = allAssessments.Count;
@@ -82,14 +69,9 @@ namespace Centriku.ViewModels
             SelectedStudentClasses = new ObservableCollection<StudentClassPerformanceViewModel>(performanceList);
             SelectedStudentClassPerformance = performanceList.FirstOrDefault();
             HasEnrolledClasses = performanceList.Any();
-
-            // Trigger the Master Record & Attendance Loaders
-            bool hasSemestral = performanceList.Any(p => p.EducationMode == "Semestral");
-            bool hasQuarterly = performanceList.Any(p => p.EducationMode == "Quarterly");
-            IsMasterRecordVisible = !(hasSemestral && !hasQuarterly);
+            IsMasterRecordVisible = true;
 
             if (IsMasterRecordVisible) await LoadMasterRecordAsync(studentId, performanceList);
-            await LoadSf9AttendanceAsync(studentId); 
         }
 
         private async Task<double?> CalculateTermGradeRawAsync(SQLite.SQLiteAsyncConnection db, string studentId, int classId, int templateId, string term)

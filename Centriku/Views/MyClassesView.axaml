@@ -29,13 +29,13 @@
                     
                     <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
                         <StackPanel Margin="0,0,15,15" MinWidth="200">
-                            <TextBlock Text="Subject Name*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewSubjectName}" PlaceholderText="e.g. Grade 11 Math" Background="{DynamicResource AppBackground}"/>
+                            <TextBlock Text="Course Code*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewSubjectName}" PlaceholderText="e.g. CS101" Background="{DynamicResource AppBackground}"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="150">
                             <TextBlock Text="Section Label" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewSectionLabel}" PlaceholderText="e.g. Section A" Background="{DynamicResource AppBackground}"/>
+                            <TextBox Text="{Binding NewSectionLabel}" PlaceholderText="e.g. BSCS 1Y" Background="{DynamicResource AppBackground}"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="120">

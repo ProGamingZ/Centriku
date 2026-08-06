@@ -33,7 +33,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string ArchiveSearchQuery { get; set; } = string.Empty;
 
         // Archive Column Visibility
-        [ObservableProperty] public partial bool ShowArchiveLrnColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowArchiveStudentIdColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowArchiveLastNameColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowArchiveFirstNameColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowArchiveMiddleNameColumn { get; set; } = false;
@@ -44,7 +44,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool ShowArchiveEnrollmentStatusColumn { get; set; } = true;
 
         // Master Column Visibility
-        [ObservableProperty] public partial bool ShowLrnColumn { get; set; } = true;
+        [ObservableProperty] public partial bool ShowStudentIdColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowLastNameColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowFirstNameColumn { get; set; } = true;
         [ObservableProperty] public partial bool ShowMiddleNameColumn { get; set; } = false;
@@ -56,7 +56,7 @@ namespace Centriku.ViewModels
 
         // Add Student Form Properties
         [ObservableProperty] public partial bool IsAddingStudent { get; set; } = false;
-        [ObservableProperty] public partial string NewStudentLrn { get; set; } = string.Empty;
+        [ObservableProperty] public partial string NewStudentId { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentFirstName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentMiddleName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentLastName { get; set; } = string.Empty;
@@ -80,19 +80,19 @@ namespace Centriku.ViewModels
 
         private async void SaveStudent()
         {
-            if (string.IsNullOrWhiteSpace(NewStudentLrn) || string.IsNullOrWhiteSpace(NewStudentLastName)) return;
+            if (string.IsNullOrWhiteSpace(NewStudentId) || string.IsNullOrWhiteSpace(NewStudentLastName)) return;
 
             var db = new Centriku.Services.DatabaseService().GetConnection();
             var newStudent = new Centriku.Models.Student
             {
-                StudentID = NewStudentLrn, FirstName = NewStudentFirstName, MiddleName = NewStudentMiddleName, LastName = NewStudentLastName,
+                StudentID = NewStudentId, FirstName = NewStudentFirstName, MiddleName = NewStudentMiddleName, LastName = NewStudentLastName,
                 Suffix = NewStudentSuffix, Gender = NewStudentGender, GradeYearLevel = NewStudentGradeYearLevel,
                 SectionBlock = NewStudentSectionBlock, EnrollmentStatus = NewStudentEnrollmentStatus, IsArchived = false
             };
 
             await db.InsertOrReplaceAsync(newStudent);
             
-            NewStudentLrn = string.Empty; NewStudentFirstName = string.Empty; NewStudentMiddleName = string.Empty;
+            NewStudentId = string.Empty; NewStudentFirstName = string.Empty; NewStudentMiddleName = string.Empty;
             NewStudentLastName = string.Empty; NewStudentSuffix = string.Empty; NewStudentGradeYearLevel = string.Empty;
             NewStudentSectionBlock = string.Empty; NewStudentEnrollmentStatus = "Regular";
             
@@ -164,7 +164,7 @@ namespace Centriku.ViewModels
                 var db = new Centriku.Services.DatabaseService().GetConnection();
                 var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
                 
-                // Fetch existing LRNs first so we can check for duplicates safely
+                // Fetch existing Student IDs first so we can check for duplicates safely
                 var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
                 var existingLrns = existingStudents.Select(s => s.StudentID).ToHashSet();
 
@@ -184,8 +184,8 @@ namespace Centriku.ViewModels
                         bool isError = false;
                         string errorMsg = "";
 
-                        // Rule 1: It is an error if there is absolutely no LRN
-                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) { isError = true; errorMsg = "Error: Missing LRN"; }
+                        // Rule 1: It is an error if there is absolutely no Student ID
+                        if (string.IsNullOrWhiteSpace(parsed.StudentID)) { isError = true; errorMsg = "Error: Missing Student ID"; }
                         
                         // Rule 2: Check Ghost Row rules from Settings
                         else if (settings.SkipIncompleteRows)
@@ -288,7 +288,7 @@ namespace Centriku.ViewModels
                 bool isError = false;
                 string errorMsg = "";
 
-                if (string.IsNullOrWhiteSpace(parsed.StudentID)) { isError = true; errorMsg = "Error: Missing LRN"; }
+                if (string.IsNullOrWhiteSpace(parsed.StudentID)) { isError = true; errorMsg = "Error: Missing Student ID"; }
                 else if (settings.SkipIncompleteRows)
                 {
                     if (settings.LastNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.LastName)) { isError = true; errorMsg = "Error: Missing Last Name"; }
@@ -395,7 +395,7 @@ namespace Centriku.ViewModels
 
             return new Centriku.Models.Student
             {
-                StudentID = GetColValue(settings.LrnColumnIndex, string.Empty),
+                StudentID = GetColValue(settings.StudentIdColumnIndex, string.Empty),
                 LastName = FormatName(GetColValue(settings.LastNameColumnIndex, string.Empty)),
                 FirstName = FormatName(GetColValue(settings.FirstNameColumnIndex, string.Empty)),
                 MiddleName = FormatName(GetColValue(settings.MiddleNameColumnIndex, string.Empty)),
