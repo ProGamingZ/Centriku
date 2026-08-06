@@ -9,22 +9,19 @@ namespace Centriku.ViewModels
         public System.Collections.Generic.Dictionary<int, ScoreCellViewModel> Scores { get; set; } = [];
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
         public string StudentID => StudentInfo.StudentID ?? "";
+        
         [ObservableProperty] public partial string MidtermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial string FinalTermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial double MidtermGradeNumeric { get; set; } = 0;
         [ObservableProperty] public partial double FinalTermGradeNumeric { get; set; } = 0;
+        
         [ObservableProperty] public partial string FinalGrade { get; set; } = "---";
         [ObservableProperty] public partial double FinalGradeNumeric { get; set; } = 0;
-        [ObservableProperty] public partial string Q1GradeDisplay { get; set; } = "--";
-        [ObservableProperty] public partial double Q1GradeNumeric { get; set; }
+
+        //These hold the math computations for the UI Tooltips!
+        [ObservableProperty] public partial string MidtermComputationTooltip { get; set; } = string.Empty;
+        [ObservableProperty] public partial string FinalComputationTooltip { get; set; } = string.Empty;
+        [ObservableProperty] public partial string FinalGradeTooltip { get; set; } = string.Empty;
         
-        [ObservableProperty] public partial string Q2GradeDisplay { get; set; } = "--";
-        [ObservableProperty] public partial double Q2GradeNumeric { get; set; }
-        
-        [ObservableProperty] public partial string Q3GradeDisplay { get; set; } = "--";
-        [ObservableProperty] public partial double Q3GradeNumeric { get; set; }
-        
-        [ObservableProperty] public partial string Q4GradeDisplay { get; set; } = "--";
-        [ObservableProperty] public partial double Q4GradeNumeric { get; set; }
     }
 }

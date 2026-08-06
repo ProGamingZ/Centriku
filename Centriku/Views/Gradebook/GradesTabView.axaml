@@ -152,7 +152,7 @@
             </Grid>
          </Border>
 
-         <DataGrid x:Name="RosterGrid" Grid.Row="3" Margin="40,0,40,40"
+         <DataGrid x:Name="RosterGrid" Grid.Row="3" Margin="40,0,40,40" 
             ItemsSource="{Binding GradebookRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
             GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
             CornerRadius="8" MinHeight="300" FrozenColumnCount="3">
@@ -160,10 +160,10 @@
                <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTemplateColumn Header="Final Grade" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="Auto">
+               <DataGridTemplateColumn Header="Computed Grade Final,Midterm,Semester" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="Auto">
                   <DataGridTemplateColumn.CellTemplate>
                      <DataTemplate>
-                        <TextBlock Text="{Binding FinalGrade}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding FinalGrade}" ToolTip.Tip="{Binding FinalGradeTooltip}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                      </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>
                </DataGridTemplateColumn>

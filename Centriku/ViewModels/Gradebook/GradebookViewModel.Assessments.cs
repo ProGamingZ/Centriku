@@ -100,7 +100,7 @@ namespace Centriku.ViewModels
          NewAssessmentMaxScore = 100;
          NewAssessmentDate = System.DateTime.Now;
          SelectedCategory = null;
-         NewAssessmentPeriod = IsSemesterAverageView ? (GradingPeriods.FirstOrDefault() ?? "Q1") : SelectedTermView;
+         NewAssessmentPeriod = IsSemesterAverageView ? (GradingPeriods.FirstOrDefault() ?? "Midterm") : SelectedTermView;
          IsAddingAssessment = false; // Hides the form
       }
 
