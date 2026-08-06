@@ -52,7 +52,6 @@ x:DataType="vm:DirectoryViewModel">
             <StackPanel IsVisible="{Binding HasStagedStudents}" Spacing="20">
                 <DataGrid ItemsSource="{Binding StagedStudents}" AutoGenerateColumns="False" IsReadOnly="False" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Height="400">
                     <DataGrid.Columns>
-                        
                         <DataGridTemplateColumn Header="Action" IsReadOnly="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -70,8 +69,10 @@ x:DataType="vm:DirectoryViewModel">
                         <DataGridTextColumn Header="Suffix" Binding="{Binding DbModel.Suffix}"/>
                         <DataGridTextColumn Header="Gender" Binding="{Binding DbModel.Gender}"/>
                         <DataGridTextColumn Header="Year" Binding="{Binding DbModel.GradeYearLevel}"/>
-                        <DataGridTextColumn Header="Section" Binding="{Binding DbModel.SectionBlock}"/>
+                        <DataGridTextColumn Header="Program" Binding="{Binding DbModel.Program}"/>
+                        <DataGridTextColumn Header="Section" Binding="{Binding DbModel.SectionName}"/>
                         <DataGridTextColumn Header="Status" Binding="{Binding DbModel.EnrollmentStatus}"/>
+                        
                     </DataGrid.Columns>
                 </DataGrid>
 

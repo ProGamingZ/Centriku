@@ -5,7 +5,6 @@
    x:DataType="vm:DirectoryViewModel"
    x:Name="ArchivesRoot">
        
-   
    <Grid RowDefinitions="Auto, Auto, *">
       <StackPanel Grid.Row="0" Margin="40,30,40,20">
          <TextBlock Text="Archived Students" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
@@ -15,7 +14,7 @@
 
       <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
          <TextBox Grid.Column="0" Text="{Binding ArchiveSearchQuery}" 
-                  PlaceholderText="Search archives by Student ID, Name, Grade, or Section..." 
+                  PlaceholderText="Search archives by Student ID, Name, Program, or Section..." 
                   Background="{DynamicResource SurfaceBrush}" 
                   BorderBrush="{DynamicResource BorderBrush}" 
                   CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
@@ -35,7 +34,8 @@
                            <CheckBox Content="Suffix" IsChecked="{Binding ShowArchiveSuffixColumn}"/>
                            <CheckBox Content="Gender" IsChecked="{Binding ShowArchiveGenderColumn}"/>
                            <CheckBox Content="Year" IsChecked="{Binding ShowArchiveGradeYearLevelColumn}"/>
-                           <CheckBox Content="Section" IsChecked="{Binding ShowArchiveSectionBlockColumn}"/>
+                           <CheckBox Content="Program" IsChecked="{Binding ShowArchiveProgramColumn}"/>
+                           <CheckBox Content="Section" IsChecked="{Binding ShowArchiveSectionNameColumn}"/>
                            <CheckBox Content="Status" IsChecked="{Binding ShowArchiveEnrollmentStatusColumn}"/>
                      </StackPanel>
                   </Flyout>
@@ -128,12 +128,23 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Section" SortMemberPath="SectionBlock" MinWidth="100" MaxWidth="200" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSectionBlockColumn}">
+                  <DataGridTemplateColumn Header="Program" SortMemberPath="Program" MinWidth="100" MaxWidth="150" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveProgramColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="10,0">
-                                 <TextBlock Text="{Binding SectionBlock}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
-                                 <TextBox Text="{Binding SectionBlock}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                                 <TextBlock Text="{Binding Program}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                 <TextBox Text="{Binding Program}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
+                              </Panel>
+                           </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+
+                  <DataGridTemplateColumn Header="Section" SortMemberPath="SectionName" MinWidth="80" MaxWidth="120" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSectionNameColumn}">
+                     <DataGridTemplateColumn.CellTemplate>
+                           <DataTemplate>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding SectionName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                                 <TextBox Text="{Binding SectionName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>

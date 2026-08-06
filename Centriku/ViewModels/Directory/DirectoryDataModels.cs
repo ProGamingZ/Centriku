@@ -26,7 +26,8 @@ namespace Centriku.ViewModels
         public string Suffix { get => DbModel.Suffix ?? string.Empty; set { DbModel.Suffix = value; OnPropertyChanged(); } }
         public string Gender { get => DbModel.Gender ?? string.Empty; set { DbModel.Gender = value; OnPropertyChanged(); } }
         public string GradeYearLevel { get => DbModel.GradeYearLevel ?? string.Empty; set { DbModel.GradeYearLevel = value; OnPropertyChanged(); } }
-        public string SectionBlock { get => DbModel.SectionBlock ?? string.Empty; set { DbModel.SectionBlock = value; OnPropertyChanged(); } }
+        public string Program { get => DbModel.Program ?? string.Empty; set { DbModel.Program = value; OnPropertyChanged(); } }
+        public string SectionName { get => DbModel.SectionName ?? string.Empty; set { DbModel.SectionName = value; OnPropertyChanged(); } }
         public string EnrollmentStatus { get => DbModel.EnrollmentStatus ?? string.Empty; set { DbModel.EnrollmentStatus = value; OnPropertyChanged(); } }
     }
 

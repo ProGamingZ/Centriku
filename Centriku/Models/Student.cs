@@ -15,7 +15,8 @@ namespace Centriku.Models
         public string? Gender { get; set; }
 
         public string? GradeYearLevel { get; set; }
-        public string? SectionBlock { get; set; }
+        public string? Program { get; set; }       
+        public string? SectionName { get; set; }
         public string? EnrollmentStatus { get; set; }
 
         public bool IsArchived { get; set; } = false;

@@ -8,14 +8,13 @@ using Centriku.Models;
 
 namespace Centriku.ViewModels.Settings
 {
-   // Holds the raw data for the dynamic Preview DataGrid
    public class PreviewStudentRow
    {
       public string Col1Text { get; set; } = ""; public string Col2Text { get; set; } = "";
       public string Col3Text { get; set; } = ""; public string Col4Text { get; set; } = "";
       public string Col5Text { get; set; } = ""; public string Col6Text { get; set; } = "";
       public string Col7Text { get; set; } = ""; public string Col8Text { get; set; } = "";
-      public string Col9Text { get; set; } = "";
+      public string Col9Text { get; set; } = ""; public string Col10Text { get; set; } = "";
    }
 
    public partial class ImportSettingsViewModel : ViewModelBase
@@ -23,9 +22,8 @@ namespace Centriku.ViewModels.Settings
       [ObservableProperty] public partial AppSettings CurrentSettings { get; set; } = new();
       [ObservableProperty] public partial bool IsSaving { get; set; } = false;
 
-      private readonly string[] _allFields = ["Student ID", "Last Name", "First Name", "Middle Name", "Suffix", "Gender", "Year", "Section", "Status"];
+      private readonly string[] _allFields = ["Student ID", "Last Name", "First Name", "Middle Name", "Suffix", "Gender", "Year", "Program", "Section", "Status"];
       
-      // Genders restricted to just Male/Female
       public ObservableCollection<string> AvailableGenders { get; } = ["Male", "Female"];
       public ObservableCollection<string> AvailableStatuses { get; } = ["Regular", "Irregular", "Transferee"];
       public ObservableCollection<string> AvailableDuplicateRules { get; } = ["Update Existing Student", "Skip Duplicate (Do not import)"];
@@ -33,12 +31,7 @@ namespace Centriku.ViewModels.Settings
       public string SelectedDuplicateRule
       {
          get => CurrentSettings.DuplicateHandlingRule == "Skip" ? AvailableDuplicateRules[1] : AvailableDuplicateRules[0];
-         set
-         {
-            if (value == null) return;
-            CurrentSettings.DuplicateHandlingRule = value == AvailableDuplicateRules[1] ? "Skip" : "Update";
-            OnPropertyChanged();
-         }
+         set { if (value == null) return; CurrentSettings.DuplicateHandlingRule = value == AvailableDuplicateRules[1] ? "Skip" : "Update"; OnPropertyChanged(); }
       }
 
       [ObservableProperty] public partial ObservableCollection<string> Col1Options { get; set; } = new();
@@ -50,6 +43,7 @@ namespace Centriku.ViewModels.Settings
       [ObservableProperty] public partial ObservableCollection<string> Col7Options { get; set; } = new();
       [ObservableProperty] public partial ObservableCollection<string> Col8Options { get; set; } = new();
       [ObservableProperty] public partial ObservableCollection<string> Col9Options { get; set; } = new();
+      [ObservableProperty] public partial ObservableCollection<string> Col10Options { get; set; } = new();
 
       private bool _isUpdating = false;
 
@@ -62,6 +56,7 @@ namespace Centriku.ViewModels.Settings
       private string _col7Selected = "Ignore"; public string Col7Selected { get => _col7Selected; set { if (value == null) return; SetProperty(ref _col7Selected, value); if (!_isUpdating) UpdateMappingState(); } }
       private string _col8Selected = "Ignore"; public string Col8Selected { get => _col8Selected; set { if (value == null) return; SetProperty(ref _col8Selected, value); if (!_isUpdating) UpdateMappingState(); } }
       private string _col9Selected = "Ignore"; public string Col9Selected { get => _col9Selected; set { if (value == null) return; SetProperty(ref _col9Selected, value); if (!_isUpdating) UpdateMappingState(); } }
+      private string _col10Selected = "Ignore"; public string Col10Selected { get => _col10Selected; set { if (value == null) return; SetProperty(ref _col10Selected, value); if (!_isUpdating) UpdateMappingState(); } }
 
       [ObservableProperty] public partial ObservableCollection<PreviewStudentRow> PreviewRows { get; set; } = new();
       
@@ -74,10 +69,12 @@ namespace Centriku.ViewModels.Settings
       [ObservableProperty] public partial string Col7Header { get; set; } = ""; [ObservableProperty] public partial bool Col7Visible { get; set; } = false;
       [ObservableProperty] public partial string Col8Header { get; set; } = ""; [ObservableProperty] public partial bool Col8Visible { get; set; } = false;
       [ObservableProperty] public partial string Col9Header { get; set; } = ""; [ObservableProperty] public partial bool Col9Visible { get; set; } = false;
+      [ObservableProperty] public partial string Col10Header { get; set; } = ""; [ObservableProperty] public partial bool Col10Visible { get; set; } = false;
 
       public string DefaultGender { get => CurrentSettings.DefaultGender; set { CurrentSettings.DefaultGender = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
       public string DefaultGradeLevel { get => CurrentSettings.DefaultGradeLevel; set { CurrentSettings.DefaultGradeLevel = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
-      public string DefaultSection { get => CurrentSettings.DefaultSection; set { CurrentSettings.DefaultSection = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
+      public string DefaultProgram { get => CurrentSettings.DefaultProgram; set { CurrentSettings.DefaultProgram = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
+      public string DefaultSectionName { get => CurrentSettings.DefaultSectionName; set { CurrentSettings.DefaultSectionName = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
       public string DefaultEnrollmentStatus { get => CurrentSettings.DefaultEnrollmentStatus; set { CurrentSettings.DefaultEnrollmentStatus = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
 
       public IRelayCommand SaveSettingsCommand { get; }
@@ -96,12 +93,7 @@ namespace Centriku.ViewModels.Settings
          if (savedSettings != null) CurrentSettings = savedSettings;
          else { CurrentSettings = new AppSettings(); await db.InsertAsync(CurrentSettings); }
 
-         // Fix old settings if they previously had "Unspecified" saved
-         if (CurrentSettings.DefaultGender == "Unspecified")
-         {
-            CurrentSettings.DefaultGender = "Male";
-            await db.UpdateAsync(CurrentSettings);
-         }
+         if (CurrentSettings.DefaultGender == "Unspecified") { CurrentSettings.DefaultGender = "Male"; await db.UpdateAsync(CurrentSettings); }
 
          _isUpdating = true;
          void SetCol(int dbIndex, string field) {
@@ -109,20 +101,18 @@ namespace Centriku.ViewModels.Settings
             else if (dbIndex == 2) Col3Selected = field; else if (dbIndex == 3) Col4Selected = field;
             else if (dbIndex == 4) Col5Selected = field; else if (dbIndex == 5) Col6Selected = field;
             else if (dbIndex == 6) Col7Selected = field; else if (dbIndex == 7) Col8Selected = field;
-            else if (dbIndex == 8) Col9Selected = field; 
+            else if (dbIndex == 8) Col9Selected = field; else if (dbIndex == 9) Col10Selected = field; 
          }
 
          SetCol(CurrentSettings.StudentIdColumnIndex, "Student ID"); SetCol(CurrentSettings.LastNameColumnIndex, "Last Name");
          SetCol(CurrentSettings.FirstNameColumnIndex, "First Name"); SetCol(CurrentSettings.MiddleNameColumnIndex, "Middle Name");
          SetCol(CurrentSettings.SuffixColumnIndex, "Suffix"); SetCol(CurrentSettings.GenderColumnIndex, "Gender");
-         SetCol(CurrentSettings.GradeLevelColumnIndex, "Year"); SetCol(CurrentSettings.SectionColumnIndex, "Section");
-         SetCol(CurrentSettings.EnrollmentStatusColumnIndex, "Status");
+         SetCol(CurrentSettings.GradeLevelColumnIndex, "Year"); SetCol(CurrentSettings.ProgramColumnIndex, "Program");
+         SetCol(CurrentSettings.SectionNameColumnIndex, "Section"); SetCol(CurrentSettings.EnrollmentStatusColumnIndex, "Status");
 
-         OnPropertyChanged(nameof(DefaultGender)); 
-         OnPropertyChanged(nameof(DefaultGradeLevel));
-         OnPropertyChanged(nameof(DefaultSection)); 
-         OnPropertyChanged(nameof(DefaultEnrollmentStatus));
-         OnPropertyChanged(nameof(SelectedDuplicateRule));
+         OnPropertyChanged(nameof(DefaultGender)); OnPropertyChanged(nameof(DefaultGradeLevel));
+         OnPropertyChanged(nameof(DefaultProgram)); OnPropertyChanged(nameof(DefaultSectionName)); 
+         OnPropertyChanged(nameof(DefaultEnrollmentStatus)); OnPropertyChanged(nameof(SelectedDuplicateRule));
          
          _isUpdating = false;
          UpdateMappingState();
@@ -131,42 +121,29 @@ namespace Centriku.ViewModels.Settings
       private void UpdateMappingState()
       {
          _isUpdating = true;
-
-         var selected = new List<string> { _col1Selected, _col2Selected, _col3Selected, _col4Selected, _col5Selected, _col6Selected, _col7Selected, _col8Selected, _col9Selected };
+         var selected = new List<string> { _col1Selected, _col2Selected, _col3Selected, _col4Selected, _col5Selected, _col6Selected, _col7Selected, _col8Selected, _col9Selected, _col10Selected };
          var available = _allFields.Where(f => !selected.Contains(f)).ToList();
 
-         // 1. SAFELY REBUILD LISTS IN-PLACE
          void RefreshOptions(ObservableCollection<string> options, string currentSelection)
          {
-               options.Clear();
-               options.Add("Ignore");
-               
-               if (currentSelection != "Ignore" && !string.IsNullOrEmpty(currentSelection))
-               {
-                  options.Add(currentSelection);
-               }
-               
-               foreach (var a in available)
-               {
-                  options.Add(a);
-               }
+               options.Clear(); options.Add("Ignore");
+               if (currentSelection != "Ignore" && !string.IsNullOrEmpty(currentSelection)) options.Add(currentSelection);
+               foreach (var a in available) options.Add(a);
          }
 
          RefreshOptions(Col1Options, _col1Selected); RefreshOptions(Col2Options, _col2Selected);
          RefreshOptions(Col3Options, _col3Selected); RefreshOptions(Col4Options, _col4Selected);
          RefreshOptions(Col5Options, _col5Selected); RefreshOptions(Col6Options, _col6Selected);
          RefreshOptions(Col7Options, _col7Selected); RefreshOptions(Col8Options, _col8Selected);
-         RefreshOptions(Col9Options, _col9Selected); 
+         RefreshOptions(Col9Options, _col9Selected); RefreshOptions(Col10Options, _col10Selected); 
 
-         // 2. SAVE SETTINGS TO DATABASE VARIABLES
          int GetColIndex(string field) => selected.IndexOf(field);
          CurrentSettings.StudentIdColumnIndex = GetColIndex("Student ID"); CurrentSettings.LastNameColumnIndex = GetColIndex("Last Name");
          CurrentSettings.FirstNameColumnIndex = GetColIndex("First Name"); CurrentSettings.MiddleNameColumnIndex = GetColIndex("Middle Name");
          CurrentSettings.SuffixColumnIndex = GetColIndex("Suffix"); CurrentSettings.GenderColumnIndex = GetColIndex("Gender");
-         CurrentSettings.GradeLevelColumnIndex = GetColIndex("Year"); CurrentSettings.SectionColumnIndex = GetColIndex("Section");
-         CurrentSettings.EnrollmentStatusColumnIndex = GetColIndex("Status");
+         CurrentSettings.GradeLevelColumnIndex = GetColIndex("Year"); CurrentSettings.ProgramColumnIndex = GetColIndex("Program");
+         CurrentSettings.SectionNameColumnIndex = GetColIndex("Section"); CurrentSettings.EnrollmentStatusColumnIndex = GetColIndex("Status");
 
-         // 3. REBUILD PREVIEW DATAGRID COLUMNS
          Col1Header = _col1Selected; Col1Visible = _col1Selected != "Ignore";
          Col2Header = _col2Selected; Col2Visible = _col2Selected != "Ignore";
          Col3Header = _col3Selected; Col3Visible = _col3Selected != "Ignore";
@@ -176,13 +153,14 @@ namespace Centriku.ViewModels.Settings
          Col7Header = _col7Selected; Col7Visible = _col7Selected != "Ignore";
          Col8Header = _col8Selected; Col8Visible = _col8Selected != "Ignore";
          Col9Header = _col9Selected; Col9Visible = _col9Selected != "Ignore";
+         Col10Header = _col10Selected; Col10Visible = _col10Selected != "Ignore";
 
-         // 4. GENERATE 1 SINGLE PREVIEW ROW
          string GetPreview(string field)
          {
                if (field == "Gender") return DefaultGender;
                if (field == "Year") return DefaultGradeLevel;
-               if (field == "Section") return DefaultSection;
+               if (field == "Program") return DefaultProgram;
+               if (field == "Section") return DefaultSectionName;
                if (field == "Status") return DefaultEnrollmentStatus;
                return "--"; 
          }
@@ -190,29 +168,18 @@ namespace Centriku.ViewModels.Settings
          var singleRow = new PreviewStudentRow {
                Col1Text = GetPreview(_col1Selected), Col2Text = GetPreview(_col2Selected), Col3Text = GetPreview(_col3Selected),
                Col4Text = GetPreview(_col4Selected), Col5Text = GetPreview(_col5Selected), Col6Text = GetPreview(_col6Selected),
-               Col7Text = GetPreview(_col7Selected), Col8Text = GetPreview(_col8Selected), Col9Text = GetPreview(_col9Selected)
+               Col7Text = GetPreview(_col7Selected), Col8Text = GetPreview(_col8Selected), Col9Text = GetPreview(_col9Selected),
+               Col10Text = GetPreview(_col10Selected)
          };
          
          PreviewRows = new ObservableCollection<PreviewStudentRow> { singleRow };
 
-         void ForceUpdate(ref string backingField, string propName)
-         {
-               string savedValue = backingField;
-               backingField = null!;           // 1. Temporarily clear the backend value
-               OnPropertyChanged(propName);    // 2. Tell UI it's cleared
-               backingField = savedValue;      // 3. Put the correct value back
-               OnPropertyChanged(propName);    // 4. Tell UI it's back 
-         }
-
-         ForceUpdate(ref _col1Selected, nameof(Col1Selected));
-         ForceUpdate(ref _col2Selected, nameof(Col2Selected));
-         ForceUpdate(ref _col3Selected, nameof(Col3Selected));
-         ForceUpdate(ref _col4Selected, nameof(Col4Selected));
-         ForceUpdate(ref _col5Selected, nameof(Col5Selected));
-         ForceUpdate(ref _col6Selected, nameof(Col6Selected));
-         ForceUpdate(ref _col7Selected, nameof(Col7Selected));
-         ForceUpdate(ref _col8Selected, nameof(Col8Selected));
-         ForceUpdate(ref _col9Selected, nameof(Col9Selected));
+         void ForceUpdate(ref string backingField, string propName) { string s = backingField; backingField = null!; OnPropertyChanged(propName); backingField = s; OnPropertyChanged(propName); }
+         ForceUpdate(ref _col1Selected, nameof(Col1Selected)); ForceUpdate(ref _col2Selected, nameof(Col2Selected));
+         ForceUpdate(ref _col3Selected, nameof(Col3Selected)); ForceUpdate(ref _col4Selected, nameof(Col4Selected));
+         ForceUpdate(ref _col5Selected, nameof(Col5Selected)); ForceUpdate(ref _col6Selected, nameof(Col6Selected));
+         ForceUpdate(ref _col7Selected, nameof(Col7Selected)); ForceUpdate(ref _col8Selected, nameof(Col8Selected));
+         ForceUpdate(ref _col9Selected, nameof(Col9Selected)); ForceUpdate(ref _col10Selected, nameof(Col10Selected));
 
          _isUpdating = false;
       }
@@ -226,13 +193,7 @@ namespace Centriku.ViewModels.Settings
          IsSaving = false;
       }
    
-      [RelayCommand]
-      public void NavigateBack()
-      {
-          OnNavigateToDirectoryBulkImportTab?.Invoke();
-      }
-
+      [RelayCommand] public void NavigateBack() => OnNavigateToDirectoryBulkImportTab?.Invoke();
       public static event System.Action? OnNavigateToDirectoryBulkImportTab;
-   
    }
 }

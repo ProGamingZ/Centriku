@@ -16,7 +16,7 @@
                 </Grid>
             </Border>
 
-            <!-- ROW 1: Student Profile Info (Restored!) -->
+            <!-- ROW 1: Student Profile Info -->
             <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="40,30">
                 <Grid ColumnDefinitions="Auto, *">
                     <Border Grid.Column="0" Width="100" Height="100" CornerRadius="50" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,25,0">
@@ -36,7 +36,9 @@
                             <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
                             <TextBlock Text="{Binding SelectedProfile.GradeYearLevel}" Foreground="{DynamicResource TextMutedBrush}"/>
                             <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                            <TextBlock Text="{Binding SelectedProfile.SectionBlock}" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding SelectedProfile.Program}" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
+                            <TextBlock Text="{Binding SelectedProfile.SectionName}" Foreground="{DynamicResource TextMutedBrush}"/>
                             <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
                             <TextBlock Text="{Binding SelectedProfile.EnrollmentStatus}" Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
@@ -73,9 +75,8 @@
                                                 </StackPanel>
                                             </StackPanel>
 
-                                            <!-- THE HYBRID GRADE TRACKER -->
+                                            <!-- THE GRADE TRACKER -->
                                             <Grid Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
-                                                <!-- Semestral UI -->
                                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                                     <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
                                                         <StackPanel>
@@ -123,7 +124,7 @@
                             
                             <Grid ColumnDefinitions="*, Auto">
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="DepEd Form 138 / SF9 Data" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <TextBlock Text="Master Grade Data" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                                     <TextBlock Text="Compile grades from all subject teachers to generate the official report card." Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
                             </Grid>
@@ -180,7 +181,7 @@
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <!-- ACTIONS & QUARTERLY SUMMARY -->
+                            <!-- SUMMARY -->
                             <Grid ColumnDefinitions="*, Auto" Margin="0,10,0,0">
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 </StackPanel>

@@ -50,6 +50,9 @@ namespace Centriku.Models
         // Attendance Formatting
         public string ExportAttendanceDetail { get; set; } = "Detailed"; // Options: "Detailed", "SummaryOnly"
         
-        // (SF9 / DepEd Settings have been completely removed!)
+        public int ProgramColumnIndex { get; set; } = -1;
+        public int SectionNameColumnIndex { get; set; } = -1;
+        public string DefaultProgram { get; set; } = string.Empty;
+        public string DefaultSectionName { get; set; } = string.Empty;
     }
 }

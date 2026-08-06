@@ -71,9 +71,13 @@
                                 <TextBlock Text="Column 8 (H)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col8Options}" SelectedItem="{Binding Col8Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-                            <StackPanel Margin="0,0,0,15">
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Column 9 (I)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding Col9Options}" SelectedItem="{Binding Col9Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,15">
+                                <TextBlock Text="Column 10 (J)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <ComboBox ItemsSource="{Binding Col10Options}" SelectedItem="{Binding Col10Selected}" Width="120" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
                         </WrapPanel>
                     </StackPanel>
@@ -103,8 +107,12 @@
                                 <TextBox Text="{Binding DefaultGradeLevel}" MinWidth="120" MaxWidth="250" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,15,15">
+                                <TextBlock Text="Program" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding DefaultProgram}" MinWidth="100" MaxWidth="150" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,15,15">
                                 <TextBlock Text="Section" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
-                                <TextBox Text="{Binding DefaultSection}" MinWidth="120" MaxWidth="250" Background="{DynamicResource AppBackground}"/>
+                                <TextBox Text="{Binding DefaultSectionName}" MinWidth="100" MaxWidth="150" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
                         </WrapPanel>
                     </StackPanel>
@@ -166,6 +174,7 @@
                             <DataGridTextColumn Header="{Binding Col7Header}" Binding="{Binding Col7Text}" IsVisible="{Binding Col7Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
                             <DataGridTextColumn Header="{Binding Col8Header}" Binding="{Binding Col8Text}" IsVisible="{Binding Col8Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
                             <DataGridTextColumn Header="{Binding Col9Header}" Binding="{Binding Col9Text}" IsVisible="{Binding Col9Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
+                            <DataGridTextColumn Header="{Binding Col10Header}" Binding="{Binding Col10Text}" IsVisible="{Binding Col10Visible}" Width="*" MinWidth="90" MaxWidth="250"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>
