@@ -54,7 +54,7 @@
                         <StackPanel IsVisible="{Binding IsBoundaryMode}" Margin="0,0,0,25">
                             <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
                                 <TextBlock Grid.Column="0" Text="Grade Boundaries" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
-                                <Button Grid.Column="1" Command="{Binding AddBoundaryCommand}" Content="+ Add Band" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" Padding="8,4"/>
+                                <Button Grid.Column="1" Command="{Binding AddBoundaryCommand}" Content="Add Band" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" Padding="8,4"/>
                             </Grid>
 
                             <Grid ColumnDefinitions="1*, 1*, 1.5*, Auto" Margin="0,0,0,5">
@@ -104,7 +104,7 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <Button Grid.Row="2" Command="{Binding AddCategoryCommand}" Content="+ Add Category" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Margin="0,0,0,20"/>
+                        <Button Grid.Row="2" Command="{Binding AddCategoryCommand}" Content="Add Category" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Margin="0,0,0,20"/>
                     </Grid>
                 </Border>
 

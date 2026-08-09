@@ -119,9 +119,21 @@ namespace Centriku.Views.Gradebook
                headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"Max: {assessment.MaxScore}", FontSize = 11, Foreground = Avalonia.Media.Brushes.Gray, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
 
                var buttonPanel = new Avalonia.Controls.StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 5, 0, 0) };
-               var editBtn = new Avalonia.Controls.Button { Content = "✏️", Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
-               var delBtn = new Avalonia.Controls.Button { Content = "🗑️", Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
+               
+               var editIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+               editIcon.Classes.Add("Icon");
+               editIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconEdit");
+               editIcon[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMainBrush");
 
+               var delIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+               delIcon.Classes.Add("Icon");
+               delIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconDelete");
+               delIcon.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+
+               // Inject them into the buttons
+               var editBtn = new Avalonia.Controls.Button { Content = editIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
+               var delBtn = new Avalonia.Controls.Button { Content = delIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
+               
                buttonPanel.Children.Add(editBtn);
                buttonPanel.Children.Add(delBtn);
                headerPanel.Children.Add(buttonPanel);

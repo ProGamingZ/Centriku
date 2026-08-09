@@ -16,7 +16,7 @@
                 
                 <Border Margin="0,0,20,20" Width="380" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="📁 File &amp; Directory Management" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
+                        <TextBlock Text="File &amp; Directory Management" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
                         <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,-5,0,5"/>
 
                         <Grid ColumnDefinitions="*, Auto">
@@ -39,7 +39,7 @@
 
                 <Border Margin="0,0,20,20" Width="380" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="🔒 Data &amp; Privacy Controls" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
+                        <TextBlock Text="Data &amp; Privacy Controls" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
                         <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,-5,0,5"/>
 
                         <StackPanel Orientation="Horizontal" Spacing="15">
@@ -62,7 +62,7 @@
 
                 <Border Margin="0,0,20,20" Width="380" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="15">
-                        <TextBlock Text="📊 Spreadsheet Formatting" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
+                        <TextBlock Text="Spreadsheet Formatting" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
                         <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,-5,0,5"/>
 
                         <Grid ColumnDefinitions="1*, 1*" RowDefinitions="Auto, Auto">
@@ -91,12 +91,12 @@
 
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,0,20,20">
                 <Button Command="{Binding ResetDefaultsCommand}" Content="Reset to Defaults" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
-                <Button Command="{Binding SaveSettingsCommand}" Content="💾 Save Export Settings" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10" CornerRadius="8"/>
+                <Button Command="{Binding SaveSettingsCommand}" Content="Save Export Settings" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10" CornerRadius="8"/>
             </StackPanel>
 
             <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="12" Padding="20" Margin="0,0,20,20" VerticalAlignment="Top">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="📊 Export Previews" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                    <TextBlock Text="Export Previews" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                     <TextBlock Text="See how your CSVs will look based on your current settings above." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-5,0,10"/>
                     
                     <TabControl>

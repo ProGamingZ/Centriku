@@ -45,7 +45,7 @@
                </Button>
 
                <Button Grid.Column="2" Command="{Binding ToggleAddStudentFormCommand}" 
-                  Content="+ Add New Student" 
+                  Content="Add New Student" 
                   Background="{DynamicResource PrimaryBrush}" 
                   Foreground="White" FontWeight="Bold" 
                   CornerRadius="8" Padding="20,10"/>
@@ -243,21 +243,21 @@
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="Edit/Save">
                                        <Panel>
-                                          <TextBlock Classes="Icon" Text="✏️" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding !IsEditing}"/>
-                                          <TextBlock Classes="Icon" Text="💾" Foreground="{DynamicResource PrimaryBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
+                                          <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding !IsEditing}"/>
+                                          <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" Foreground="{DynamicResource PrimaryBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
                                        </Panel>
                                  </Button>
                                  
                                  <Button Command="{Binding #MasterRosterRoot.((vm:DirectoryViewModel)DataContext).ViewProfileCommand}"
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="View Full Profile">
-                                       <TextBlock Classes="Icon" Text="👤" Foreground="{DynamicResource TextMainBrush}" FontSize="16"/>
+                                       <TextBlock Classes="Icon" Text="{DynamicResource IconPerson}" Foreground="{DynamicResource TextMainBrush}" FontSize="16"/>
                                  </Button>
                                  
                                  <Button Command="{Binding #MasterRosterRoot.((vm:DirectoryViewModel)DataContext).ArchiveStudentCommand}"
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="Archive Student">
-                                       <TextBlock Classes="Icon" Text="📦" Foreground="#F59E0B" FontSize="16"/>
+                                       <TextBlock Classes="Icon" Text="{DynamicResource IconArchive}" Foreground="#F59E0B" FontSize="16"/>
                                  </Button>
                                  
                               </StackPanel>

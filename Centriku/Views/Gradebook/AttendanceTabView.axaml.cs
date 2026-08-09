@@ -85,8 +85,19 @@ namespace Centriku.Views.Gradebook
             headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"{date:ddd}".ToUpper(), FontSize = 11, Foreground = Avalonia.Media.Brushes.Gray, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
             
             var buttonPanel = new Avalonia.Controls.StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 5, 0, 0) };
-            buttonPanel.Children.Add(new Avalonia.Controls.Button { Content = "✏️", Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditRollCallCommand, CommandParameter = date, Padding = new Avalonia.Thickness(5) });
-            buttonPanel.Children.Add(new Avalonia.Controls.Button { Content = "🗑️", Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteRollCallCommand, CommandParameter = date, Padding = new Avalonia.Thickness(5) });
+
+            var editIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+            editIcon.Classes.Add("Icon");
+            editIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconEdit");
+            editIcon[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMainBrush");
+
+            var delIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+            delIcon.Classes.Add("Icon");
+            delIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconDelete");
+            delIcon.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+
+            buttonPanel.Children.Add(new Avalonia.Controls.Button { Content = editIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditRollCallCommand, CommandParameter = date, Padding = new Avalonia.Thickness(5) });
+            buttonPanel.Children.Add(new Avalonia.Controls.Button { Content = delIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteRollCallCommand, CommandParameter = date, Padding = new Avalonia.Thickness(5) });
             headerPanel.Children.Add(buttonPanel);
 
             var newColumn = new DataGridTemplateColumn

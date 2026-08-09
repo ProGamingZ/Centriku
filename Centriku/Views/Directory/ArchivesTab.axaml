@@ -174,27 +174,27 @@
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="Edit/Save">
                                        <Panel>
-                                          <TextBlock Classes="Icon" Text="✏️" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding !IsEditing}"/>
-                                          <TextBlock Classes="Icon" Text="💾" Foreground="{DynamicResource PrimaryBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
+                                          <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding !IsEditing}"/>
+                                          <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" Foreground="{DynamicResource PrimaryBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
                                        </Panel>
                                  </Button>
                                  
                                  <Button Command="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).ViewProfileCommand}"
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="View Full Profile">
-                                       <TextBlock Classes="Icon" Text="👤" Foreground="{DynamicResource TextMainBrush}" FontSize="16"/>
+                                       <TextBlock Classes="Icon" Text="{DynamicResource IconPerson}" Foreground="{DynamicResource TextMainBrush}" FontSize="16"/>
                                  </Button>
                                  
                                  <Button Command="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).RestoreStudentCommand}"
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="Restore Student">
-                                       <TextBlock Classes="Icon" Text="🔄" Foreground="#10B981" FontSize="16"/>
+                                       <TextBlock Classes="Icon" Text="{DynamicResource IconRestore}" Foreground="#10B981" FontSize="16"/>
                                  </Button>
 
                                  <Button Command="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).DeleteStudentCommand}"
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="Permanently Delete">
-                                       <TextBlock Classes="Icon" Text="🗑️" Foreground="#EF4444" FontSize="16"/>
+                                       <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="#EF4444" FontSize="16"/>
                                  </Button>
                                  
                               </StackPanel>

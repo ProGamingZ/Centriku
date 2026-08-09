@@ -149,9 +149,15 @@
             <x:String x:Key="IconDirectory">&#62901;</x:String>
             <x:String x:Key="IconSettings">&#63146;</x:String>
 
+            <x:String x:Key="IconEdit">&#58804;</x:String>
+            <x:String x:Key="IconDelete">&#62287;</x:String>
             <x:String x:Key="IconSearch">&#63120;</x:String>
             <x:String x:Key="IconExport">&#58599;</x:String>
             <x:String x:Key="IconTheme">&#58450;</x:String>
+            <x:String x:Key="IconPerson">&#62912;</x:String>
+            <x:String x:Key="IconArchive">&#61756;</x:String>
+            <x:String x:Key="IconRestore">&#57577;</x:String>
+
 
         </ResourceDictionary>
     </Application.Resources>

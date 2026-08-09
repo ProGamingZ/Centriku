@@ -14,13 +14,15 @@
                 
                 <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Classes="Icon" Text="{DynamicResource IconBooks}" FontSize="16" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <TextBlock Classes="Icon" Text="{DynamicResource IconBooks}" FontSize="32" Foreground="{DynamicResource TextMutedBrush}"/>
                         <TextBlock Text="Managing" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ActiveClasses}" Foreground="{DynamicResource PrimaryBrush}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock Text="active classes with" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalStudents}" Foreground="{DynamicResource PrimaryBrush}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock Text="total students." Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding ActiveClasses}" Foreground="{DynamicResource PrimaryBrush}" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Text="active classes with" Foreground="{DynamicResource TextMutedBrush}" FontSize="14"/>
-                    <TextBlock Text="{Binding TotalStudents}" Foreground="{DynamicResource PrimaryBrush}" FontSize="14" FontWeight="Bold"/>
-                    <TextBlock Text="total students." Foreground="{DynamicResource TextMutedBrush}" FontSize="14"/>
+
+                    
                 </StackPanel>
             </StackPanel>
             
