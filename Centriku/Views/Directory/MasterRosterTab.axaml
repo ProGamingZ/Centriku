@@ -244,7 +244,7 @@
                                           Background="Transparent" ToolTip.Tip="Edit/Save">
                                        <Panel>
                                           <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding !IsEditing}"/>
-                                          <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" Foreground="{DynamicResource PrimaryBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
+                                          <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" Foreground="{DynamicResource TextMainBrush}" FontSize="16" IsVisible="{Binding IsEditing}"/>
                                        </Panel>
                                  </Button>
                                  

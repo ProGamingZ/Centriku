@@ -15,13 +15,15 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> ActiveClasses { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<GradingTemplate> AvailableTemplates { get; set; } = new();
         [ObservableProperty] public partial bool IsAddingClass { get; set; } = false;
-        [ObservableProperty]  public partial string NewSubjectName { get; set; } = string.Empty;
+        
+        [ObservableProperty] public partial string NewSubjectName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewSectionLabel { get; set; } = string.Empty;   
+        [ObservableProperty] public partial string NewProgram { get; set; } = string.Empty;   
+        [ObservableProperty] public partial string NewProfessorName { get; set; } = string.Empty;   
         [ObservableProperty] public partial string NewAcademicYear { get; set; } = "2025-2026";        
         [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = [];
         [ObservableProperty] public partial string NewTerm { get; set; } = string.Empty;     
         [ObservableProperty] public partial GradingTemplate? SelectedTemplate { get; set; }
-
         
         private int? _editingClassId = null;
         private static readonly System.Collections.Generic.Dictionary<int, GradebookViewModel> _gradebookCache = [];
@@ -91,6 +93,8 @@ namespace Centriku.ViewModels
             _editingClassId = classCard.DbModel.ClassID;
             NewSubjectName = classCard.SubjectName;
             NewSectionLabel = classCard.SectionLabel;
+            NewProgram = classCard.Program;
+            NewProfessorName = classCard.ProfessorName;
             NewAcademicYear = classCard.AcademicYear;
             NewTerm = classCard.Term;
             SelectedTemplate = AvailableTemplates.FirstOrDefault(t => t.TemplateID == classCard.DbModel.GradingTemplateID);
@@ -109,6 +113,8 @@ namespace Centriku.ViewModels
                 var classToUpdate = await db.Table<TeacherClass>().Where(c => c.ClassID == _editingClassId.Value).FirstOrDefaultAsync();
                 classToUpdate.SubjectName = NewSubjectName;
                 classToUpdate.SectionLabel = NewSectionLabel;
+                classToUpdate.Program = NewProgram;
+                classToUpdate.ProfessorName = NewProfessorName;
                 classToUpdate.AcademicYear = NewAcademicYear;
                 classToUpdate.Term = NewTerm;
                 classToUpdate.GradingTemplateID = SelectedTemplate.TemplateID;
@@ -122,6 +128,8 @@ namespace Centriku.ViewModels
                 {
                     SubjectName = NewSubjectName,
                     SectionLabel = NewSectionLabel,
+                    Program = NewProgram,
+                    ProfessorName = NewProfessorName,
                     AcademicYear = NewAcademicYear,
                     Term = NewTerm,
                     GradingTemplateID = SelectedTemplate.TemplateID
@@ -132,24 +140,26 @@ namespace Centriku.ViewModels
             ResetForm();
             await LoadClasses();
         }
+
         private async void DeleteClass(ClassCardViewModel classCard)
         {
             if (classCard == null) return;
             var db = new DatabaseService().GetConnection();
-            
             await db.DeleteAsync(classCard.DbModel);
             await LoadClasses();
         }
+
         private void ResetForm()
         {
             _editingClassId = null;
             NewSubjectName = string.Empty;
             NewSectionLabel = string.Empty;
+            NewProgram = string.Empty;
+            NewProfessorName = string.Empty;
             SelectedTemplate = null;
             IsAddingClass = false;
         }
 
-       
         private async void OpenClass(ClassCardViewModel selectedClass)
         {
             if (selectedClass != null)
@@ -158,14 +168,12 @@ namespace Centriku.ViewModels
 
                 if (!_gradebookCache.TryGetValue(classId, out GradebookViewModel? value))
                 {
-                    // FIRST TIME OPENING: Initialize from scratch
                     var newGradebook = new GradebookViewModel();
                     newGradebook.Initialize(classId, selectedClass.SubjectName);
                     _gradebookCache[classId] = newGradebook;
                 }
                 else
                 {
-                    // OPENING FROM CACHE: Force it to grab the fresh student edits/enrollments!
                     await value.RefreshRostersAsync(); 
                     value.RecalculateFinalGrades();
                 }
@@ -173,12 +181,12 @@ namespace Centriku.ViewModels
                 _navigateAction(_gradebookCache[classId]);
             }
         }
+        
         public async Task RefreshDataAsync()
         {
             await LoadTemplates();
             await LoadClasses();
         }
-
     }
 
     public partial class ClassCardViewModel : ObservableObject
@@ -188,6 +196,8 @@ namespace Centriku.ViewModels
 
         public string SubjectName => DbModel.SubjectName ?? string.Empty;
         public string SectionLabel => DbModel.SectionLabel ?? string.Empty;
+        public string Program => DbModel.Program ?? string.Empty;
+        public string ProfessorName => DbModel.ProfessorName ?? string.Empty;
         public string AcademicYear => DbModel.AcademicYear ?? string.Empty;
         public string Term => DbModel.Term ?? string.Empty;
         public ClassCardViewModel(TeacherClass teacherClass, string templateName)

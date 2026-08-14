@@ -13,6 +13,9 @@ namespace Centriku.Models
         public string? SubjectName { get; set; }
         public string? SectionLabel { get; set; }
 
+        public string? Program { get; set; }
+        public string? ProfessorName { get; set; }
+
         public int GradingTemplateID { get; set; } 
 
         

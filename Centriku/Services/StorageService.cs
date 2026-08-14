@@ -41,7 +41,7 @@ namespace Centriku.Services
             return Path.Combine(GetAppFolderPath(), "centriku.db");
         }
 
-        // Gets the folder path for exported CSV/Excel files (Useful for Phase A!)
+        // Gets the folder path for exported CSV/Excel files
         public static string GetExportsFolderPath()
         {
             string exportFolder = Path.Combine(GetAppFolderPath(), "Exports");
@@ -52,6 +52,35 @@ namespace Centriku.Services
             }
             
             return exportFolder;
+        }
+
+        // Gets the folder path for the Excel Templates
+        public static string GetTemplateFolderPath()
+        {
+            string templateFolder = Path.Combine(GetAppFolderPath(), "template");
+            
+            if (!Directory.Exists(templateFolder))
+            {
+                Directory.CreateDirectory(templateFolder);
+            }
+            
+            return templateFolder;
+        }
+
+        // Copies the bundled template into the user's data folder on first run
+        public static void InitializeDefaultTemplates()
+        {
+            string targetFolder = GetTemplateFolderPath();
+            string targetFile = Path.Combine(targetFolder, "NwSSU-Class-Record.xlsx");
+
+            // The file bundled by the compiler (preserves folder structure)
+            string sourceFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "template", "NwSSU-Class-Record.xlsx");
+
+            // If the bundled file exists but the user doesn't have it yet, copy it over!
+            if (File.Exists(sourceFile) && !File.Exists(targetFile))
+            {
+                File.Copy(sourceFile, targetFile);
+            }
         }
     }
 }

@@ -29,22 +29,28 @@
                     
                     <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
                         <StackPanel Margin="0,0,15,15" MinWidth="200">
-                            <TextBlock Text="Course Code*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewSubjectName}" PlaceholderText="e.g. CS101" Background="{DynamicResource AppBackground}"/>
+                            <TextBlock Text="Course Code &amp; Title*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewSubjectName}" PlaceholderText="e.g. CS101 Mobile Prog" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15" MinWidth="150">
+                            <TextBlock Text="Program" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewProgram}" PlaceholderText="e.g. BSCS" Background="{DynamicResource AppBackground}"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="150">
                             <TextBlock Text="Section Label" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewSectionLabel}" PlaceholderText="e.g. BSCS 1Y" Background="{DynamicResource AppBackground}"/>
+                            <TextBox Text="{Binding NewSectionLabel}" PlaceholderText="e.g. 3A" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,15,15" MinWidth="200">
+                            <TextBlock Text="Professor Name" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding NewProfessorName}" PlaceholderText="e.g. Yuri Joseph A. Ortiz" Background="{DynamicResource AppBackground}"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="120">
                             <TextBlock Text="Term*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-    
-                            <ComboBox ItemsSource="{Binding AvailableTerms}" 
-                                SelectedItem="{Binding NewTerm}" 
-                                Background="{DynamicResource AppBackground}" 
-                                HorizontalAlignment="Stretch"/>
+                            <ComboBox ItemsSource="{Binding AvailableTerms}" SelectedItem="{Binding NewTerm}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,15,15" MinWidth="120">
@@ -54,16 +60,8 @@
                         
                         <StackPanel Margin="0,0,15,15" MinWidth="250">
                             <TextBlock Text="Grading Policy*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <ComboBox ItemsSource="{Binding AvailableTemplates}" 
-                                      SelectedItem="{Binding SelectedTemplate}" 
-                                      Background="{DynamicResource AppBackground}" 
-                                      HorizontalAlignment="Stretch"
-                                      PlaceholderText="Select a saved template...">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding TemplateName}"/>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
+                            <ComboBox ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedTemplate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch" PlaceholderText="Select a saved template...">
+                                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding TemplateName}"/></DataTemplate></ComboBox.ItemTemplate>
                             </ComboBox>
                         </StackPanel>
                     </WrapPanel>

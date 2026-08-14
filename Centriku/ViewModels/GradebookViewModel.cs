@@ -126,37 +126,23 @@ namespace Centriku.ViewModels
             public IRelayCommand ExportCsvCommand { get; }
             private async void ExportToCsv()
             {
-                if (!ExportAttendance && !ExportMidterm && !ExportFinal && !ExportSemesterAverage)
-                {
-                    ShowToastMessage?.Invoke("Please select at least one tab to export."); return;
-                }
-
-                ShowToastMessage?.Invoke("Generating CSV files...");
+                ShowToastMessage?.Invoke("Generating Official Excel File...");
 
                 var db = new DatabaseService().GetConnection();
-                var appSettings = await db.Table<AppSettings>().FirstOrDefaultAsync() ?? new AppSettings();
+                
+                // 1. Fetch the TeacherClass info
+                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                if (currentClass == null) return;
 
-                var selectedTerms = new System.Collections.Generic.List<string>();
-                if (ExportMidterm) selectedTerms.Add("Midterm");
-                if (ExportFinal) selectedTerms.Add("Final");
-                if (ExportSemesterAverage) selectedTerms.Add("Semester Average");
-
-                // === 1. Prepare Active Students ===
-                var finalGradeRows = GradebookRows.ToList();
-                var finalAttRows = AttendanceGridRows.ToList();
-
-                // === 2. Fetch Archived Students (If the Global Setting is turned on!) ===
-                if (appSettings.ExportIncludeArchived)
+                // 2. Fetch the Students (Using the active GradebookRows)
+                var studentsToExport = new System.Collections.Generic.List<Student>();
+                foreach (var row in GradebookRows)
                 {
-                    var archivedData = await FetchArchivedExportDataAsync();
-                    finalGradeRows.AddRange(archivedData.Grades);
-                    finalAttRows.AddRange(archivedData.Attendance);
+                    studentsToExport.Add(row.StudentInfo);
                 }
 
-                var result = await CsvExportService.ExportClassDataAsync(
-                    ClassTitle, ExportAttendance, ExportFolderPath, selectedTerms,
-                    finalGradeRows, ClassAssessments, finalAttRows, AttendanceDates, appSettings
-                );
+                // 3. Send data to the Excel Service
+                var result = await ExcelExportService.ExportToNwSSUTemplateAsync(currentClass, studentsToExport, ExportFolderPath);
                 
                 ShowToastMessage?.Invoke(result.Message); 
             }

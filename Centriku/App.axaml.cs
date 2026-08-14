@@ -18,7 +18,8 @@ namespace Centriku
         {
             var dbService = new DatabaseService();
             _ = dbService.InitializeDatabaseAsync(); // '_' to fire-and-forget this background task
-            
+            Centriku.Services.StorageService.InitializeDefaultTemplates();
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow = new MainWindow
