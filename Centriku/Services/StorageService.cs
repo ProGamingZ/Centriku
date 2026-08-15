@@ -67,19 +67,27 @@ namespace Centriku.Services
             return templateFolder;
         }
 
-        // Copies the bundled template into the user's data folder on first run
+        // Copies the bundled templates into the user's data folder on first run
         public static void InitializeDefaultTemplates()
         {
             string targetFolder = GetTemplateFolderPath();
-            string targetFile = Path.Combine(targetFolder, "NwSSU-Class-Record.xlsx");
+            
+            // --- 1. Class Record Template ---
+            string targetRecordFile = Path.Combine(targetFolder, "NwSSU-Class-Record.xlsx");
+            string sourceRecordFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "template", "NwSSU-Class-Record.xlsx");
 
-            // The file bundled by the compiler (preserves folder structure)
-            string sourceFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "template", "NwSSU-Class-Record.xlsx");
-
-            // If the bundled file exists but the user doesn't have it yet, copy it over!
-            if (File.Exists(sourceFile) && !File.Exists(targetFile))
+            if (File.Exists(sourceRecordFile) && !File.Exists(targetRecordFile))
             {
-                File.Copy(sourceFile, targetFile);
+                File.Copy(sourceRecordFile, targetRecordFile);
+            }
+
+            // --- 2. Attendance Template ---
+            string targetAttFile = Path.Combine(targetFolder, "ATTENDANCE.xlsx");
+            string sourceAttFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "template", "ATTENDANCE.xlsx");
+
+            if (File.Exists(sourceAttFile) && !File.Exists(targetAttFile))
+            {
+                File.Copy(sourceAttFile, targetAttFile);
             }
         }
     }

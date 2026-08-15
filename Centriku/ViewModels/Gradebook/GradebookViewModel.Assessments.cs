@@ -37,6 +37,29 @@ namespace Centriku.ViewModels
          if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
             return;
 
+         // --- NEW: EXCEL LIMIT VALIDATION ---
+         int existingCount = ClassAssessments.Count(a => a.Category == SelectedCategory.Name && a.GradingPeriod == NewAssessmentPeriod);
+         
+         // If editing, don't count the current assessment against the limit
+         if (_editingAssessmentId.HasValue) 
+         {
+            existingCount = ClassAssessments.Count(a => a.Category == SelectedCategory.Name && a.GradingPeriod == NewAssessmentPeriod && a.AssessmentID != _editingAssessmentId.Value);
+         }
+
+         int maxAllowed = SelectedCategory.SequenceOrder switch {
+            1 => 10, // Class Standing limit
+            2 => 5,  // MCO limit
+            3 => 1,  // Major Exam limit
+            _ => 10
+         };
+
+         if (existingCount >= maxAllowed)
+         {
+            ShowToastMessage?.Invoke($"Limit Reached: Official class records only allow {maxAllowed} assessment(s) for {SelectedCategory.Name} per term.");
+            return;
+         }
+         // -----------------------------------
+
          var db = new DatabaseService().GetConnection();
 
          if (_editingAssessmentId.HasValue)
@@ -45,11 +68,7 @@ namespace Centriku.ViewModels
             var assessmentToUpdate = await db.Table<Assessment>().Where(a => a.AssessmentID == _editingAssessmentId.Value).FirstOrDefaultAsync();
             assessmentToUpdate.Title = NewAssessmentTitle;
             assessmentToUpdate.Category = SelectedCategory.Name;
-            
-            // === FIX: Tell SQLite which term this belongs to! ===
             assessmentToUpdate.GradingPeriod = NewAssessmentPeriod; 
-            // ====================================================
-
             assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
             assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
             
@@ -63,11 +82,7 @@ namespace Centriku.ViewModels
                ClassID = ClassId,
                Title = NewAssessmentTitle,
                Category = SelectedCategory.Name,
-               
-               // === FIX: Save the dropdown selection to SQLite! ===
                GradingPeriod = NewAssessmentPeriod,
-               // ===================================================
-
                MaxScore = NewAssessmentMaxScore,
                DateGiven = NewAssessmentDate ?? System.DateTime.Now
             };

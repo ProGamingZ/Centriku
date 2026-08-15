@@ -70,7 +70,6 @@ namespace Centriku.Services
          double rawAcademicGrade,
          TeacherClass teacherClass,
          GradingTemplate template,
-         IEnumerable<GradeBoundary> boundaries,
          int totalActiveDays,
          double effectiveAbsences)
       {
@@ -80,17 +79,11 @@ namespace Centriku.Services
 
          // === 1. ATTENDANCE MODIFIERS ===
          string attMode = teacherClass.AttendanceCalculationMode ?? "None";
-         
          switch (attMode)
          {
             case "Threshold":
-               if (effectiveAbsences >= teacherClass.MaxAbsencesAllowed) 
-               {
-                  result.IsFA = true;
-                  finalNumeric = -1;
-               }
+               if (effectiveAbsences >= teacherClass.MaxAbsencesAllowed) { result.IsFA = true; finalNumeric = -1; }
                break;
-
             case "Weighted":
                double attendanceScore = 100.0;
                if (totalActiveDays > 0)
@@ -102,7 +95,6 @@ namespace Centriku.Services
                double attWeight = teacherClass.AttendanceWeight / 100.0;
                finalNumeric = (rawAcademicGrade * academicWeight) + (attendanceScore * attWeight);
                break;
-
             case "Bonus":
                if (effectiveAbsences == 0 && totalActiveDays > 0) finalNumeric += teacherClass.AttendanceWeight;
                else if (effectiveAbsences > teacherClass.MaxAbsencesAllowed) finalNumeric -= teacherClass.AttendanceWeight;
@@ -110,7 +102,7 @@ namespace Centriku.Services
                break;
          }
 
-         // === 2. TRANSMUTATION (NRFG / CRG) ===
+         // === 2. TRANSMUTATION (NRFG ONLY) ===
          if (result.IsFA || finalNumeric == -1)
          {
             result.FinalNumeric = -1;
@@ -119,38 +111,11 @@ namespace Centriku.Services
             return result;
          }
 
-         string calcMode = template?.CalculationMode ?? "NRFG";
+         // Always apply the Base-Value Transmutation!
+         double baseVal = template?.NrfgBaseValue ?? 50.0;
+         finalNumeric = (finalNumeric / 100.0) * (100.0 - baseVal) + baseVal;
          
-         if (calcMode == "NRFG")
-         {
-            double baseVal = template?.NrfgBaseValue ?? 60.0;
-            finalNumeric = (finalNumeric / 100.0) * (100.0 - baseVal) + baseVal;
-            result.FinalOutput = $"{finalNumeric.ToString("0.##")}%";
-         }
-         else if (calcMode == "CRG")
-         {
-            if (boundaries != null && boundaries.Any())
-            {
-               var matchingBand = boundaries.FirstOrDefault(b => finalNumeric >= b.MinScore && finalNumeric <= b.MaxScore);
-               if (matchingBand != null)
-               {
-                  result.FinalOutput = matchingBand.Label ?? "";
-                  finalNumeric = matchingBand.GpaValue;
-               }
-               else
-               {
-                  result.FinalOutput = $"{finalNumeric.ToString("0.##")}%";
-               }
-            }
-            else
-            {
-               result.FinalOutput = $"{finalNumeric.ToString("0.##")}%";
-            }
-         }
-         else
-         {
-            result.FinalOutput = $"{finalNumeric.ToString("0.##")}%";
-         }
+         result.FinalOutput = $"{finalNumeric.ToString("0.##")}%";
 
          // === 3. FINAL EVALUATION ===
          result.FinalNumeric = finalNumeric;

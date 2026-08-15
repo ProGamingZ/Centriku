@@ -50,7 +50,11 @@ namespace Centriku.ViewModels
                 {
                     if (raw == null) return "--";
                     double val = raw.Value;
-                    if (template?.CalculationMode == "NRFG") val = (val / 100.0) * (100.0 - template.NrfgBaseValue) + template.NrfgBaseValue;
+                    // Always transmutate using the template's Base Value
+                    if (template != null) 
+                    {
+                        val = (val / 100.0) * (100.0 - template.NrfgBaseValue) + template.NrfgBaseValue;
+                    }
                     return $"{val.ToString("0.##")}%";
                 }
 

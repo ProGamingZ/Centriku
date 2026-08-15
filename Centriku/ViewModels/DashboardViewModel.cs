@@ -40,7 +40,6 @@ namespace Centriku.ViewModels
         private List<Score> _allScores = [];
         private List<AttendanceRecord> _allAttendance = [];
         private List<GradingCategory> _allCategories = [];
-        private List<GradeBoundary> _allBoundaries = [];
 
         public IRelayCommand<DashboardClassCardViewModel> OpenGradebookCommand { get; }
         public IRelayCommand<DashboardClassCardViewModel> OpenAttendanceCommand { get; }
@@ -64,7 +63,6 @@ namespace Centriku.ViewModels
             _allScores = await db.Table<Score>().ToListAsync();
             _allAttendance = await db.Table<AttendanceRecord>().ToListAsync();
             _allCategories = await db.Table<GradingCategory>().ToListAsync();
-            _allBoundaries = await db.Table<GradeBoundary>().ToListAsync();
 
             // 2. Dynamically extract the unique Years and Terms from the teacher's classes
             var years = _allClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
@@ -124,8 +122,6 @@ namespace Centriku.ViewModels
                 var template = _allTemplates.FirstOrDefault(t => t.TemplateID == teacherClass.GradingTemplateID);
                 
                 var classCategories = _allCategories.Where(c => c.TemplateID == teacherClass.GradingTemplateID).ToList();
-                var classBoundaries = _allBoundaries.Where(b => b.TemplateID == teacherClass.GradingTemplateID).ToList();
-
 
                 // 1. Get ALL assessments for the class
                 var allClassAssessments = _allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
@@ -172,7 +168,7 @@ namespace Centriku.ViewModels
                         // Calculate Transmuted Grade (Bypass attendance for single terms)
                         var tempClass = new TeacherClass { AttendanceCalculationMode = "None" };
                         var termResult = GradeCalculationService.EvaluateFinalGrade(
-                            rawAcademicGrade, tempClass, template ?? new GradingTemplate(), classBoundaries, 0, 0);
+                            rawAcademicGrade, tempClass, template ?? new GradingTemplate(), 0, 0);
 
                         // Only flag as red if it is completely graded AND failing!
                         bool isFailingTerm = isTerm100Percent && termResult.IsFailing;
@@ -221,7 +217,7 @@ namespace Centriku.ViewModels
                         double finalAcademicAverage = sumOfRawTerms / termsToEvaluate.Count;
 
                         var finalResult = GradeCalculationService.EvaluateFinalGrade(
-                            finalAcademicAverage, teacherClass, template ?? new GradingTemplate(), classBoundaries, activeDays, effectiveAbsences);
+                            finalAcademicAverage, teacherClass, template ?? new GradingTemplate(), activeDays, effectiveAbsences);
                         
                         finalGradeItem.GradeDisplay = finalResult.IsFA ? "FA" : finalResult.FinalOutput;
                         

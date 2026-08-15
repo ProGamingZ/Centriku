@@ -22,9 +22,7 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool ShowFinalGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowMidtermGrade { get; set; } = true;
             [ObservableProperty] public partial bool ShowFinalTermGrade { get; set; } = true;
-            [ObservableProperty] public partial string CalculationMode { get; set; } = "Raw Percentage";
             [ObservableProperty] public partial double NrfgBaseValue { get; set; } = 60.0;
-            public System.Collections.Generic.List<Centriku.Models.GradeBoundary> ClassGradeBoundaries { get; set; } = new();
             
             partial void OnShowStudentIdChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
             partial void OnShowFirstNameChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
@@ -111,22 +109,22 @@ namespace Centriku.ViewModels
         #endregion
 
         #region Setup& Data Loading
-
-            [ObservableProperty] public partial bool ExportQ1 { get; set; } = true;
-            [ObservableProperty] public partial bool ExportQ2 { get; set; } = true;
-            [ObservableProperty] public partial bool ExportQ3 { get; set; } = true;
-            [ObservableProperty] public partial bool ExportQ4 { get; set; } = true;
-            [ObservableProperty] public partial bool ExportFinalAverage { get; set; } = true;
-            [ObservableProperty] public partial bool ExportMidterm { get; set; } = true;
-            [ObservableProperty] public partial bool ExportFinal { get; set; } = true;
-            [ObservableProperty] public partial bool ExportSemesterAverage { get; set; } = true;
-            [ObservableProperty] public partial bool ExportAttendance { get; set; } = true;
+        // DELETED the old checkboxes, ADDED the two new official Excel checkboxes
+            [ObservableProperty] public partial bool ExportClassRecord { get; set; } = true;
+            [ObservableProperty] public partial bool ExportClassAttendance { get; set; } = true;
+            
             [ObservableProperty] public partial string ExportFolderPath { get; set; } = string.Empty;
             [ObservableProperty] public partial string ExportFolderDisplay { get; set; } = "Default Downloads Folder";
             public IRelayCommand ExportCsvCommand { get; }
+            
             private async void ExportToCsv()
             {
-                ShowToastMessage?.Invoke("Generating Official Excel File...");
+                if (!ExportClassRecord && !ExportClassAttendance)
+                {
+                    ShowToastMessage?.Invoke("Please select at least one document to export."); return;
+                }
+
+                ShowToastMessage?.Invoke("Generating Official Excel Files...");
 
                 var db = new DatabaseService().GetConnection();
                 
@@ -134,17 +132,28 @@ namespace Centriku.ViewModels
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass == null) return;
 
-                // 2. Fetch the Students (Using the active GradebookRows)
-                var studentsToExport = new System.Collections.Generic.List<Student>();
-                foreach (var row in GradebookRows)
+                // 2. Prepare the Active Rows for both templates
+                var activeRows = GradebookRows.ToList(); 
+                var activeAttRows = AttendanceGridRows.ToList();
+
+                // 3. Export to NwSSU Class Record (Grades)
+                if (ExportClassRecord)
                 {
-                    studentsToExport.Add(row.StudentInfo);
+                    var assessmentsList = ClassAssessments.ToList();
+                    var categoriesList = AvailableCategories.ToList();
+
+                    var resultRecord = await ExcelExportService.ExportToNwSSUTemplateAsync(
+                        currentClass, activeRows, assessmentsList, categoriesList, ExportFolderPath);
+                    ShowToastMessage?.Invoke(resultRecord.Message); 
                 }
 
-                // 3. Send data to the Excel Service
-                var result = await ExcelExportService.ExportToNwSSUTemplateAsync(currentClass, studentsToExport, ExportFolderPath);
-                
-                ShowToastMessage?.Invoke(result.Message); 
+                // 4. Export to ATTENDANCE.xlsx (Roll Call)
+                if (ExportClassAttendance)
+                {
+                    var resultAtt = await ExcelExportService.ExportAttendanceTemplateAsync(
+                        currentClass, activeAttRows, AttendanceDates.ToList(), ExportFolderPath);
+                    ShowToastMessage?.Invoke(resultAtt.Message);
+                }
             }
 
             private async Task<(System.Collections.Generic.List<StudentGradeRow> Grades, System.Collections.Generic.List<AttendanceGridRowViewModel> Attendance)> FetchArchivedExportDataAsync()
@@ -168,7 +177,6 @@ namespace Centriku.ViewModels
                 // 2. Build their invisible rows
                 foreach (var student in archivedStudents)
                 {
-                    // Add a visual tag to their name so the teacher knows WHY they are at the bottom of the CSV!
                     student.LastName = $"[ARCHIVED] {student.LastName}";
 
                     var gradeRow = new StudentGradeRow(student);
@@ -210,12 +218,11 @@ namespace Centriku.ViewModels
 
                 ToggleAddAssessmentCommand = new RelayCommand(() => 
                 {
-                    if (IsAddingAssessment) ResetAssessmentForm(); // If clicking Cancel, wipe everything clean!
-                    else IsAddingAssessment = true;                // If clicking Add, just open it.
+                    if (IsAddingAssessment) ResetAssessmentForm(); 
+                    else IsAddingAssessment = true;                
                 });
 
                 SaveAssessmentCommand = new RelayCommand(SaveAssessment);
-
                 EditAssessmentCommand = new RelayCommand<Assessment>(EditAssessment!);
                 DeleteAssessmentCommand = new RelayCommand<Assessment>(DeleteAssessment!);
 
@@ -247,8 +254,6 @@ namespace Centriku.ViewModels
             private async Task LoadGradebookData()
             {
                 var db = new DatabaseService().GetConnection();
-                await db.CreateTableAsync<Centriku.Models.GradeBoundary>();
-                // 1. Load Class Visibility Settings 
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass != null)
                 {
@@ -263,49 +268,38 @@ namespace Centriku.ViewModels
                     var template = await db.Table<GradingTemplate>().Where(t => t.TemplateID == currentClass.GradingTemplateID).FirstOrDefaultAsync();
                     if (template != null) 
                     {
-                        CalculationMode = template.CalculationMode ?? "NRFG";
                         NrfgBaseValue = template.NrfgBaseValue; 
                     }
-                    
-                    ClassGradeBoundaries = await db.Table<GradeBoundary>().Where(b => b.TemplateID == currentClass.GradingTemplateID).ToListAsync();
                 }
 
                 TermViews = new ObservableCollection<string> { "Midterm", "Final", "Semester Average" };
                 GradingPeriods = new ObservableCollection<string> { "Midterm", "Final" };
                 if (!TermViews.Contains(SelectedTermView)) SelectedTermView = "Semester Average";
 
-                // 2. Get the Columns (Assessments)
                 var assessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
                 ClassAssessments = new ObservableCollection<Assessment>(assessments);
 
                 BuildCategoryFilters();
 
-                // 2. Get the Students in this Class
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                 var studentIds = roster.Select(r => r.StudentID).ToList();
                 var enrolled = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync()).Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").ToList();
 
-                // 3. Get the Scores for this Class
                 var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
                 var scores = await db.Table<Score>().Where(s => assessmentIds.Contains(s.AssessmentID)).ToListAsync();
 
-                // 4. Stitch them together into Rows!
                 GradebookRows.Clear();
                 foreach (var student in enrolled)
                 {
                     var row = new StudentGradeRow(student);
-                    
-                    // Find all existing scores belonging to this specific student
                     var studentScores = scores.Where(s => s.StudentID == student.StudentID).ToList();
 
                     foreach (var assessment in ClassAssessments)
                     {
-                        // Check if the student already has a saved score for this column
                         var existingScore = studentScores.FirstOrDefault(s => s.AssessmentID == assessment.AssessmentID);
                         
                         if (existingScore != null)
                         {
-                            // Wrap the existing score
                             row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                         else
@@ -319,7 +313,6 @@ namespace Centriku.ViewModels
                             row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                     }
-                    
                     GradebookRows.Add(row);
                 }
                 TriggerGridRedraw();
@@ -330,7 +323,6 @@ namespace Centriku.ViewModels
                 var db = new DatabaseService().GetConnection();
                 await db.CreateTableAsync<AttendanceRecord>(); 
                 
-                // 1. Load Settings Memory
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass != null)
                 {
@@ -339,33 +331,22 @@ namespace Centriku.ViewModels
                     ShowTotalA = currentClass.ShowTotalA;
                 }
 
-                // 2. Get students & ALL attendance records
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                 var studentIds = roster.Select(r => r.StudentID).ToList();
                 var enrolled = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync()).Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").OrderBy(s => s.LastName).ToList();
                 var allRecords = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId).ToListAsync();
 
-                // 3. Find unique dates to build our Columns
                 var uniqueDates = allRecords.Select(r => r.Date.Date).Distinct().OrderBy(d => d).ToList();
                 AttendanceDates = new ObservableCollection<System.DateTime>(uniqueDates);
 
                 var extractedMonths = uniqueDates.Select(d => d.ToString("MMM yyyy")).Distinct().ToList();
                 
                 AvailableMonths.Clear();
-                AvailableMonths.Add("All Months"); // Always keep an "All" option at the top!
+                AvailableMonths.Add("All Months"); 
+                foreach (var m in extractedMonths) AvailableMonths.Add(m);
                 
-                foreach (var m in extractedMonths)
-                {
-                    AvailableMonths.Add(m);
-                }
-                
-                // Safety check: If the teacher deleted a date and that month no longer exists, reset the filter
-                if (!AvailableMonths.Contains(SelectedMonthFilter)) 
-                {
-                    SelectedMonthFilter = "All Months";
-                }
+                if (!AvailableMonths.Contains(SelectedMonthFilter)) SelectedMonthFilter = "All Months";
 
-                // 4. Build the Excel Rows
                 AttendanceGridRows.Clear();
                 foreach (var student in enrolled)
                 {
@@ -379,11 +360,7 @@ namespace Centriku.ViewModels
                         
                         row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(
                             existingRecord, 
-                            () => 
-                            {
-                                row.RefreshTotals();
-                                RecalculateFinalGrades(); 
-                            }, 
+                            () => { row.RefreshTotals(); RecalculateFinalGrades(); }, 
                             msg => ShowToastMessage?.Invoke(msg)
                         );
                     }
@@ -395,13 +372,10 @@ namespace Centriku.ViewModels
             private async Task LoadCategories()
             {
                 var db = new DatabaseService().GetConnection();
-                
-                // 1. Get the current class to find out which Template it uses
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 
                 if (currentClass != null)
                 {
-                    // 2. Fetch only the categories that belong to that specific template!
                     var categories = await db.Table<GradingCategory>().Where(cat => cat.TemplateID == currentClass.GradingTemplateID).ToListAsync();
                     AvailableCategories = new ObservableCollection<GradingCategory>(categories);
                 }

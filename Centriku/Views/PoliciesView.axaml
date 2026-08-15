@@ -55,75 +55,30 @@
                             <TextBlock Text="{Binding EditorTitleText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                         </Border>
 
-                        <Grid ColumnDefinitions="1*, 1*">
-                            <!-- Template Setup -->
-                            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25" Margin="0,0,15,0">
-                                <StackPanel>
-                                    <TextBlock Text="Template Details" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
-                                    
-                                    <StackPanel Margin="0,0,0,20">
+                        <!-- Template Details -->
+                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
+                            <StackPanel>
+                                <TextBlock Text="Template Details" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
+                                
+                                <Grid ColumnDefinitions="*, *, *">
+                                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
                                         <TextBlock Text="Template Name" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
                                         <TextBox Text="{Binding TemplateName}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
                                     </StackPanel>
                                     
-                                    <StackPanel Margin="0,0,0,20">
+                                    <StackPanel Grid.Column="1" Margin="0,0,15,0">
                                         <TextBlock Text="Passing Grade (%)" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
                                         <NumericUpDown Value="{Binding PassingGrade}" Minimum="1" Maximum="100" ShowButtonSpinner="False" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
                                     </StackPanel>
-                                </StackPanel>
-                            </Border>
 
-                            <!-- Calculation Mode -->
-                            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25" Margin="15,0,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="Calculation Mode" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
-                                    
-                                    <ComboBox ItemsSource="{Binding AvailableCalculationModes}" SelectedItem="{Binding CalculationMode}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}" Margin="0,0,0,15"/>
-                                    
-                                    <!-- NRFG Explainer -->
-                                    <StackPanel IsVisible="{Binding IsFormulaMode}">
-                                        <Border Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,15">
-                                            <TextBlock Text="Applies a mathematical formula to scale raw scores using a minimum baseline floor (e.g., a score of 0 scales up to your Formula Base Value)." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
-                                        </Border>
-                                        <TextBlock Text="Formula Base Value" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,5"/>
-                                        <NumericUpDown Value="{Binding NrfgBaseValue}" Minimum="0" Maximum="100" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
+                                    <!-- NRFG Base Value Restored -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Formula Base Value" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
+                                        <NumericUpDown Value="{Binding NrfgBaseValue}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" ToolTip.Tip="The lowest possible percentage a student can receive (e.g., Base 50)"/>
                                     </StackPanel>
-
-                                    <!-- CRG Explainer & Editor -->
-                                    <StackPanel IsVisible="{Binding IsBoundaryMode}">
-                                        <Border Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,15">
-                                            <TextBlock Text="Your grade output is determined strictly by matching raw percentages to custom letter or GPA score boundaries (e.g., 90–100% = A)." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap"/>
-                                        </Border>
-
-                                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
-                                            <TextBlock Grid.Column="0" Text="Grade Boundaries" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
-                                            <Button Grid.Column="1" Command="{Binding AddBoundaryCommand}" Content="Add Band" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" Padding="8,4"/>
-                                        </Grid>
-
-                                        <Grid ColumnDefinitions="1*, 1*, 1.5*, Auto" Margin="0,0,0,5">
-                                            <TextBlock Grid.Column="0" Text="Min %" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" FontWeight="Bold" Margin="0,0,5,0"/>
-                                            <TextBlock Grid.Column="1" Text="Max %" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" FontWeight="Bold" Margin="0,0,10,0"/>
-                                            <TextBlock Grid.Column="2" Text="Label" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" FontWeight="Bold" Margin="0,0,10,0"/>
-                                        </Grid>
-
-                                        <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
-                                            <ItemsControl ItemsSource="{Binding Boundaries}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid ColumnDefinitions="1*, 1*, 1.5*, Auto" Margin="0,0,10,8">
-                                                            <NumericUpDown Grid.Column="0" Value="{Binding MinScore}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Margin="0,0,5,0" Background="{DynamicResource AppBackground}"/>
-                                                            <NumericUpDown Grid.Column="1" Value="{Binding MaxScore}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Margin="0,0,10,0" Background="{DynamicResource AppBackground}"/>
-                                                            <TextBox Grid.Column="2" Text="{Binding Label}" PlaceholderText="e.g. A" Margin="0,0,10,0" Background="{DynamicResource AppBackground}"/>
-                                                            <Button Grid.Column="3" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).RemoveBoundaryCommand}" CommandParameter="{Binding}" Content="✕" Foreground="#EF4444" Background="Transparent" Padding="5"/>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
                         <!-- Grading Categories -->
                         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
@@ -147,7 +102,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <Button Command="{Binding AddCategoryCommand}" Content="Add Category" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                                <Button Command="{Binding AddCategoryCommand}" Content="+ Add Category" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
                             </StackPanel>
                         </Border>
 

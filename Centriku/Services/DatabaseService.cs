@@ -28,7 +28,6 @@ namespace Centriku.Services
             await _database.CreateTableAsync<GradingTemplate>();
             await _database.CreateTableAsync<GradingCategory>();
             await _database.CreateTableAsync<AttendanceRecord>();
-            await _database.CreateTableAsync<GradeBoundary>();
             await _database.CreateTableAsync<AppSettings>();
         }
         

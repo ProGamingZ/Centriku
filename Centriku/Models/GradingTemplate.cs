@@ -12,8 +12,6 @@ namespace Centriku.Models
         
         // Note: Using double to keep your data types consistent with Score.cs and Assessment.cs
         public double PassingGrade { get; set; } // e.g., 75
-        
-        public string CalculationMode { get; set; } = "NRFG";
-        public double NrfgBaseValue { get; set; } = 60.0;
+        public double NrfgBaseValue { get; set; } = 50.0;
     }
 }
