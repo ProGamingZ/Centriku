@@ -11,7 +11,6 @@ namespace Centriku.Services
       public double FinalNumeric { get; set; }
       public string FinalOutput { get; set; } = string.Empty;
       public bool IsFailing { get; set; }
-      public bool IsFA { get; set; } // Failed specifically due to Absences
    }
 
    public static class GradeCalculationService
@@ -64,60 +63,21 @@ namespace Centriku.Services
          return academicGrade;
       }
 
-      // Applies attendance modifiers and transmutations (NRFG/CRG) to determine the final UI output and pass/fail status.
-
       public static GradeResult EvaluateFinalGrade(
          double rawAcademicGrade,
-         TeacherClass teacherClass,
-         GradingTemplate template,
-         int totalActiveDays,
-         double effectiveAbsences)
+         GradingTemplate template)
       {
          var result = new GradeResult { RawAcademicGrade = rawAcademicGrade };
          double finalNumeric = rawAcademicGrade;
          double passingScore = template?.PassingGrade ?? 75.0;
 
-         // === 1. ATTENDANCE MODIFIERS ===
-         string attMode = teacherClass.AttendanceCalculationMode ?? "None";
-         switch (attMode)
-         {
-            case "Threshold":
-               if (effectiveAbsences >= teacherClass.MaxAbsencesAllowed) { result.IsFA = true; finalNumeric = -1; }
-               break;
-            case "Weighted":
-               double attendanceScore = 100.0;
-               if (totalActiveDays > 0)
-               {
-                  attendanceScore = ((totalActiveDays - effectiveAbsences) / totalActiveDays) * 100.0;
-                  if (attendanceScore < 0) attendanceScore = 0;
-               }
-               double academicWeight = (100.0 - teacherClass.AttendanceWeight) / 100.0;
-               double attWeight = teacherClass.AttendanceWeight / 100.0;
-               finalNumeric = (rawAcademicGrade * academicWeight) + (attendanceScore * attWeight);
-               break;
-            case "Bonus":
-               if (effectiveAbsences == 0 && totalActiveDays > 0) finalNumeric += teacherClass.AttendanceWeight;
-               else if (effectiveAbsences > teacherClass.MaxAbsencesAllowed) finalNumeric -= teacherClass.AttendanceWeight;
-               finalNumeric = Math.Clamp(finalNumeric, 0, 100);
-               break;
-         }
-
-         // === 2. TRANSMUTATION (NRFG ONLY) ===
-         if (result.IsFA || finalNumeric == -1)
-         {
-            result.FinalNumeric = -1;
-            result.FinalOutput = "FA";
-            result.IsFailing = true;
-            return result;
-         }
-
-         // Always apply the Base-Value Transmutation!
+         // 1. Always apply the Base-Value Transmutation!
          double baseVal = template?.NrfgBaseValue ?? 50.0;
          finalNumeric = (finalNumeric / 100.0) * (100.0 - baseVal) + baseVal;
          
          result.FinalOutput = $"{finalNumeric.ToString("0.##")}%";
 
-         // === 3. FINAL EVALUATION ===
+         // 2. Final Evaluation
          result.FinalNumeric = finalNumeric;
          result.IsFailing = finalNumeric < passingScore;
 

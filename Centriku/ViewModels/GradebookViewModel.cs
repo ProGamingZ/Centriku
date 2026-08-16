@@ -47,10 +47,7 @@ namespace Centriku.ViewModels
                     currentClass.ShowTotalP = ShowTotalP;
                     currentClass.ShowTotalL = ShowTotalL;
                     currentClass.ShowTotalA = ShowTotalA;
-                    currentClass.AttendanceCalculationMode = AttendanceCalculationMode;
-                    currentClass.MaxAbsencesAllowed = MaxAbsencesAllowed;
-                    currentClass.AttendanceWeight = AttendanceWeight;
-                    currentClass.LateValue = LateValue;
+                    currentClass.ShowTotalE = ShowTotalE;
 
                     await db.UpdateAsync(currentClass);
                 }
@@ -261,10 +258,7 @@ namespace Centriku.ViewModels
                     ShowFirstName = currentClass.ShowFirstName;
                     ShowLastName = currentClass.ShowLastName;
                     ShowFinalGrade = currentClass.ShowFinalGrade;
-                    AttendanceCalculationMode = currentClass.AttendanceCalculationMode ?? "None";
-                    MaxAbsencesAllowed = currentClass.MaxAbsencesAllowed;
-                    AttendanceWeight = currentClass.AttendanceWeight;
-                    LateValue = currentClass.LateValue;
+                    
                     var template = await db.Table<GradingTemplate>().Where(t => t.TemplateID == currentClass.GradingTemplateID).FirstOrDefaultAsync();
                     if (template != null) 
                     {

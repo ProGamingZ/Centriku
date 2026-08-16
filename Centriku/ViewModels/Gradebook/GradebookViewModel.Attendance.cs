@@ -106,31 +106,6 @@ namespace Centriku.ViewModels
       }
       #endregion
 
-      #region Attendance Policy
-         public System.Collections.ObjectModel.ObservableCollection<string> AttendanceModes { get; } = new() { "None", "Threshold", "Weighted", "Bonus" };
-         [ObservableProperty] public partial string AttendanceCalculationMode { get; set; } = "None";
-         [ObservableProperty] public partial int MaxAbsencesAllowed { get; set; } = 3;
-         [ObservableProperty] public partial double AttendanceWeight { get; set; } = 10.0;
-         [ObservableProperty] public partial double LateValue { get; set; } = 0.5;
-
-         public bool IsThresholdMode => AttendanceCalculationMode == "Threshold";
-         public bool IsWeightedOrBonusMode => AttendanceCalculationMode == "Weighted" || AttendanceCalculationMode == "Bonus";
-         public bool IsMathEngineActive => AttendanceCalculationMode != "None";
-
-         partial void OnAttendanceCalculationModeChanged(string value) 
-         { 
-            OnPropertyChanged(nameof(IsThresholdMode)); 
-            OnPropertyChanged(nameof(IsWeightedOrBonusMode)); 
-            OnPropertyChanged(nameof(IsMathEngineActive)); 
-            SaveClassSettings(); 
-            RecalculateFinalGrades();
-         }
-         partial void OnMaxAbsencesAllowedChanged(int value) { SaveClassSettings(); RecalculateFinalGrades();}
-         partial void OnAttendanceWeightChanged(double value) { SaveClassSettings(); RecalculateFinalGrades();}
-         partial void OnLateValueChanged(double value) { SaveClassSettings(); RecalculateFinalGrades();}
-      #endregion
-
-
-
+      
    }
 }
