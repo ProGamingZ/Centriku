@@ -13,5 +13,7 @@ namespace Centriku.Models
 
         [Indexed] 
         public string? StudentID { get; set; }
+        
+        public bool HasRecited { get; set; } = false;
     }
 }

@@ -14,6 +14,10 @@
         <TabItem Header="Attendance" FontSize="16" FontWeight="SemiBold">
             <gb:AttendanceTabView DataContext="{Binding}" />
         </TabItem>
+
+        <TabItem Header="Recitation" FontSize="16" FontWeight="SemiBold">
+            <gb:RecitationTabView DataContext="{Binding}" />
+        </TabItem>
         
     </TabControl>
 </UserControl>
