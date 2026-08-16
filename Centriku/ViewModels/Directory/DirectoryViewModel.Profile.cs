@@ -73,9 +73,6 @@ namespace Centriku.ViewModels
             SelectedStudentClasses = new ObservableCollection<StudentClassPerformanceViewModel>(performanceList);
             SelectedStudentClassPerformance = performanceList.FirstOrDefault();
             HasEnrolledClasses = performanceList.Any();
-            IsMasterRecordVisible = true;
-
-            if (IsMasterRecordVisible) await LoadMasterRecordAsync(studentId, performanceList);
         }
 
         private async Task<double?> CalculateTermGradeRawAsync(SQLite.SQLiteAsyncConnection db, string studentId, int classId, int templateId, string term)

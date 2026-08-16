@@ -46,39 +46,4 @@ namespace Centriku.ViewModels
         public int Lates { get; set; }
     }
 
-    public partial class MasterGradeRowViewModel : ObservableObject
-    {
-        public int GradeId { get; set; } 
-        public bool IsFromActiveGradebook { get; set; } 
-        
-        [ObservableProperty] public partial string SubjectName { get; set; } = string.Empty;
-        [ObservableProperty] public partial string MidtermText { get; set; } = string.Empty;
-        [ObservableProperty] public partial string FinalTermText { get; set; } = string.Empty;
-
-        partial void OnMidtermTextChanged(string value) { UpdateMath(); }
-        partial void OnFinalTermTextChanged(string value) { UpdateMath(); }
-
-        [ObservableProperty] public partial string FinalGrade { get; set; } = "--";
-        [ObservableProperty] public partial string Remarks { get; set; } = "--";
-
-        public Action? TriggerParentRecalc { get; set; }
-
-        public void ForceRecalc() => UpdateMath();
-
-        private void UpdateMath()
-        {
-            if (double.TryParse(MidtermText, out double mid) && double.TryParse(FinalTermText, out double fin))
-            {
-                double avg = (mid + fin) / 2.0;
-                FinalGrade = Math.Round(avg, 0).ToString("0.##"); 
-                Remarks = avg >= 75 ? "Passed" : "Failed";
-            }
-            else
-            {
-                FinalGrade = "--";
-                Remarks = "--";
-            }
-            TriggerParentRecalc?.Invoke(); 
-        }
-    }
 }
