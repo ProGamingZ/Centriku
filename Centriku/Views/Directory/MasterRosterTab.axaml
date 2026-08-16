@@ -14,7 +14,10 @@
                   Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
          </StackPanel>
 
-         <Grid Grid.Row="1" ColumnDefinitions="*, Auto, Auto" Margin="40,0,40,20">
+         <Grid Grid.Row="1" Margin="40,0,40,20" RowDefinitions="Auto, Auto">
+            
+            <!-- Top Bar: Search, Columns, and Add Button -->
+            <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,15">
                <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
                   PlaceholderText="Search by Student ID, Name, Program, or Section..." 
                   Background="{DynamicResource SurfaceBrush}" 
@@ -49,6 +52,33 @@
                   Background="{DynamicResource PrimaryBrush}" 
                   Foreground="White" FontWeight="Bold" 
                   CornerRadius="8" Padding="20,10"/>
+            </Grid>
+
+            <!-- Bottom Bar: Dynamic Filters and Counter -->
+            <Grid Grid.Row="1" ColumnDefinitions="Auto, *">
+                <WrapPanel Grid.Column="0" Orientation="Horizontal">
+                    <StackPanel Margin="0,0,15,0">
+                        <TextBlock Text="Year" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableYears}" SelectedItem="{Binding SelectedYearFilter}" Background="{DynamicResource AppBackground}" Width="110"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,15,0">
+                        <TextBlock Text="Program" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailablePrograms}" SelectedItem="{Binding SelectedProgramFilter}" Background="{DynamicResource AppBackground}" Width="110"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,15,0">
+                        <TextBlock Text="Section" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableSections}" SelectedItem="{Binding SelectedSectionFilter}" Background="{DynamicResource AppBackground}" Width="110"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,0,0">
+                        <TextBlock Text="Status" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding SelectedStatusFilter}" Background="{DynamicResource AppBackground}" Width="110"/>
+                    </StackPanel>
+                </WrapPanel>
+                
+                <TextBlock Grid.Column="1" Text="{Binding DynamicStudentCounter}" 
+                           Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" 
+                           HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
+            </Grid>
          </Grid>
 
          <Border Grid.Row="2" IsVisible="{Binding IsAddingStudent}" 
