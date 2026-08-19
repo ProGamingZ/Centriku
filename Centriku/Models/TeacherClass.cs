@@ -18,7 +18,6 @@ namespace Centriku.Models
 
         public int GradingTemplateID { get; set; } 
 
-        
         public bool ShowStudentId { get; set; } = true;
         public bool ShowFirstName { get; set; } = true;
         public bool ShowLastName { get; set; } = true;
@@ -26,12 +25,6 @@ namespace Centriku.Models
         public bool ShowTotalP { get; set; } = true;
         public bool ShowTotalL { get; set; } = true;
         public bool ShowTotalA { get; set; } = true;
-
-        public string? AttendanceCalculationMode { get; set; } = "None"; 
-        public int MaxAbsencesAllowed { get; set; } = 3; 
-        public double AttendanceWeight { get; set; } = 10.0; 
-        public double LateValue { get; set; } = 0.5;
-
-        // NOTE: EducationMode has been completely removed!
+        public bool ShowTotalE { get; set; } = true; 
     }
 }

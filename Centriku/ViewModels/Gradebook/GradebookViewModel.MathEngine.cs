@@ -94,7 +94,6 @@ namespace Centriku.ViewModels
       {
          if (targetGradeRows == null || targetAttRows == null) return;
 
-         var classCfg = new TeacherClass { AttendanceCalculationMode = this.AttendanceCalculationMode, MaxAbsencesAllowed = this.MaxAbsencesAllowed, AttendanceWeight = this.AttendanceWeight, LateValue = this.LateValue };
          var tempCfg = new GradingTemplate { NrfgBaseValue = this.NrfgBaseValue, PassingGrade = 75.0 };
 
          foreach (var row in targetGradeRows)
@@ -103,14 +102,14 @@ namespace Centriku.ViewModels
             bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
             var midResult = GetTermGradeWithDetails(row, "Midterm");
             row.MidtermGradeNumeric = midResult.RawGrade;
-            var tempMidResult = GradeCalculationService.EvaluateFinalGrade(midResult.RawGrade, new TeacherClass { AttendanceCalculationMode = "None" }, tempCfg, 0, 0);
+            var tempMidResult = GradeCalculationService.EvaluateFinalGrade(midResult.RawGrade, tempCfg);
             row.MidtermGradeDisplay = hasMidterm ? tempMidResult.FinalOutput : "--";
             row.MidtermComputationTooltip = hasMidterm ? $"{midResult.Breakdown}\n{GetTransmutationExplanation(midResult.RawGrade)}" : "No Midterm Assessments";
 
             bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
             var finResult = GetTermGradeWithDetails(row, "Final");
             row.FinalTermGradeNumeric = finResult.RawGrade;
-            var tempFinResult = GradeCalculationService.EvaluateFinalGrade(finResult.RawGrade, new TeacherClass { AttendanceCalculationMode = "None" }, tempCfg, 0, 0);
+            var tempFinResult = GradeCalculationService.EvaluateFinalGrade(finResult.RawGrade, tempCfg);
             row.FinalTermGradeDisplay = hasFinal ? tempFinResult.FinalOutput : "--";
             row.FinalComputationTooltip = hasFinal ? $"{finResult.Breakdown}\n{GetTransmutationExplanation(finResult.RawGrade)}" : "No Final Assessments";
 
@@ -137,7 +136,7 @@ namespace Centriku.ViewModels
                baseMathTooltip = $"{detailedBreakdown}\n";
             }
 
-            // === 3. ATTENDANCE & FINAL OUTPUT ===
+            // === 3. FINAL OUTPUT ===
             if (!isFinalMathComplete)
             {
                row.FinalGrade = "--";
@@ -146,28 +145,12 @@ namespace Centriku.ViewModels
             }
             else
             {
-               var attRow = targetAttRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
-               int totalDays = attRow?.Cells.Count ?? 0;
-               int excusedDays = attRow?.TotalE ?? 0;
-               int activeDays = totalDays - excusedDays;
-               double effectiveAbsences = (attRow?.TotalA ?? 0) + ((attRow?.TotalL ?? 0) * LateValue);
-
-               var finalEval = GradeCalculationService.EvaluateFinalGrade(finalAcademicGrade, classCfg, tempCfg, activeDays, effectiveAbsences);
+               // Straight to evaluation, skipping attendance logic entirely!
+               var finalEval = GradeCalculationService.EvaluateFinalGrade(finalAcademicGrade, tempCfg);
 
                row.FinalGrade = finalEval.FinalOutput;
                row.FinalGradeNumeric = finalEval.FinalNumeric;
-               
-               string attString = "";
-               if (AttendanceCalculationMode != "None")
-               {
-                  attString = $"\n[ Attendance Modifier: {AttendanceCalculationMode} ]\nTotal Active Days: {activeDays}\nEffective Absences: {effectiveAbsences} (A + L*{LateValue})\n";
-                  if (AttendanceCalculationMode == "Weighted") attString += $"Academic Weight: {100-AttendanceWeight}%, Attendance Weight: {AttendanceWeight}%\n";
-                  if (AttendanceCalculationMode == "Bonus") attString += $"Bonus/Penalty Applied: {AttendanceWeight}%\n";
-                  if (AttendanceCalculationMode == "Threshold") attString += $"Max Absences Allowed: {MaxAbsencesAllowed}\n";
-               }
-
-               row.FinalGradeTooltip = $"{baseMathTooltip}{attString}{GetTransmutationExplanation(finalEval.RawAcademicGrade)}";
-               if (finalEval.IsFA) row.FinalGradeTooltip += "\n\n⚠️ STATUS: Failed due to Absences (FA)";
+               row.FinalGradeTooltip = $"{baseMathTooltip}{GetTransmutationExplanation(finalEval.RawAcademicGrade)}";
             }
          }
       }

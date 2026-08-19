@@ -117,20 +117,15 @@ namespace Centriku.ViewModels
             // 5. Calculate KPI: Needs Attention (The Math Engine)
             var newAlerts = new List<AttentionAlertViewModel>();
             int riskCounter = 0;
+            
             foreach (var teacherClass in activeClassList)
             {
                 var template = _allTemplates.FirstOrDefault(t => t.TemplateID == teacherClass.GradingTemplateID);
-                
                 var classCategories = _allCategories.Where(c => c.TemplateID == teacherClass.GradingTemplateID).ToList();
 
-                // 1. Get ALL assessments for the class
                 var allClassAssessments = _allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 var allClassAssessmentIds = allClassAssessments.Select(a => a.AssessmentID).ToList();
-
-                // 2. Fetch ALL scores for the entire year so the Mini-Report Card can read them!
                 var classScores = _allScores.Where(s => allClassAssessmentIds.Contains(s.AssessmentID)).ToList();
-
-                var classAttendance = _allAttendance.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 var classStudents = activeRosters.Where(r => r.ClassID == teacherClass.ClassID).Select(r => r.StudentID).ToList();
 
                 foreach (var studentId in classStudents)
@@ -140,15 +135,12 @@ namespace Centriku.ViewModels
                     var studentScores = classScores.Where(s => s.StudentID == studentId).ToList();
                     var termGradesList = new List<TermGradeItem>();
                     bool triggersWarning = false;
-                    bool isCriticalFA = false;
 
-                    // 1. Determine which terms to show based on Education Mode
                     var termsToEvaluate = new List<string> { "Midterm", "Final" };
-
                     double sumOfRawTerms = 0;
                     int completedTermsCount = 0;
 
-                    // 2. Evaluate every individual term
+                    // Evaluate every individual term
                     foreach (var term in termsToEvaluate)
                     {
                         var termAssessments = allClassAssessments.Where(a => a.GradingPeriod == term).ToList();
@@ -159,18 +151,15 @@ namespace Centriku.ViewModels
                             continue;
                         }
 
-                        // SMART CHECK: Does this term have at least one assessment in EVERY category? (Total weight = 100%)
+                        // Check if term is fully graded (100% weight)
                         bool isTerm100Percent = classCategories.All(c => termAssessments.Any(a => a.Category == c.Name && a.MaxScore > 0));
 
                         double rawAcademicGrade = GradeCalculationService.CalculateRawAcademicGrade(
                             classCategories, termAssessments, studentScores);
 
-                        // Calculate Transmuted Grade (Bypass attendance for single terms)
-                        var tempClass = new TeacherClass { AttendanceCalculationMode = "None" };
                         var termResult = GradeCalculationService.EvaluateFinalGrade(
-                            rawAcademicGrade, tempClass, template ?? new GradingTemplate(), 0, 0);
+                            rawAcademicGrade, template ?? new GradingTemplate());
 
-                        // Only flag as red if it is completely graded AND failing!
                         bool isFailingTerm = isTerm100Percent && termResult.IsFailing;
                         if (isFailingTerm) triggersWarning = true;
 
@@ -181,7 +170,6 @@ namespace Centriku.ViewModels
                             IsFailing = isFailingTerm 
                         });
 
-                        // Store for the final average calculation
                         if (isTerm100Percent) 
                         {
                             sumOfRawTerms += rawAcademicGrade;
@@ -189,49 +177,29 @@ namespace Centriku.ViewModels
                         }
                     }
 
-                    // 3. Process Attendance
-                    var studentAttendance = classAttendance.Where(a => a.StudentID == studentId).ToList();
-                    int totalDays = studentAttendance.Select(a => a.Date.Date).Distinct().Count();
-                    int totalA = studentAttendance.Count(a => a.Status == "A");
-                    int totalL = studentAttendance.Count(a => a.Status == "L");
-                    int totalE = studentAttendance.Count(a => a.Status == "E"); 
-                    
-                    int activeDays = totalDays - totalE;
-                    double effectiveAbsences = totalA + (totalL * teacherClass.LateValue);
-
-                    // 4. Calculate Final Average
+                    // Calculate Final Average
                     string finalLabel = "Sem. Avg";
                     TermGradeItem finalGradeItem = new TermGradeItem { TermLabel = finalLabel, GradeDisplay = "--" };
 
-                    // Apply strict Threshold FA failure even if the year isn't over yet
-                    if (teacherClass.AttendanceCalculationMode == "Threshold" && effectiveAbsences >= teacherClass.MaxAbsencesAllowed)
-                    {
-                        triggersWarning = true;
-                        isCriticalFA = true;
-                        finalGradeItem.GradeDisplay = "FA";
-                        finalGradeItem.IsFailing = true;
-                    }
-                    // Only calculate actual final math if ALL periods reached 100%
-                    else if (completedTermsCount == termsToEvaluate.Count)
+                    if (completedTermsCount == termsToEvaluate.Count)
                     {
                         double finalAcademicAverage = sumOfRawTerms / termsToEvaluate.Count;
 
                         var finalResult = GradeCalculationService.EvaluateFinalGrade(
-                            finalAcademicAverage, teacherClass, template ?? new GradingTemplate(), activeDays, effectiveAbsences);
+                            finalAcademicAverage, template ?? new GradingTemplate());
                         
-                        finalGradeItem.GradeDisplay = finalResult.IsFA ? "FA" : finalResult.FinalOutput;
+                        finalGradeItem.GradeDisplay = finalResult.FinalOutput;
                         
-                        if (finalResult.IsFailing || finalResult.IsFA) 
+                        if (finalResult.IsFailing) 
                         {
                             triggersWarning = true;
                             finalGradeItem.IsFailing = true;
-                            if (finalResult.IsFA) isCriticalFA = true;
                         }
                     }
 
                     termGradesList.Add(finalGradeItem);
 
-                    // 5. Package the warning for the UI!
+                    // Package the warning for the UI!
                     if (triggersWarning)
                     {
                         riskCounter++;
@@ -242,8 +210,8 @@ namespace Centriku.ViewModels
                         {
                             StudentName = studentName,
                             ClassName = $"{teacherClass.SubjectName} ({teacherClass.SectionLabel})",
-                            AbsencesText = $"Absences: {effectiveAbsences}",
-                            IsCritical = isCriticalFA,
+                            AbsencesText = "Failing Academic Grade", // Replaced attendance text!
+                            IsCritical = false, // We don't have FA anymore, so no critical red badges!
                             TermGrades = new ObservableCollection<TermGradeItem>(termGradesList)
                         });
                     }
