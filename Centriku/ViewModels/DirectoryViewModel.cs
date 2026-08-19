@@ -20,11 +20,6 @@ namespace Centriku.ViewModels
         public IRelayCommand<StudentRowViewModel> ViewProfileCommand { get; }
         public IRelayCommand CloseProfileCommand { get; }
 
-        // Master Record & Export Commands
-        public IRelayCommand SaveMasterRecordCommand { get; }
-        public IRelayCommand AddBlankMasterSubjectCommand { get; }
-        public IRelayCommand<MasterGradeRowViewModel> DeleteMasterSubjectCommand { get; } 
-
         public DirectoryViewModel()
         {
             ToggleAddStudentFormCommand = new RelayCommand(() => IsAddingStudent = !IsAddingStudent);
@@ -35,10 +30,6 @@ namespace Centriku.ViewModels
             ArchiveStudentCommand = new RelayCommand<StudentRowViewModel>(ArchiveStudent!); 
             RestoreStudentCommand = new RelayCommand<StudentRowViewModel>(RestoreStudent!); 
             DeleteStudentCommand = new RelayCommand<StudentRowViewModel>(DeleteStudent!);
-            
-            SaveMasterRecordCommand = new RelayCommand(SaveMasterRecord);
-            AddBlankMasterSubjectCommand = new RelayCommand(AddBlankMasterSubject);
-            DeleteMasterSubjectCommand = new RelayCommand<MasterGradeRowViewModel>(DeleteMasterSubject!);
             CloseProfileCommand = new RelayCommand(() => IsProfileOpen = false); 
 
             LoadStudents();

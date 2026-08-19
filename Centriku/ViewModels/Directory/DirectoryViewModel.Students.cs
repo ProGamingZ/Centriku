@@ -26,6 +26,24 @@ namespace Centriku.ViewModels
         private List<StudentRowViewModel> _allArchivedStudents = [];
         [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> DisplayedStudents { get; set; } = new();
         [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
+
+        [ObservableProperty] public partial ObservableCollection<string> AvailableYears { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> AvailablePrograms { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> AvailableSections { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> AvailableStatuses { get; set; } = new();
+        
+        [ObservableProperty] public partial string SelectedYearFilter { get; set; } = "All Years";
+        [ObservableProperty] public partial string SelectedProgramFilter { get; set; } = "All Programs";
+        [ObservableProperty] public partial string SelectedSectionFilter { get; set; } = "All Sections";
+        [ObservableProperty] public partial string SelectedStatusFilter { get; set; } = "All Statuses";
+        
+        [ObservableProperty] public partial string DynamicStudentCounter { get; set; } = "Showing: 0 students";
+
+        partial void OnSelectedYearFilterChanged(string value) => UpdateDisplayedStudents();
+        partial void OnSelectedProgramFilterChanged(string value) => UpdateDisplayedStudents();
+        partial void OnSelectedSectionFilterChanged(string value) => UpdateDisplayedStudents();
+        partial void OnSelectedStatusFilterChanged(string value) => UpdateDisplayedStudents();
+
         [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> DisplayedArchivedStudents { get; set; } = new();
         [ObservableProperty] public partial string ArchiveSearchQuery { get; set; } = string.Empty;
 
@@ -72,6 +90,27 @@ namespace Centriku.ViewModels
             var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
             _allStudents = rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
             _allArchivedStudents = rawStudents.Where(s => s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
+
+            var years = _allStudents.Select(s => s.GradeYearLevel).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderBy(y => y).ToList();
+            AvailableYears.Clear(); AvailableYears.Add("All Years");
+            foreach (var y in years) AvailableYears.Add(y!);
+            if (!AvailableYears.Contains(SelectedYearFilter)) SelectedYearFilter = "All Years";
+
+            var programs = _allStudents.Select(s => s.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
+            AvailablePrograms.Clear(); AvailablePrograms.Add("All Programs");
+            foreach (var p in programs) AvailablePrograms.Add(p!);
+            if (!AvailablePrograms.Contains(SelectedProgramFilter)) SelectedProgramFilter = "All Programs";
+
+            var sections = _allStudents.Select(s => s.SectionName).Where(sec => !string.IsNullOrWhiteSpace(sec)).Distinct().OrderBy(sec => sec).ToList();
+            AvailableSections.Clear(); AvailableSections.Add("All Sections");
+            foreach (var s in sections) AvailableSections.Add(s!);
+            if (!AvailableSections.Contains(SelectedSectionFilter)) SelectedSectionFilter = "All Sections";
+
+            var statuses = _allStudents.Select(s => s.EnrollmentStatus).Where(es => !string.IsNullOrWhiteSpace(es)).Distinct().OrderBy(es => es).ToList();
+            AvailableStatuses.Clear(); AvailableStatuses.Add("All Statuses");
+            foreach (var st in statuses) AvailableStatuses.Add(st!);
+            if (!AvailableStatuses.Contains(SelectedStatusFilter)) SelectedStatusFilter = "All Statuses";
+
             UpdateDisplayedStudents();
             UpdateDisplayedArchivedStudents();
         }
@@ -326,10 +365,31 @@ namespace Centriku.ViewModels
 
         private void UpdateDisplayedStudents()
         {
-            if (string.IsNullOrWhiteSpace(SearchQuery)) { DisplayedStudents = new ObservableCollection<StudentRowViewModel>(_allStudents); return; }
-            var lowerQuery = SearchQuery.ToLower();
-            var filtered = _allStudents.Where(s => (s.StudentID?.Contains(lowerQuery) == true) || (s.LastName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || (s.FirstName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || (s.Program?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || (s.SectionName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true));
-            DisplayedStudents = new ObservableCollection<StudentRowViewModel>(filtered);
+            var filtered = _allStudents.AsEnumerable();
+
+            // 1. Text Search Filter
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var lowerQuery = SearchQuery.ToLower();
+                filtered = filtered.Where(s => 
+                    (s.StudentID?.ToLower().Contains(lowerQuery) == true) || 
+                    (s.LastName?.ToLower().Contains(lowerQuery) == true) || 
+                    (s.FirstName?.ToLower().Contains(lowerQuery) == true) || 
+                    (s.Program?.ToLower().Contains(lowerQuery) == true) || 
+                    (s.SectionName?.ToLower().Contains(lowerQuery) == true));
+            }
+
+            // 2. Dropdown Filters
+            if (SelectedYearFilter != "All Years") filtered = filtered.Where(s => s.GradeYearLevel == SelectedYearFilter);
+            if (SelectedProgramFilter != "All Programs") filtered = filtered.Where(s => s.Program == SelectedProgramFilter);
+            if (SelectedSectionFilter != "All Sections") filtered = filtered.Where(s => s.SectionName == SelectedSectionFilter);
+            if (SelectedStatusFilter != "All Statuses") filtered = filtered.Where(s => s.EnrollmentStatus == SelectedStatusFilter);
+
+            var finalResults = filtered.ToList();
+            DisplayedStudents = new ObservableCollection<StudentRowViewModel>(finalResults);
+            
+            // 3. Update the Dynamic Counter
+            DynamicStudentCounter = $"Showing: {finalResults.Count} students";
         }
     }
 }

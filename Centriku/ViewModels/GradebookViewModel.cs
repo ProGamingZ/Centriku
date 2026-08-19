@@ -241,12 +241,14 @@ namespace Centriku.ViewModels
                 await LoadGradebookData();
                 await LoadCategories();
                 await LoadAttendanceData();
+                await LoadRecitationData();
             }
 
             public async Task RefreshRostersAsync()
             {
                 await LoadGradebookData();
                 await LoadAttendanceData();
+                await LoadRecitationData();
             }
             private async Task LoadGradebookData()
             {

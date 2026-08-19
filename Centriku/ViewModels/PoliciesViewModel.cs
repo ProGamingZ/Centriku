@@ -62,7 +62,7 @@ namespace Centriku.ViewModels
             if (template == null) return;
             IsEditing = true;
             _editingTemplateId = template.TemplateID;
-            EditorTitleText = $"✏️ Editing: {template.TemplateName}";
+            EditorTitleText = $"Editing: {template.TemplateName}";
             SaveButtonText = "Update Template";
 
             TemplateName = template.TemplateName ?? "Unnamed Template";
@@ -138,7 +138,7 @@ namespace Centriku.ViewModels
         {
             IsEditing = false;
             _editingTemplateId = null; 
-            EditorTitleText = "✨ Create New Template";
+            EditorTitleText = "Create New Template";
             SaveButtonText = "Create Template";
 
             TemplateName = "New Grading Template";
