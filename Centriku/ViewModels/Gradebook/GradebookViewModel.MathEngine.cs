@@ -10,27 +10,29 @@ namespace Centriku.ViewModels
 {
    public partial class GradebookViewModel
    {
-      // 1. Core Calculator & String Builder
-      private (double RawGrade, string Breakdown) GetTermGradeWithDetails(StudentGradeRow row, string targetPeriod)
+      // 1. Core Calculator & String Builder (EXCEL TEMPLATE MATH)
+      private (double TermGrade, string Breakdown) GetTermGradeWithDetails(StudentGradeRow row, string targetPeriod)
       {
          var termAssessments = ClassAssessments.Where(a => a.GradingPeriod == targetPeriod).ToList();
          var rawScores = row.Scores.Values.Select(v => v.DbModel).ToList();
 
          if (!AvailableCategories.Any() || !termAssessments.Any())
-            return (0, "No assessments recorded yet.");
+            return (-1, "No assessments recorded yet."); // -1 = Incomplete
 
-         double totalRawContribution = 0;
          double totalExcelWS = 0;
-         double totalPolicyWeight = 0;
+         bool isMissingCategory = false; // The flag for incomplete categories
          
          var tip = new StringBuilder();
          tip.AppendLine($"[ {targetPeriod} Score Breakdown ]");
 
          foreach (var category in AvailableCategories)
          {
-            double weightDec = category.Weight / 100.0;
-            totalPolicyWeight += weightDec; 
+            // Ensure the dictionary entry exists for binding
+            if (!row.CategoryGrades.ContainsKey(category.SequenceOrder))
+               row.CategoryGrades[category.SequenceOrder] = new CategoryGradeViewModel();
+            var catGrade = row.CategoryGrades[category.SequenceOrder];
 
+            double weightDec = category.Weight / 100.0;
             var catAssessments = termAssessments.Where(a => a.Category == category.Name).ToList();
             
             double earned = 0, max = 0;
@@ -46,46 +48,41 @@ namespace Centriku.ViewModels
 
             if (max > 0)
             {
-               // Centriku Raw Math
-               double rawPct = (earned / max) * 100.0;
-               double rawContribution = rawPct * weightDec;
-               totalRawContribution += rawContribution;
-
-               // Excel TS/WS Math
-               double ts = rawPct;
-               ts = (rawPct / 100.0) * (100.0 - this.NrfgBaseValue) + this.NrfgBaseValue;
-               double ws = ts * weightDec;
+               double ts = Math.Round((earned / max) * (100.0 - this.NrfgBaseValue) + this.NrfgBaseValue, 2, MidpointRounding.AwayFromZero);
+               double ws = Math.Round(ts * weightDec, 2, MidpointRounding.AwayFromZero);
                totalExcelWS += ws;
 
-               tip.AppendLine($"• {category.Name} ({category.Weight}% weight):");
-               tip.AppendLine($"   Earned: {earned:0.##} / {max:0.##} = {rawPct:0.##}%");
-               
-               tip.AppendLine($"   Excel TS (Base-{this.NrfgBaseValue}): {ts:0.##}");
-               tip.AppendLine($"   Excel WS: {ts:0.##} × {weightDec:0.##} = {ws:0.##}");
+               // Save the TS and WS logic to the specific category cells
+               catGrade.TsDisplay = $"{ts:0.00}";
+               catGrade.WsDisplay = $"{ws:0.00}";
+               catGrade.TsTooltip = $"Formula: (Earned ÷ Max) × (100 - Base) + Base\nMath: ({earned:0.##} ÷ {max:0.##}) × {100 - this.NrfgBaseValue} + {this.NrfgBaseValue} = {ts:0.00}";
+               catGrade.WsTooltip = $"Formula: TS × Category Weight\nMath: {ts:0.00} × {weightDec:0.##} = {ws:0.00}";
+
+               tip.AppendLine($"• {category.Name} ({category.Weight}%): TS = {ts:0.00}, WS = {ws:0.00}");
             }
             else
             {
-               tip.AppendLine($"• {category.Name} ({category.Weight}% weight):");
-               tip.AppendLine($"   No assessments. Excel TS: 0.00 | Excel WS: 0.00");
+               isMissingCategory = true; // Trigger the block!
+               
+               catGrade.TsDisplay = "--";
+               catGrade.WsDisplay = "--";
+               catGrade.TsTooltip = "Missing assessments for this category.";
+               catGrade.WsTooltip = "Missing assessments for this category.";
+               
+               tip.AppendLine($"• {category.Name} ({category.Weight}%): INCOMPLETE");
             }
          }
 
-         // Calculate the Original Centriku Running Average (e.g. 5%)
-         double finalRaw = totalPolicyWeight > 0 ? totalRawContribution / totalPolicyWeight : 0;
+         // NEW: If any category is empty, we return -1 so the term grade stays blank!
+         if (isMissingCategory)
+             return (-1, "Incomplete: One or more categories are missing assessments.");
 
+         double finalTermGrade = Math.Round(totalExcelWS, 0, MidpointRounding.AwayFromZero);
          tip.AppendLine($"--------------------------");
-         tip.AppendLine($"Excel Term Grade (Sum of WS): {totalExcelWS:0.##}");
-         tip.AppendLine($"Centriku Term Raw Grade: {finalRaw:0.##}%");
+         tip.AppendLine($"Term Grade (Sum of WS): {totalExcelWS:0.00}");
+         tip.AppendLine($"Rounded Term Grade: {finalTermGrade}%");
 
-         return (finalRaw, tip.ToString().TrimEnd());
-      }
-
-      // 2. Transmutation Explanation Builder
-      private string GetTransmutationExplanation(double raw)
-      {
-          double nrfgBase = this.NrfgBaseValue;
-          double transmuted = (raw / 100.0) * (100.0 - nrfgBase) + nrfgBase;
-          return $"\n[ Centriku Running Average (NRFG) ]\nFormula: ({raw:0.##}% / 100) × (100 - {nrfgBase}) + {nrfgBase}\nFinal UI Display: {transmuted:0.##}%";
+         return (finalTermGrade, tip.ToString().TrimEnd());
       }
 
       public void RecalculateFinalGrades() => RecalculateFinalGradesForList(GradebookRows, AttendanceGridRows);
@@ -94,24 +91,24 @@ namespace Centriku.ViewModels
       {
          if (targetGradeRows == null || targetAttRows == null) return;
 
-         var tempCfg = new GradingTemplate { NrfgBaseValue = this.NrfgBaseValue, PassingGrade = 75.0 };
-
          foreach (var row in targetGradeRows)
          {
             // === 1. MIDTERM & FINAL MATH ===
             bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
             var midResult = GetTermGradeWithDetails(row, "Midterm");
-            row.MidtermGradeNumeric = midResult.RawGrade;
-            var tempMidResult = GradeCalculationService.EvaluateFinalGrade(midResult.RawGrade, tempCfg);
-            row.MidtermGradeDisplay = hasMidterm ? tempMidResult.FinalOutput : "--";
-            row.MidtermComputationTooltip = hasMidterm ? $"{midResult.Breakdown}\n{GetTransmutationExplanation(midResult.RawGrade)}" : "No Midterm Assessments";
+            bool isMidComplete = midResult.TermGrade >= 0;
+            
+            row.MidtermGradeNumeric = isMidComplete ? midResult.TermGrade : 0;
+            row.MidtermGradeDisplay = isMidComplete ? $"{midResult.TermGrade}%" : "--";
+            row.MidtermComputationTooltip = midResult.Breakdown;
 
             bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
             var finResult = GetTermGradeWithDetails(row, "Final");
-            row.FinalTermGradeNumeric = finResult.RawGrade;
-            var tempFinResult = GradeCalculationService.EvaluateFinalGrade(finResult.RawGrade, tempCfg);
-            row.FinalTermGradeDisplay = hasFinal ? tempFinResult.FinalOutput : "--";
-            row.FinalComputationTooltip = hasFinal ? $"{finResult.Breakdown}\n{GetTransmutationExplanation(finResult.RawGrade)}" : "No Final Assessments";
+            bool isFinComplete = finResult.TermGrade >= 0;
+            
+            row.FinalTermGradeNumeric = isFinComplete ? finResult.TermGrade : 0;
+            row.FinalTermGradeDisplay = isFinComplete ? $"{finResult.TermGrade}%" : "--";
+            row.FinalComputationTooltip = finResult.Breakdown;
 
             // === 2. SEMESTER MATH ===
             double finalAcademicGrade = 100.0;
@@ -120,20 +117,19 @@ namespace Centriku.ViewModels
 
             if (SelectedTermView == "Semester Average")
             {
-               if (hasMidterm && hasFinal) 
+               if (isMidComplete && isFinComplete) 
                { 
-                  finalAcademicGrade = (midResult.RawGrade + finResult.RawGrade) / 2.0; 
+                  finalAcademicGrade = Math.Round((midResult.TermGrade + finResult.TermGrade) / 2.0, 0, MidpointRounding.AwayFromZero); 
                   isFinalMathComplete = true; 
-                  baseMathTooltip = $"[ Semester Average ]\nMidterm Score: {midResult.RawGrade:0.##}%\nFinal Score: {finResult.RawGrade:0.##}%\nCalculation: ({midResult.RawGrade:0.##} + {finResult.RawGrade:0.##}) / 2\nSemester Academic Grade: {finalAcademicGrade:0.##}%\n";
+                  baseMathTooltip = $"[ Semester Average ]\nMidterm Score: {midResult.TermGrade}%\nFinal Score: {finResult.TermGrade}%\nCalculation: ({midResult.TermGrade} + {finResult.TermGrade}) / 2\nSemester Academic Grade: {finalAcademicGrade}%\n";
                }
-               else baseMathTooltip = "Requires both Midterm and Final scores to compute Semester Average.";
+               else baseMathTooltip = "Requires both Midterm and Final term grades to be complete.";
             }
             else
             {
-               finalAcademicGrade = SelectedTermView switch { "Midterm" => midResult.RawGrade, "Final" => finResult.RawGrade, _ => 100.0 };
-               isFinalMathComplete = SelectedTermView switch { "Midterm" => hasMidterm, "Final" => hasFinal, _ => false };
-               string detailedBreakdown = SelectedTermView switch { "Midterm" => midResult.Breakdown, "Final" => finResult.Breakdown, _ => "" };
-               baseMathTooltip = $"{detailedBreakdown}\n";
+               finalAcademicGrade = SelectedTermView switch { "Midterm" => midResult.TermGrade, "Final" => finResult.TermGrade, _ => 100.0 };
+               isFinalMathComplete = SelectedTermView switch { "Midterm" => isMidComplete, "Final" => isFinComplete, _ => false };
+               baseMathTooltip = SelectedTermView switch { "Midterm" => midResult.Breakdown, "Final" => finResult.Breakdown, _ => "" };
             }
 
             // === 3. FINAL OUTPUT ===
@@ -145,12 +141,9 @@ namespace Centriku.ViewModels
             }
             else
             {
-               // Straight to evaluation, skipping attendance logic entirely!
-               var finalEval = GradeCalculationService.EvaluateFinalGrade(finalAcademicGrade, tempCfg);
-
-               row.FinalGrade = finalEval.FinalOutput;
-               row.FinalGradeNumeric = finalEval.FinalNumeric;
-               row.FinalGradeTooltip = $"{baseMathTooltip}{GetTransmutationExplanation(finalEval.RawAcademicGrade)}";
+               row.FinalGrade = $"{finalAcademicGrade}%";
+               row.FinalGradeNumeric = finalAcademicGrade;
+               row.FinalGradeTooltip = baseMathTooltip;
             }
          }
       }

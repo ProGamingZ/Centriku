@@ -108,6 +108,7 @@ namespace Centriku.ViewModels
             IsEnrolling = false;
             await LoadGradebookData(); 
             await LoadAttendanceData();
+            await LoadRecitationData(); 
         }
 
         private async void RemoveStudent(Student student)
@@ -121,6 +122,7 @@ namespace Centriku.ViewModels
                 await db.DeleteAsync(rosterEntry);
                 await LoadGradebookData();
                 await LoadAttendanceData();
+                await LoadRecitationData();
             }
         }
     }

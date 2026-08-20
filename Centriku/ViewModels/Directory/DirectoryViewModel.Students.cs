@@ -87,6 +87,7 @@ namespace Centriku.ViewModels
         public async void LoadStudents()
         {
             var db = new Centriku.Services.DatabaseService().GetConnection();
+            await db.CreateTableAsync<Centriku.Models.Student>();
             var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
             _allStudents = rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
             _allArchivedStudents = rawStudents.Where(s => s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();

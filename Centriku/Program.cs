@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Avalonia;
 
 namespace Centriku
@@ -11,26 +13,37 @@ namespace Centriku
         [STAThread]
         public static void Main(string[] args)
         {
+            string logPath = "crash_log.txt";
+
+            // 1. Catch exceptions that happen on background threads
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                string errorMsg = $"\n[{DateTime.Now}] [FATAL BACKGROUND CRASH]:\n{e.ExceptionObject}\n";
+                Console.WriteLine(errorMsg);
+                File.AppendAllText(logPath, errorMsg);
+            };
+
+            // 2. Catch async task exceptions (e.g., database queries that fail silently)
+            TaskScheduler.UnobservedTaskException += (sender, e) =>
+            {
+                string errorMsg = $"\n[{DateTime.Now}] [UNOBSERVED ASYNC TASK CRASH]:\n{e.Exception}\n";
+                Console.WriteLine(errorMsg);
+                File.AppendAllText(logPath, errorMsg);
+                // Optional: e.SetObserved(); keeps the app alive, but letting it crash is better for debugging
+            };
+
             try
             {
-                // 1. Catch exceptions that happen on background threads
-                AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-                {
-                    string errorMsg = $"[FATAL BACKGROUND CRASH]: {e.ExceptionObject}";
-                    Console.WriteLine(errorMsg);
-                    System.IO.File.WriteAllText("crash_log.txt", errorMsg);
-                };
-
                 // This is your standard Avalonia startup
                 BuildAvaloniaApp()
                     .StartWithClassicDesktopLifetime(args);
             }
             catch (Exception ex)
             {
-                // 2. Catch exceptions that happen during app startup or on the main UI thread
-                string errorMsg = $"[CRITICAL STARTUP ERROR]:\nMessage: {ex.Message}\nStack Trace:\n{ex.StackTrace}";
+                // 3. Catch exceptions that happen during app startup or on the main UI thread
+                string errorMsg = $"\n[{DateTime.Now}] [CRITICAL UI/STARTUP ERROR]:\n{ex}\n";
                 Console.WriteLine(errorMsg);
-                System.IO.File.WriteAllText("crash_log.txt", ex.ToString());
+                File.AppendAllText(logPath, errorMsg);
             }
         }
 

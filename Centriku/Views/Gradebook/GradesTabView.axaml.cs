@@ -44,139 +44,180 @@ namespace Centriku.Views.Gradebook
          var grid = this.FindControl<DataGrid>("RosterGrid");
          if (grid == null) return;
 
-         // 1. Find the fixed columns safely
-         var colLRN = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentID");
-         var colFirstName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.FirstName");
-         var colLastName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.LastName");
-         var colFinalGrade = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "FinalGradeNumeric");
-         var colActions = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Actions");
+         // Temporarily unbind the data to prevent Avalonia from crashing while redrawing columns!
+         var backupData = grid.ItemsSource;
+         grid.ItemsSource = null;
 
-         // 2. Toggle visibility
-         if (colLRN != null) colLRN.IsVisible = vm.ShowStudentId;
-         if (colFirstName != null) colFirstName.IsVisible = vm.ShowFirstName;
-         if (colLastName != null) colLastName.IsVisible = vm.ShowLastName;
-         
-         if (colFinalGrade != null) 
+         try
          {
-            colFinalGrade.IsVisible = vm.ShowFinalGrade;
-            colFinalGrade.Header = vm.DynamicFinalColumnName;
-         }
+            // 1. Find the fixed columns safely
+            var colLRN = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentID");
+            var colFirstName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.FirstName");
+            var colLastName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.LastName");
+            var colFinalGrade = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "FinalGradeNumeric");
+            var colActions = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Actions");
 
-         // 3. Tell the grid to keep ONLY our 5 fixed columns
-         var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
-         if (colLRN != null) staticColumns.Add(colLRN);
-         if (colFirstName != null) staticColumns.Add(colFirstName);
-         if (colLastName != null) staticColumns.Add(colLastName);
-         if (colFinalGrade != null) staticColumns.Add(colFinalGrade);
-         if (colActions != null) staticColumns.Add(colActions);
-
-         var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
-
-         foreach (var col in columnsToRemove)
-         {
-            grid.Columns.Remove(col);
-         }
-
-         // 4. Insert new dynamic columns right before the Final Grade column
-         int insertIndex = colFinalGrade != null ? grid.Columns.IndexOf(colFinalGrade) : grid.Columns.Count - 1;
-         if (insertIndex < 0) insertIndex = grid.Columns.Count;
-         
-         // 3A. MODE: SEMESTER AVERAGE 
-         if (vm.IsSemesterAverageView)
-         {
-            // Draw Midterm and Final columns
-            var midColumn = new DataGridTemplateColumn { Header = "Midterm", IsVisible = vm.ShowMidtermGrade, CanUserSort = true, SortMemberPath = "MidtermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { 
-            var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
-            tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay"));
-            tb.Bind(ToolTip.TipProperty, new Avalonia.Data.Binding("MidtermComputationTooltip")); 
-            return tb; })};
-            grid.Columns.Insert(insertIndex++, midColumn);
-
-            var finalColumn = new DataGridTemplateColumn { Header = "Final", IsVisible = vm.ShowFinalTermGrade, CanUserSort = true, SortMemberPath = "FinalTermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { 
-            var tb2 = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
-            tb2.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay"));
-            tb2.Bind(ToolTip.TipProperty, new Avalonia.Data.Binding("FinalComputationTooltip")); 
-            return tb2; })};
-            grid.Columns.Insert(insertIndex, finalColumn);
+            // 2. Toggle visibility
+            if (colLRN != null) colLRN.IsVisible = vm.ShowStudentId;
+            if (colFirstName != null) colFirstName.IsVisible = vm.ShowFirstName;
+            if (colLastName != null) colLastName.IsVisible = vm.ShowLastName;
             
-            return; 
-         }
-
-         // 3B. MODE: MIDTERM or FINAL
-         foreach (var category in vm.CategoryFilters)
-         {
-            foreach (var filter in category.Assessments)
+            if (colFinalGrade != null) 
             {
-               if (!filter.IsVisible) continue; 
-
-               var assessment = filter.DbModel;
-
-               if (assessment.GradingPeriod != vm.SelectedTermView) continue;
-
-               var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 5) };
-               headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = assessment.Title, FontWeight = Avalonia.Media.FontWeight.Bold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
-               headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"[{assessment.Category}]", FontSize = 11, Foreground = Avalonia.Media.Brushes.DarkCyan, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
-               headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"Max: {assessment.MaxScore}", FontSize = 11, Foreground = Avalonia.Media.Brushes.Gray, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
-
-               var buttonPanel = new Avalonia.Controls.StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 5, 0, 0) };
-               
-               var editIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
-               editIcon.Classes.Add("Icon");
-               editIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconEdit");
-               editIcon[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMainBrush");
-
-               var delIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
-               delIcon.Classes.Add("Icon");
-               delIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconDelete");
-               delIcon.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
-
-               // Inject them into the buttons
-               var editBtn = new Avalonia.Controls.Button { Content = editIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
-               var delBtn = new Avalonia.Controls.Button { Content = delIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
-               
-               buttonPanel.Children.Add(editBtn);
-               buttonPanel.Children.Add(delBtn);
-               headerPanel.Children.Add(buttonPanel);
-
-               var newColumn = new DataGridTemplateColumn
-               {
-                  Header = headerPanel,
-                  Width = DataGridLength.Auto,
-                  MaxWidth = 250,
-                  CanUserSort = true,
-                  SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned",
-                  IsReadOnly = false, 
-
-                  CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
-                  {
-                     var cellGrid = new Avalonia.Controls.Grid { Background = Avalonia.Media.Brushes.Transparent };
-                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
-                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarnedDisplay"));
-                     cellGrid.Children.Add(tb);
-                     return cellGrid;
-                  }),
-                  CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
-                  {
-                     var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
-                     box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarnedDisplay") { Mode = Avalonia.Data.BindingMode.TwoWay });
-                     
-                     // Push the cursor to the rightmost side when the textbox loads into the UI
-                     box.AttachedToVisualTree += (sender, args) =>
-                     {
-                        // Using Dispatcher ensures the text binding has finished populating before we measure its length
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                        {
-                           box.SelectAll();
-                        }, Avalonia.Threading.DispatcherPriority.Input);
-                     };
-
-                     return box;
-                  })
-               };
-
-               grid.Columns.Insert(insertIndex, newColumn);
-               insertIndex++;
+               colFinalGrade.IsVisible = vm.ShowFinalGrade;
+               colFinalGrade.Header = vm.DynamicFinalColumnName;
             }
+
+            // 3. Tell the grid to keep ONLY our 5 fixed columns
+            var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
+            if (colLRN != null) staticColumns.Add(colLRN);
+            if (colFirstName != null) staticColumns.Add(colFirstName);
+            if (colLastName != null) staticColumns.Add(colLastName);
+            if (colFinalGrade != null) staticColumns.Add(colFinalGrade);
+            if (colActions != null) staticColumns.Add(colActions);
+
+            var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
+
+            foreach (var col in columnsToRemove)
+            {
+               grid.Columns.Remove(col);
+            }
+
+            // 4. Insert new dynamic columns right before the Final Grade column
+            int insertIndex = colFinalGrade != null ? grid.Columns.IndexOf(colFinalGrade) : grid.Columns.Count - 1;
+            if (insertIndex < 0) insertIndex = grid.Columns.Count;
+            
+            // 3A. MODE: SEMESTER AVERAGE 
+            if (vm.IsSemesterAverageView)
+            {
+               // Draw Midterm and Final columns
+               var midColumn = new DataGridTemplateColumn { Header = "Midterm", IsVisible = vm.ShowMidtermGrade, CanUserSort = true, SortMemberPath = "MidtermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { 
+               var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+               tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay"));
+               tb.Bind(ToolTip.TipProperty, new Avalonia.Data.Binding("MidtermComputationTooltip")); 
+               return tb; })};
+               grid.Columns.Insert(insertIndex++, midColumn);
+
+               var finalColumn = new DataGridTemplateColumn { Header = "Final", IsVisible = vm.ShowFinalTermGrade, CanUserSort = true, SortMemberPath = "FinalTermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { 
+               var tb2 = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+               tb2.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("FinalTermGradeDisplay"));
+               tb2.Bind(ToolTip.TipProperty, new Avalonia.Data.Binding("FinalComputationTooltip")); 
+               return tb2; })};
+               grid.Columns.Insert(insertIndex, finalColumn);
+               
+               return; 
+            }
+
+            // 3B. MODE: MIDTERM or FINAL
+            foreach (var category in vm.CategoryFilters)
+            {
+               if (!category.IsCategoryVisible) continue; // Skip hidden categories
+
+               var dbCategory = vm.AvailableCategories.FirstOrDefault(c => c.Name == category.CategoryName);
+               category.SequenceOrder = dbCategory != null ? dbCategory.SequenceOrder : 0;
+
+               foreach (var filter in category.Assessments)
+               {
+                  if (!filter.IsVisible) continue; 
+
+                  var assessment = filter.DbModel;
+                  if (assessment.GradingPeriod != vm.SelectedTermView) continue;
+
+                  var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 5) };
+                  headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = assessment.Title, FontWeight = Avalonia.Media.FontWeight.Bold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
+                  headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"[{assessment.Category}]", FontSize = 11, Foreground = Avalonia.Media.Brushes.DarkCyan, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
+                  headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"Max: {assessment.MaxScore}", FontSize = 11, Foreground = Avalonia.Media.Brushes.Gray, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
+
+                  var buttonPanel = new Avalonia.Controls.StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 5, 0, 0) };
+                  
+                  var editIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+                  editIcon.Classes.Add("Icon");
+                  editIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconEdit");
+                  editIcon[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMainBrush");
+
+                  var delIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+                  delIcon.Classes.Add("Icon");
+                  delIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconDelete");
+                  delIcon.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+
+                  var editBtn = new Avalonia.Controls.Button { Content = editIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
+                  var delBtn = new Avalonia.Controls.Button { Content = delIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
+                  
+                  buttonPanel.Children.Add(editBtn);
+                  buttonPanel.Children.Add(delBtn);
+                  headerPanel.Children.Add(buttonPanel);
+
+                  var newColumn = new DataGridTemplateColumn
+                  {
+                     Header = headerPanel,
+                     Width = DataGridLength.Auto,
+                     MaxWidth = 250,
+                     CanUserSort = true,
+                     SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned",
+                     IsReadOnly = false, 
+
+                     CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                     {
+                        var cellGrid = new Avalonia.Controls.Grid { Background = Avalonia.Media.Brushes.Transparent };
+                        var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                        tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarnedDisplay"));
+                        cellGrid.Children.Add(tb);
+                        return cellGrid;
+                     }),
+                     CellEditingTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                     {
+                        var box = new Avalonia.Controls.TextBox { HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center };
+                        box.Bind(Avalonia.Controls.TextBox.TextProperty, new Avalonia.Data.Binding($"Scores[{assessment.AssessmentID}].PointsEarnedDisplay") { Mode = Avalonia.Data.BindingMode.TwoWay });
+                        box.AttachedToVisualTree += (sender, args) =>
+                        {
+                           Avalonia.Threading.Dispatcher.UIThread.Post(() => { box.SelectAll(); }, Avalonia.Threading.DispatcherPriority.Input);
+                        };
+                        return box;
+                     })
+                  };
+
+                  grid.Columns.Insert(insertIndex, newColumn);
+                  insertIndex++;
+               }
+
+               // Append the TS and WS Columns right after all the quizzes for this category are drawn
+               var periodAssessments = vm.ClassAssessments.Where(a => a.Category == category.CategoryName && a.GradingPeriod == vm.SelectedTermView).ToList();
+               if (periodAssessments.Any())
+               {
+                  // Create TS Column
+                  var tsHeader = new Avalonia.Controls.TextBlock { Text = "TS", FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.MediumPurple };
+                  Avalonia.Controls.ToolTip.SetTip(tsHeader, $"Transmuted Score for {category.CategoryName}");
+                  
+                  var tsColumn = new DataGridTemplateColumn { Header = tsHeader, IsReadOnly = true, CanUserSort = false, Width = DataGridLength.Auto };
+                  tsColumn.CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                  {
+                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.SemiBold, Foreground = Avalonia.Media.Brushes.MediumPurple };
+                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].TsDisplay"));
+                     tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].TsTooltip"));
+                     return tb;
+                  });
+                  grid.Columns.Insert(insertIndex++, tsColumn);
+
+                  // Create WS Column
+                  var wsHeader = new Avalonia.Controls.TextBlock { Text = "WS", FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.DarkOrange };
+                  Avalonia.Controls.ToolTip.SetTip(wsHeader, $"Weighted Score for {category.CategoryName}");
+
+                  var wsColumn = new DataGridTemplateColumn { Header = wsHeader, IsReadOnly = true, CanUserSort = false, Width = DataGridLength.Auto };
+                  wsColumn.CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
+                  {
+                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.DarkOrange };
+                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].WsDisplay"));
+                     tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].WsTooltip"));
+                     return tb;
+                  });
+                  grid.Columns.Insert(insertIndex++, wsColumn);
+               }
+            }
+         }
+         finally
+         {
+            // Safely restore the data binding so Avalonia can measure and draw the cells without crashing!
+            grid.ItemsSource = backupData;
          }
       }    
    
