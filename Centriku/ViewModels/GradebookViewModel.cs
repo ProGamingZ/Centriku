@@ -215,8 +215,15 @@ namespace Centriku.ViewModels
 
                 ToggleAddAssessmentCommand = new RelayCommand(() => 
                 {
-                    if (IsAddingAssessment) ResetAssessmentForm(); 
-                    else IsAddingAssessment = true;                
+                    if (IsAddingAssessment) 
+                    {
+                        ResetAssessmentForm(); 
+                    }
+                    else 
+                    {
+                        IsAddingAssessment = true;
+                        IsEnrolling = false; 
+                    }                
                 });
 
                 SaveAssessmentCommand = new RelayCommand(SaveAssessment);

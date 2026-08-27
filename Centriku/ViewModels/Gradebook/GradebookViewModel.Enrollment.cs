@@ -59,6 +59,7 @@ namespace Centriku.ViewModels
             
             if (IsEnrolling)
             {
+                IsAddingAssessment = false;
                 var db = new DatabaseService().GetConnection();
                 var allStudents = await db.Table<Student>().ToListAsync();
                 var enrolledIds = GradebookRows.Select(s => s.StudentID).ToList();

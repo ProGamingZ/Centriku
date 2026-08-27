@@ -29,15 +29,16 @@ namespace Centriku.ViewModels
          NewAssessmentMaxScore = assessment.MaxScore;
          NewAssessmentDate = assessment.DateGiven;
          SelectedCategory = AvailableCategories.FirstOrDefault(c => c.Name == assessment.Category);
-         NewAssessmentPeriod = assessment.GradingPeriod ?? "Midterm"; // <== ADD THIS
-         IsAddingAssessment = true; 
+         NewAssessmentPeriod = assessment.GradingPeriod ?? "Midterm"; 
+         IsAddingAssessment = true;
+         IsEnrolling = false; 
       }
       private async void SaveAssessment()
       {
          if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
             return;
 
-         // --- NEW: EXCEL LIMIT VALIDATION ---
+         // EXCEL LIMIT VALIDATION ---
          int existingCount = ClassAssessments.Count(a => a.Category == SelectedCategory.Name && a.GradingPeriod == NewAssessmentPeriod);
          
          // If editing, don't count the current assessment against the limit
