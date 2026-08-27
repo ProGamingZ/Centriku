@@ -11,6 +11,9 @@ namespace Centriku.ViewModels
     public partial class GradebookViewModel
     {
         [ObservableProperty] public partial bool IsEnrolling { get; set; } = false;
+        [ObservableProperty] public partial bool IsRemoveStudentModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string RemoveModalMessage { get; set; } = string.Empty;
+        private Student? _studentToRemove;
         
         // Full list of students fetched from DB
         private System.Collections.Generic.List<EnrollmentItemViewModel> _allAvailableStudents = new();
@@ -40,7 +43,6 @@ namespace Centriku.ViewModels
         public IRelayCommand SaveEnrollmentCommand { get; }
         public IRelayCommand<Student> RemoveStudentCommand { get; }
 
-        // NEW: Select/Deselect All Commands
         [RelayCommand]
         public void SelectAllStudents()
         {
@@ -67,7 +69,7 @@ namespace Centriku.ViewModels
                 _allAvailableStudents.Clear();
                 var uniqueYears = new System.Collections.Generic.HashSet<string> { "All" };
                 var uniquePrograms = new System.Collections.Generic.HashSet<string> { "All" };
-                var uniqueSections = new System.Collections.Generic.HashSet<string> { "All" }; // NEW
+                var uniqueSections = new System.Collections.Generic.HashSet<string> { "All" }; 
                 var uniqueStatuses = new System.Collections.Generic.HashSet<string> { "All" };
 
                 foreach (var s in allStudents)
@@ -79,19 +81,19 @@ namespace Centriku.ViewModels
                         
                         if (!string.IsNullOrWhiteSpace(s.GradeYearLevel)) uniqueYears.Add(s.GradeYearLevel);
                         if (!string.IsNullOrWhiteSpace(s.Program)) uniquePrograms.Add(s.Program);
-                        if (!string.IsNullOrWhiteSpace(s.SectionName)) uniqueSections.Add(s.SectionName); // NEW
+                        if (!string.IsNullOrWhiteSpace(s.SectionName)) uniqueSections.Add(s.SectionName); 
                         if (!string.IsNullOrWhiteSpace(s.EnrollmentStatus)) uniqueStatuses.Add(s.EnrollmentStatus);
                     }
                 }
 
                 EnrollmentYearFilters = new ObservableCollection<string>(uniqueYears.OrderBy(y => y == "All" ? 0 : 1).ThenBy(y => y));
                 EnrollmentProgramFilters = new ObservableCollection<string>(uniquePrograms.OrderBy(p => p == "All" ? 0 : 1).ThenBy(p => p));
-                EnrollmentSectionFilters = new ObservableCollection<string>(uniqueSections.OrderBy(s => s == "All" ? 0 : 1).ThenBy(s => s)); // NEW
+                EnrollmentSectionFilters = new ObservableCollection<string>(uniqueSections.OrderBy(s => s == "All" ? 0 : 1).ThenBy(s => s)); 
                 EnrollmentStatusFilters = new ObservableCollection<string>(uniqueStatuses.OrderBy(s => s == "All" ? 0 : 1).ThenBy(s => s));
 
                 SelectedEnrollmentYear = "All";
                 SelectedEnrollmentProgram = "All";
-                SelectedEnrollmentSection = "All"; // NEW
+                SelectedEnrollmentSection = "All"; 
                 SelectedEnrollmentStatus = "All";
                 
                 FilterAvailableStudents();
@@ -103,7 +105,7 @@ namespace Centriku.ViewModels
             var filtered = _allAvailableStudents.Where(s => 
                 (SelectedEnrollmentYear == "All" || s.DbModel.GradeYearLevel == SelectedEnrollmentYear) &&
                 (SelectedEnrollmentProgram == "All" || s.DbModel.Program == SelectedEnrollmentProgram) &&
-                (SelectedEnrollmentSection == "All" || s.DbModel.SectionName == SelectedEnrollmentSection) && // NEW
+                (SelectedEnrollmentSection == "All" || s.DbModel.SectionName == SelectedEnrollmentSection) && 
                 (SelectedEnrollmentStatus == "All" || s.DbModel.EnrollmentStatus == SelectedEnrollmentStatus)
             ).ToList();
 
@@ -133,12 +135,23 @@ namespace Centriku.ViewModels
             await LoadRecitationData(); 
         }
 
-        private async void RemoveStudent(Student student)
+        // --- UPDATED: Modal Control Methods ---
+
+        private void RemoveStudent(Student student)
         {
             if (student == null) return;
+            _studentToRemove = student;
+            RemoveModalMessage = $"Are you sure you want to unenroll {student.FirstName} {student.LastName} from this class?\n\nThey will be removed from the class roster immediately, but their permanent data will remain in the directory.";
+            IsRemoveStudentModalOpen = true;
+        }
+
+        [RelayCommand]
+        public async Task ConfirmRemoveStudent()
+        {
+            if (_studentToRemove == null) return;
             var db = new DatabaseService().GetConnection();
             
-            var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
+            var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == _studentToRemove.StudentID).FirstOrDefaultAsync();
             if (rosterEntry != null)
             {
                 await db.DeleteAsync(rosterEntry);
@@ -146,6 +159,14 @@ namespace Centriku.ViewModels
                 await LoadAttendanceData();
                 await LoadRecitationData();
             }
+            CancelRemoveStudent(); 
+        }
+
+        [RelayCommand]
+        public void CancelRemoveStudent()
+        {
+            IsRemoveStudentModalOpen = false;
+            _studentToRemove = null;
         }
     }
 }
