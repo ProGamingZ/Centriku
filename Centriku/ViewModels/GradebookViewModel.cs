@@ -70,6 +70,14 @@ namespace Centriku.ViewModels
                 BuildCategoryFilters();
                 TriggerGridRedraw(); 
                 RecalculateFinalGrades(); 
+                if (IsSemesterAverageView)
+                {
+                    if (IsAddingAssessment) IsAddingAssessment = false; 
+                }
+                else
+                {
+                    NewAssessmentPeriod = value;
+                }
             }
 
             [ObservableProperty] public partial AttendanceCellViewModel? SelectedAttendanceCell { get; set; }
@@ -221,6 +229,7 @@ namespace Centriku.ViewModels
                     }
                     else 
                     {
+                        ResetAssessmentForm();
                         IsAddingAssessment = true;
                         IsEnrolling = false; 
                     }                
