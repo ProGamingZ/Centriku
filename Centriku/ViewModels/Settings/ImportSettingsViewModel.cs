@@ -24,7 +24,7 @@ namespace Centriku.ViewModels.Settings
 
       private readonly string[] _allFields = ["Student ID", "Last Name", "First Name", "Middle Name", "Suffix", "Gender", "Year", "Program", "Section", "Status"];
       
-      public ObservableCollection<string> AvailableGenders { get; } = ["Male", "Female"];
+      public ObservableCollection<string> AvailableGenders { get; } = ["None","Male", "Female"];
       public ObservableCollection<string> AvailableStatuses { get; } = ["Regular", "Irregular", "Transferee"];
       public ObservableCollection<string> AvailableDuplicateRules { get; } = ["Update Existing Student", "Skip Duplicate (Do not import)"];
 
@@ -93,8 +93,6 @@ namespace Centriku.ViewModels.Settings
          if (savedSettings != null) CurrentSettings = savedSettings;
          else { CurrentSettings = new AppSettings(); await db.InsertAsync(CurrentSettings); }
 
-         if (CurrentSettings.DefaultGender == "Unspecified") { CurrentSettings.DefaultGender = "Male"; await db.UpdateAsync(CurrentSettings); }
-
          _isUpdating = true;
          void SetCol(int dbIndex, string field) {
             if (dbIndex == 0) Col1Selected = field; else if (dbIndex == 1) Col2Selected = field;
@@ -157,7 +155,7 @@ namespace Centriku.ViewModels.Settings
 
          string GetPreview(string field)
          {
-               if (field == "Gender") return DefaultGender;
+               if (field == "Gender") return DefaultGender == "None" ? "--" : DefaultGender;
                if (field == "Year") return DefaultGradeLevel;
                if (field == "Program") return DefaultProgram;
                if (field == "Section") return DefaultSectionName;
