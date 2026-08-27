@@ -21,21 +21,37 @@ namespace Centriku.ViewModels
         // Filter Options
         [ObservableProperty] public partial ObservableCollection<string> EnrollmentYearFilters { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<string> EnrollmentProgramFilters { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> EnrollmentSectionFilters { get; set; } = new(); 
         [ObservableProperty] public partial ObservableCollection<string> EnrollmentStatusFilters { get; set; } = new();
 
         // Selected Filters
         [ObservableProperty] public partial string SelectedEnrollmentYear { get; set; } = "All";
         [ObservableProperty] public partial string SelectedEnrollmentProgram { get; set; } = "All";
+        [ObservableProperty] public partial string SelectedEnrollmentSection { get; set; } = "All"; 
         [ObservableProperty] public partial string SelectedEnrollmentStatus { get; set; } = "All";
 
         // Trigger filtering when selections change
         partial void OnSelectedEnrollmentYearChanged(string value) => FilterAvailableStudents();
         partial void OnSelectedEnrollmentProgramChanged(string value) => FilterAvailableStudents();
+        partial void OnSelectedEnrollmentSectionChanged(string value) => FilterAvailableStudents(); 
         partial void OnSelectedEnrollmentStatusChanged(string value) => FilterAvailableStudents();
 
         public IRelayCommand ToggleEnrollmentCommand { get; }
         public IRelayCommand SaveEnrollmentCommand { get; }
         public IRelayCommand<Student> RemoveStudentCommand { get; }
+
+        // NEW: Select/Deselect All Commands
+        [RelayCommand]
+        public void SelectAllStudents()
+        {
+            foreach (var student in AvailableStudents) { student.IsSelected = true; }
+        }
+
+        [RelayCommand]
+        public void DeselectAllStudents()
+        {
+            foreach (var student in AvailableStudents) { student.IsSelected = false; }
+        }
 
         private async void ToggleEnrollment()
         {
@@ -50,6 +66,7 @@ namespace Centriku.ViewModels
                 _allAvailableStudents.Clear();
                 var uniqueYears = new System.Collections.Generic.HashSet<string> { "All" };
                 var uniquePrograms = new System.Collections.Generic.HashSet<string> { "All" };
+                var uniqueSections = new System.Collections.Generic.HashSet<string> { "All" }; // NEW
                 var uniqueStatuses = new System.Collections.Generic.HashSet<string> { "All" };
 
                 foreach (var s in allStudents)
@@ -61,16 +78,19 @@ namespace Centriku.ViewModels
                         
                         if (!string.IsNullOrWhiteSpace(s.GradeYearLevel)) uniqueYears.Add(s.GradeYearLevel);
                         if (!string.IsNullOrWhiteSpace(s.Program)) uniquePrograms.Add(s.Program);
+                        if (!string.IsNullOrWhiteSpace(s.SectionName)) uniqueSections.Add(s.SectionName); // NEW
                         if (!string.IsNullOrWhiteSpace(s.EnrollmentStatus)) uniqueStatuses.Add(s.EnrollmentStatus);
                     }
                 }
 
                 EnrollmentYearFilters = new ObservableCollection<string>(uniqueYears.OrderBy(y => y == "All" ? 0 : 1).ThenBy(y => y));
                 EnrollmentProgramFilters = new ObservableCollection<string>(uniquePrograms.OrderBy(p => p == "All" ? 0 : 1).ThenBy(p => p));
+                EnrollmentSectionFilters = new ObservableCollection<string>(uniqueSections.OrderBy(s => s == "All" ? 0 : 1).ThenBy(s => s)); // NEW
                 EnrollmentStatusFilters = new ObservableCollection<string>(uniqueStatuses.OrderBy(s => s == "All" ? 0 : 1).ThenBy(s => s));
 
                 SelectedEnrollmentYear = "All";
                 SelectedEnrollmentProgram = "All";
+                SelectedEnrollmentSection = "All"; // NEW
                 SelectedEnrollmentStatus = "All";
                 
                 FilterAvailableStudents();
@@ -82,6 +102,7 @@ namespace Centriku.ViewModels
             var filtered = _allAvailableStudents.Where(s => 
                 (SelectedEnrollmentYear == "All" || s.DbModel.GradeYearLevel == SelectedEnrollmentYear) &&
                 (SelectedEnrollmentProgram == "All" || s.DbModel.Program == SelectedEnrollmentProgram) &&
+                (SelectedEnrollmentSection == "All" || s.DbModel.SectionName == SelectedEnrollmentSection) && // NEW
                 (SelectedEnrollmentStatus == "All" || s.DbModel.EnrollmentStatus == SelectedEnrollmentStatus)
             ).ToList();
 
