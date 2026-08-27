@@ -22,7 +22,7 @@
                   PlaceholderText="Search by Student ID, Name, Program, or Section..." 
                   Background="{DynamicResource SurfaceBrush}" 
                   BorderBrush="{DynamicResource BorderBrush}" 
-                  CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
+                  CornerRadius="8" Padding="15,10" Width="400" MaxWidth="400" HorizontalAlignment="Left"/>
                
                <Button Grid.Column="1" Content="Columns ⚙️" 
                   Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 

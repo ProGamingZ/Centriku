@@ -43,7 +43,20 @@
         <Style Selector="DataGridCell:selected, DataGridCell:pointerover, DataGridCell:selected:pointerover">
             <Setter Property="Background" Value="Transparent"/>
         </Style>
+        
+        <Style Selector="DataGridCell">
+            <Setter Property="FocusAdorner" Value="{x:Null}"/>
+        </Style>
+        <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
 
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        </Style>
 
         <Style Selector="DataGridColumnHeader">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
