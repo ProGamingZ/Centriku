@@ -139,8 +139,20 @@ namespace Centriku.ViewModels
         private async void EditOrSaveStudent(StudentRowViewModel row)
         {
             if (row == null) return;
-            if (!row.IsEditing) row.IsEditing = true;
-            else { var db = new Centriku.Services.DatabaseService().GetConnection(); await db.UpdateAsync(row.DbModel); row.IsEditing = false; }
+            
+            if (!row.IsEditing) 
+            {
+                row.IsEditing = true;
+            }
+            else 
+            { 
+                var db = new Centriku.Services.DatabaseService().GetConnection(); 
+                // 1. Await the permanent database update
+                await db.UpdateAsync(row.DbModel); 
+                row.IsEditing = false; 
+                // 2. Force the view to refresh and lock in the saved data!
+                LoadStudents(); 
+            }
         }
 
         private async void ArchiveStudent(StudentRowViewModel row)
