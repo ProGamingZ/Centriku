@@ -248,6 +248,7 @@ namespace Centriku.ViewModels
         public string StudentCountText { get; }
         
         public string FullTitle => $"{ClassRecord.SubjectName} - {ClassRecord.SectionLabel}";
+        public string ProgramSectionDisplay => $"{ClassRecord.Program}_{ClassRecord.SectionLabel}";
         public string Subtitle => $"{ClassRecord.Term} | {ClassRecord.AcademicYear}";
 
         public DashboardClassCardViewModel(TeacherClass teacherClass, int studentCount)

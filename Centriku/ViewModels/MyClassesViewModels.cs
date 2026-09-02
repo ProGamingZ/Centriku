@@ -197,6 +197,7 @@ namespace Centriku.ViewModels
         public string SubjectName => DbModel.SubjectName ?? string.Empty;
         public string SectionLabel => DbModel.SectionLabel ?? string.Empty;
         public string Program => DbModel.Program ?? string.Empty;
+        public string ProgramSectionDisplay => $"{Program}_{SectionLabel}";
         public string ProfessorName => DbModel.ProfessorName ?? string.Empty;
         public string AcademicYear => DbModel.AcademicYear ?? string.Empty;
         public string Term => DbModel.Term ?? string.Empty;
