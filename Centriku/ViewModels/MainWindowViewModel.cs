@@ -17,6 +17,13 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial WindowState CurrentWindowState { get; set; } = WindowState.Normal;
         [ObservableProperty] public partial bool IsDarkTheme { get; set; } = true;
         
+        // --- NEW: ACTIVE TAB TRACKERS ---
+        [ObservableProperty] public partial bool IsDashboardActive { get; set; } = true;
+        [ObservableProperty] public partial bool IsMyClassesActive { get; set; } = false;
+        [ObservableProperty] public partial bool IsPoliciesActive { get; set; } = false;
+        [ObservableProperty] public partial bool IsDirectoryActive { get; set; } = false;
+        [ObservableProperty] public partial bool IsSettingsActive { get; set; } = false;
+
         // --- 1. CACHE ALL VIEWMODELS HERE ---
         private readonly DashboardViewModel _dashboardViewModel;
         private readonly MyClassesViewModel _myClassesViewModel;
@@ -54,17 +61,19 @@ namespace Centriku.ViewModels
             NavigateToMyClassesCommand = new RelayCommand(OnNavigateToMyClasses);
             NavigateToPoliciesCommand = new RelayCommand(OnNavigateToPolicies);
             NavigateToDirectoryCommand = new RelayCommand(OnNavigateToDirectory);
-            NavigateToSettingsCommand = new RelayCommand(() => Navigate(_settingsViewModel));
+            NavigateToSettingsCommand = new RelayCommand(() => { SetActiveTab("Settings"); Navigate(_settingsViewModel); });
 
             // Global Navigation Glue
             Centriku.ViewModels.DirectoryViewModel.OnNavigateToSettingsBulkImportTab += () => 
             {
+                SetActiveTab("Settings");
                 _settingsViewModel.SelectedTabIndex = 1;
                 Navigate(_settingsViewModel);
             };
 
             Centriku.ViewModels.Settings.ImportSettingsViewModel.OnNavigateToDirectoryBulkImportTab += () => 
             {
+                SetActiveTab("Directory");
                 _directoryViewModel.SelectedTabIndex = 1;
                 Navigate(_directoryViewModel);
             };
@@ -72,10 +81,21 @@ namespace Centriku.ViewModels
             BootUpApplication();
         }
 
+        // --- NEW: HELPER TO HIGHLIGHT THE CORRECT TAB ---
+        private void SetActiveTab(string tabName)
+        {
+            IsDashboardActive = tabName == "Dashboard";
+            IsMyClassesActive = tabName == "MyClasses";
+            IsPoliciesActive = tabName == "Policies";
+            IsDirectoryActive = tabName == "Directory";
+            IsSettingsActive = tabName == "Settings";
+        }
+
         private async void BootUpApplication()
         {
             var dbService = new DatabaseService();
             await dbService.InitializeDatabaseAsync();
+            SetActiveTab("Dashboard");
             Navigate(_dashboardViewModel);
             
             StartGlobalSecuritySweep();
@@ -99,26 +119,30 @@ namespace Centriku.ViewModels
     
         private async void OnNavigateToDashboard()
         {
+            SetActiveTab("Dashboard");
             await _dashboardViewModel.LoadDashboardDataAsync(); 
             Navigate(_dashboardViewModel);
         }
 
         private async void OnNavigateToMyClasses()
         {
+            SetActiveTab("MyClasses");
             await _myClassesViewModel.RefreshDataAsync(); 
             Navigate(_myClassesViewModel);
         }
 
         private async void OnNavigateToPolicies()
         {
+            SetActiveTab("Policies");
             await _policiesViewModel.LoadSavedTemplatesAsync(); 
             Navigate(_policiesViewModel);
         }
+        
         private void OnNavigateToDirectory()
         {
+            SetActiveTab("Directory");
             _directoryViewModel.LoadStudents(); 
             Navigate(_directoryViewModel);
         }
-
     }
 }

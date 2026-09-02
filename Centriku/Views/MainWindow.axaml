@@ -11,50 +11,79 @@
         Background="{DynamicResource AppBackground}" 
         Foreground="{DynamicResource TextMainBrush}">
 
+    <Window.Styles>
+        <!-- The Base Style for all Sidebar Navigation Buttons -->
+        <Style Selector="Button.NavButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="12,12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        
+        <!-- Hover state overriding Avalonia default -->
+        <Style Selector="Button.NavButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
+
+        <!-- Active/Glowing State overriding Avalonia default -->
+        <Style Selector="Button.NavButton.active /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.NavButton.active TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </Window.Styles>
+
     <SplitView IsPaneOpen="{Binding IsSidebarOpen}"
                DisplayMode="CompactInline"
-               CompactPaneLength="60"
-               OpenPaneLength="160"
+               CompactPaneLength="70"
+               OpenPaneLength="180"
                Background="{DynamicResource AppBackground}"
                PaneBackground="{DynamicResource SurfaceBrush}">
         
         <SplitView.Pane>
             <Grid RowDefinitions="Auto, *">
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="20,20,0,30">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="25,20,0,30">
                     <TextBlock Text="C" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                     <TextBlock Text="Centriku" FontSize="20" FontWeight="Bold" Margin="15,2,0,0" IsVisible="{Binding IsSidebarOpen}"/>
                 </StackPanel>
 
+                <!-- NEW: Cleaned up buttons that bind dynamically to the ViewModel trackers -->
                 <StackPanel Grid.Row="1" Spacing="10" Margin="10,0">
-                    <Button Command="{Binding NavigateToDashboardCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
+                    
+                    <Button Classes="NavButton" Classes.active="{Binding IsDashboardActive}" Command="{Binding NavigateToDashboardCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDashboard}"/>
                             <TextBlock Text="Dashboard" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding NavigateToMyClassesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
+                    <Button Classes="NavButton" Classes.active="{Binding IsMyClassesActive}" Command="{Binding NavigateToMyClassesCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconClasses}"/>
                             <TextBlock Text="My Classes" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding NavigateToPoliciesCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
+                    <Button Classes="NavButton" Classes.active="{Binding IsPoliciesActive}" Command="{Binding NavigateToPoliciesCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconPolicies}"/>
                             <TextBlock Text="Policies" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding NavigateToDirectoryCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
+                    <Button Classes="NavButton" Classes.active="{Binding IsDirectoryActive}" Command="{Binding NavigateToDirectoryCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
                             <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
                     
-                    <Button Command="{Binding NavigateToSettingsCommand}" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,8">
+                    <Button Classes="NavButton" Classes.active="{Binding IsSettingsActive}" Command="{Binding NavigateToSettingsCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="15">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconSettings}"/>
                             <TextBlock Text="Settings" VerticalAlignment="Center" FontWeight="SemiBold"/>
