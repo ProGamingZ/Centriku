@@ -147,10 +147,10 @@ namespace Centriku.ViewModels
             else 
             { 
                 var db = new Centriku.Services.DatabaseService().GetConnection(); 
-                // 1. Await the permanent database update
-                await db.UpdateAsync(row.DbModel); 
+                // Uses InsertOrReplace to guarantee the save executes even if the ID was altered
+                await db.InsertOrReplaceAsync(row.DbModel); 
+                
                 row.IsEditing = false; 
-                // 2. Force the view to refresh and lock in the saved data!
                 LoadStudents(); 
             }
         }
@@ -218,7 +218,34 @@ namespace Centriku.ViewModels
                         if (isError) { staged.IsError = true; staged.ImportStatus = errorMsg; staged.StatusColor = "#EF4444"; }
                         else
                         {
-                            bool isDup = existingIds.Contains(parsed.StudentID);
+                            bool isDup = false;
+                            
+                            // 1. Check by ID first
+                            if (!string.IsNullOrWhiteSpace(parsed.StudentID) && existingIds.Contains(parsed.StudentID)) 
+                            {
+                                isDup = true;
+                            } 
+                            else 
+                            {
+                                // 2. Check by Full Name (Last + First)
+                                var nameMatch = existingStudents.FirstOrDefault(e => 
+                                    string.Equals(e.LastName, parsed.LastName, StringComparison.OrdinalIgnoreCase) && 
+                                    string.Equals(e.FirstName, parsed.FirstName, StringComparison.OrdinalIgnoreCase));
+                                
+                                if (nameMatch != null) 
+                                {
+                                    // 3. Middle Name check: True if either is empty, OR if they match exactly
+                                    if (string.IsNullOrWhiteSpace(parsed.MiddleName) || 
+                                        string.IsNullOrWhiteSpace(nameMatch.MiddleName) || 
+                                        string.Equals(nameMatch.MiddleName, parsed.MiddleName, StringComparison.OrdinalIgnoreCase)) 
+                                    {
+                                        isDup = true;
+                                        // Adopt the DB's StudentID so it overwrites the correct existing record
+                                        staged.DbModel.StudentID = nameMatch.StudentID; 
+                                    }
+                                }
+                            }
+
                             if (isDup)
                             {
                                 staged.IsDuplicate = true;
@@ -293,7 +320,34 @@ namespace Centriku.ViewModels
                 else
                 {
                     staged.IsError = false; 
-                    bool isDup = existingIds.Contains(parsed.StudentID);
+                    
+                    bool isDup = false;
+                    
+                    // 1. Check by ID first
+                    if (!string.IsNullOrWhiteSpace(parsed.StudentID) && existingIds.Contains(parsed.StudentID)) 
+                    {
+                        isDup = true;
+                    } 
+                    else 
+                    {
+                        // 2. Check by Full Name (Last + First)
+                        var nameMatch = existingStudents.FirstOrDefault(e => 
+                            string.Equals(e.LastName, parsed.LastName, StringComparison.OrdinalIgnoreCase) && 
+                            string.Equals(e.FirstName, parsed.FirstName, StringComparison.OrdinalIgnoreCase));
+                        
+                        if (nameMatch != null) 
+                        {
+                            // 3. Middle Name check
+                            if (string.IsNullOrWhiteSpace(parsed.MiddleName) || 
+                                string.IsNullOrWhiteSpace(nameMatch.MiddleName) || 
+                                string.Equals(nameMatch.MiddleName, parsed.MiddleName, StringComparison.OrdinalIgnoreCase)) 
+                            {
+                                isDup = true;
+                                staged.DbModel.StudentID = nameMatch.StudentID; 
+                            }
+                        }
+                    }
+
                     if (isDup)
                     {
                         staged.IsDuplicate = true;
