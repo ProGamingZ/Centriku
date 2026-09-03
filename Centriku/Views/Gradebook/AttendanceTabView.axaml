@@ -4,109 +4,123 @@
    x:Class="Centriku.Views.Gradebook.AttendanceTabView"
    x:DataType="vm:GradebookViewModel">
 
-   <Grid RowDefinitions="Auto, *">
-      <StackPanel Grid.Row="0" Margin="40,30,40,20">
-         <Grid ColumnDefinitions="1*, 1.5*">
-            <StackPanel Grid.Column="0" Margin="0,0,20,0">
-               <TextBlock Text="Daily Roll Call" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-               <TextBlock Text="Click a cell and type P (Present), L (Late), A (Absent) or E (Excused)." TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
-            </StackPanel>
-            
-            <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                  
-                  <Button Content="View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15">
-                     <Button.Flyout>
-                           <Flyout Placement="BottomEdgeAlignedRight">
-                              <StackPanel Spacing="10" Width="200" Margin="10">
-                                 <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                 <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
-                                 <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
-                                 
-                                 <TextBlock Text="Summary Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                 <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
-                                 <CheckBox Content="Show Total Late (L)" IsChecked="{Binding ShowTotalL}"/>
-                                 <CheckBox Content="Show Total Absent (A)" IsChecked="{Binding ShowTotalA}"/>
-                                 <CheckBox Content="Show Total Excused (E)" IsChecked="{Binding ShowTotalE}"/>
-
-                                 <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
-                                 <TextBlock Text="📅 Date Range Filter" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                 <ComboBox ItemsSource="{Binding AvailableMonths}" SelectedItem="{Binding SelectedMonthFilter}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
-                              </StackPanel>
-                           </Flyout>
-                     </Button.Flyout>
-                  </Button>
-
-                  <Button Command="{Binding ToggleAddRollCallCommand}" Content="Add Roll Call Day" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,0,15"/>
-               </WrapPanel>
-         </Grid>
-
-         <Border IsVisible="{Binding IsAddingRollCall}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,20,0,0">
-            <Grid RowDefinitions="Auto, Auto, Auto">
-               <TextBlock Grid.Row="0" Text="Create New Roll Call Day" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-               <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
-                  <TextBlock Text="Select Date:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,15,10"/>
-                  <CalendarDatePicker SelectedDate="{Binding NewRollCallDate}" Background="{DynamicResource AppBackground}" Margin="0,0,15,10"/>
-                  <TextBlock Text="(All students will default to Present)" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" Margin="0,0,0,10"/>
-               </WrapPanel>
-               <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                  <Button Command="{Binding ToggleAddRollCallCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
-                  <Button Command="{Binding SaveRollCallCommand}" Content="Generate Column" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
+   <!-- Responsive Outer ScrollViewer allowing both horizontal and vertical scrolling -->
+   <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+      <Grid RowDefinitions="Auto, *" >
+         
+         <StackPanel Grid.Row="0" Margin="40,30,40,20">
+            <Grid ColumnDefinitions="1*, 1.5*">
+               <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                  <TextBlock Text="Daily Roll Call" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                  <TextBlock Text="Click a cell and type P (Present), L (Late), A (Absent) or E (Excused)." TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
                </StackPanel>
-            </Grid>
-         </Border>
-         
-         <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
-      </StackPanel>
-
-      <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,40">
-         
-         <DataGrid x:Name="AttendanceGrid" Grid.Column="0" 
-            ItemsSource="{Binding AttendanceGridRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
-            GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" MinHeight="300" FrozenColumnCount="5">
-            <DataGrid.Columns>
-               <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-               <DataGridTemplateColumn Header="E" SortMemberPath="TotalE" CanUserSort="True" IsReadOnly="True" Width="Auto">
-                  <DataGridTemplateColumn.CellTemplate>
-                     <DataTemplate><TextBlock Text="{Binding TotalE}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
-                  </DataGridTemplateColumn.CellTemplate>
-               </DataGridTemplateColumn>
-            </DataGrid.Columns>
-         </DataGrid>
-
-         <Border Grid.Column="1" Width="300" IsVisible="{Binding IsAttendancePanelOpen}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="20,0,0,0">
-            <StackPanel Spacing="15">
-               <Grid ColumnDefinitions="*, Auto">
-                  <TextBlock Grid.Column="0" Text="Attendance Details" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource TextMainBrush}"/>
-                  <Button Grid.Column="1" Command="{Binding CloseAttendancePanelCommand}" Content="✕" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" Padding="5"/>
-               </Grid>
                
-               <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+               <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                     <Button Content="View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15">
+                        <Button.Flyout>
+                              <Flyout Placement="BottomEdgeAlignedRight">
+                                 <StackPanel Spacing="10" Width="200" Margin="10">
+                                    <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
+                                    <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
+                                    
+                                    <TextBlock Text="Summary Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
+                                    <CheckBox Content="Show Total Late (L)" IsChecked="{Binding ShowTotalL}"/>
+                                    <CheckBox Content="Show Total Absent (A)" IsChecked="{Binding ShowTotalA}"/>
+                                    <CheckBox Content="Show Total Excused (E)" IsChecked="{Binding ShowTotalE}"/>
 
-               <StackPanel Spacing="5">
-                  <TextBlock Text="Student" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                  <TextBlock Text="{Binding SelectedAttendanceStudentName}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
-               </StackPanel>
+                                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
+                                    <TextBlock Text="📅 Date Range Filter" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <ComboBox ItemsSource="{Binding AvailableMonths}" SelectedItem="{Binding SelectedMonthFilter}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                                 </StackPanel>
+                              </Flyout>
+                        </Button.Flyout>
+                     </Button>
 
-               <StackPanel Spacing="5">
-                  <TextBlock Text="Date" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                  <TextBlock Text="{Binding SelectedAttendanceDateDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
-               </StackPanel>
+                     <Button Command="{Binding ToggleAddRollCallCommand}" Content="Add Roll Call Day" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,0,15"/>
+               </WrapPanel>
+            </Grid>
 
-               <StackPanel Spacing="5" Margin="0,10,0,0">
-                  <TextBlock Text="Status (P, L, A, E)*" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                  <TextBox Text="{Binding SelectedAttendanceCell.Status}" MaxLength="1" Background="{DynamicResource AppBackground}"/>
-               </StackPanel>
+            <!-- Constrained Add Roll Call Box -->
+            <Border IsVisible="{Binding IsAddingRollCall}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,20,0,0" MaxWidth="800" HorizontalAlignment="Left">
+               <Grid RowDefinitions="Auto, Auto, Auto">
+                  <TextBlock Grid.Row="0" Text="Create New Roll Call Day" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                  <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
+                     <TextBlock Text="Select Date:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,15,10"/>
+                     <CalendarDatePicker SelectedDate="{Binding NewRollCallDate}" Background="{DynamicResource AppBackground}" Margin="0,0,15,10"/>
+                     <TextBlock Text="(All students will default to Present)" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" Margin="0,0,0,10"/>
+                  </WrapPanel>
+                  <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                     <Button Command="{Binding ToggleAddRollCallCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
+                     <Button Command="{Binding SaveRollCallCommand}" Content="Generate Column" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
+                  </StackPanel>
+               </Grid>
+            </Border>
+            
+            <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
+         </StackPanel>
 
-               <StackPanel Spacing="5">
-                  <TextBlock Text="Reason / Notes" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                  <TextBox Text="{Binding SelectedAttendanceCell.Reason}" Height="100" AcceptsReturn="True" TextWrapping="Wrap" PlaceholderText="e.g. Medical certificate provided..." Background="{DynamicResource AppBackground}"/>
-               </StackPanel>
-            </StackPanel>
-         </Border>
+         <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="24,0,24,24">
+            
+            <!-- Bounded Attendance Grid -->
+            <DataGrid x:Name="AttendanceGrid" Grid.Column="0" 
+               ItemsSource="{Binding AttendanceGridRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
+               GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" 
+               RowHeight="36"
+               MinHeight="250" 
+               MaxHeight="580"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Top"
+               FrozenColumnCount="5">
+               <DataGrid.Columns>
+                  <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                  <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                  <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                  <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                  <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                  <DataGridTemplateColumn Header="E" SortMemberPath="TotalE" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                     <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate><TextBlock Text="{Binding TotalE}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+               </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Bounded Detail Panel -->
+            <Border Grid.Column="1" Width="300" MaxHeight="600" VerticalAlignment="Top" IsVisible="{Binding IsAttendancePanelOpen}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="20,0,0,0">
+               <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <StackPanel Spacing="15">
+                     <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Attendance Details" FontWeight="Bold" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource TextMainBrush}"/>
+                        <Button Grid.Column="1" Command="{Binding CloseAttendancePanelCommand}" Content="✕" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" Padding="5"/>
+                     </Grid>
+                     
+                     <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+
+                     <StackPanel Spacing="5">
+                        <TextBlock Text="Student" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                        <TextBlock Text="{Binding SelectedAttendanceStudentName}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                     </StackPanel>
+
+                     <StackPanel Spacing="5">
+                        <TextBlock Text="Date" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                        <TextBlock Text="{Binding SelectedAttendanceDateDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
+                     </StackPanel>
+
+                     <StackPanel Spacing="5" Margin="0,10,0,0">
+                        <TextBlock Text="Status (P, L, A, E)*" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                        <TextBox Text="{Binding SelectedAttendanceCell.Status}" MaxLength="1" Background="{DynamicResource AppBackground}"/>
+                     </StackPanel>
+
+                     <StackPanel Spacing="5">
+                        <TextBlock Text="Reason / Notes" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                        <TextBox Text="{Binding SelectedAttendanceCell.Reason}" Height="100" AcceptsReturn="True" TextWrapping="Wrap" PlaceholderText="e.g. Medical certificate provided..." Background="{DynamicResource AppBackground}"/>
+                     </StackPanel>
+                  </StackPanel>
+               </ScrollViewer>
+            </Border>
+         </Grid>
       </Grid>
-   </Grid>
+   </ScrollViewer>
 </UserControl>

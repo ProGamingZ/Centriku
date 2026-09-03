@@ -92,7 +92,10 @@
                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
             </StackPanel>
 
-            <Border Grid.Row="1" IsVisible="{Binding IsEnrolling}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,30">
+            <Border Grid.Row="1" IsVisible="{Binding IsEnrolling}" 
+                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                    BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,25"
+                    MaxWidth="1060" MaxHeight="480" HorizontalAlignment="Left" ZIndex="10">
                <Grid RowDefinitions="Auto, Auto, *, Auto">
                   
                   <TextBlock Grid.Row="0" Text="Select Students to Enroll" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
@@ -125,10 +128,9 @@
                      </StackPanel>
                   </Grid>
 
-                  <!-- Compact Student Cards -->
-                  <ScrollViewer Grid.Row="2" MaxHeight="400" Margin="0,0,0,20" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                  <!-- Internal Card ScrollViewer with bounded MaxHeight -->
+                  <ScrollViewer Grid.Row="2" MaxHeight="260" Margin="0,0,0,20" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                      <ItemsControl ItemsSource="{Binding AvailableStudents}">
-                        
                         <ItemsControl.ItemsPanel>
                            <ItemsPanelTemplate>
                               <WrapPanel Orientation="Horizontal" />
@@ -137,7 +139,6 @@
                         
                         <ItemsControl.ItemTemplate>
                            <DataTemplate>
-                              <!-- Student Card (Added Margin="0,0,10,10" to simulate the spacing) -->
                               <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Width="300" Margin="0,0,10,10">
                                  <Grid ColumnDefinitions="Auto, *">
                                     <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -177,33 +178,41 @@
                </Grid>
             </Border>
 
-            <Border Grid.Row="2" IsVisible="{Binding IsAddingAssessment}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,30">
+            <Border Grid.Row="2" IsVisible="{Binding IsAddingAssessment}" 
+                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                    BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,25"
+                    MaxWidth="920" MaxHeight="320" HorizontalAlignment="Left" ZIndex="10">
                <Grid RowDefinitions="Auto, *, Auto">
                   <TextBlock Grid.Row="0" Text="Create New Assessment Column" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-                  <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
-                     <StackPanel Margin="0,0,15,15" MinWidth="200">
-                        <TextBlock Text="Title*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <TextBox Text="{Binding NewAssessmentTitle}" PlaceholderText="e.g. Quiz 1" Background="{DynamicResource AppBackground}"/>
-                     </StackPanel>
-                     <StackPanel Margin="0,0,15,15" MinWidth="200">
-                        <TextBlock Text="Grading Category*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding AvailableCategories}" SelectedItem="{Binding SelectedCategory}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch" PlaceholderText="Select category...">
-                           <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
-                        </ComboBox>
-                     </StackPanel>
-                     <StackPanel Margin="0,0,15,15" MinWidth="150">
-                        <TextBlock Text="Grading Period*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding GradingPeriods}" SelectedItem="{Binding NewAssessmentPeriod}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
-                     </StackPanel>
-                     <StackPanel Margin="0,0,15,15" MinWidth="120">
-                        <TextBlock Text="Max Score*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <NumericUpDown Value="{Binding NewAssessmentMaxScore}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
-                     </StackPanel>
-                     <StackPanel Margin="0,0,15,15" MinWidth="150">
-                        <TextBlock Text="Date Given" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <CalendarDatePicker SelectedDate="{Binding NewAssessmentDate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
-                     </StackPanel>
-                  </WrapPanel>
+                  
+                  <!-- Internal ScrollViewer prevents inputs from overflowing on smaller vertical screens -->
+                  <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="180" Margin="0,0,0,15">
+                     <WrapPanel Orientation="Horizontal">
+                        <StackPanel Margin="0,0,15,15" MinWidth="200">
+                           <TextBlock Text="Title*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <TextBox Text="{Binding NewAssessmentTitle}" PlaceholderText="e.g. Quiz 1" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="200">
+                           <TextBlock Text="Grading Category*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <ComboBox ItemsSource="{Binding AvailableCategories}" SelectedItem="{Binding SelectedCategory}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch" PlaceholderText="Select category...">
+                              <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
+                           </ComboBox>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="150">
+                           <TextBlock Text="Grading Period*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <ComboBox ItemsSource="{Binding GradingPeriods}" SelectedItem="{Binding NewAssessmentPeriod}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="120">
+                           <TextBlock Text="Max Score*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <NumericUpDown Value="{Binding NewAssessmentMaxScore}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="150">
+                           <TextBlock Text="Date Given" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <CalendarDatePicker SelectedDate="{Binding NewAssessmentDate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                     </WrapPanel>
+                  </ScrollViewer>
+
                   <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
                      <Button Command="{Binding ToggleAddAssessmentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
                      <Button Command="{Binding SaveAssessmentCommand}" Content="Save Assessment" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
@@ -211,22 +220,31 @@
                </Grid>
             </Border>
 
-            <DataGrid x:Name="RosterGrid" Grid.Row="3" Margin="40,0,40,40" 
+            <DataGrid x:Name="RosterGrid" Grid.Row="3" Margin="24,0,24,24" 
                ItemsSource="{Binding GradebookRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
                GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
-               CornerRadius="8" MinHeight="300" FrozenColumnCount="3">
+               CornerRadius="8" 
+               RowHeight="36"
+               MinHeight="250" 
+               MaxHeight="580"
+               HorizontalAlignment="Stretch"
+               FrozenColumnCount="3">
                <DataGrid.Columns>
-                  <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                  <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                  <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                  <DataGridTemplateColumn Header="Computed Grade Final,Midterm,Semester" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="Auto">
+                  <!-- Compact, fixed/auto-sized columns -->
+                  <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="130"/>
+                  <!-- Flexible columns that expand to fill all empty space -->
+                  <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="1.2*" MinWidth="130"/>
+                  <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="1.2*" MinWidth="130"/>
+                  <!-- Dynamic / Computed Grade Columns -->
+                  <DataGridTemplateColumn Header="Computed Grade Final,Midterm,Semester" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="140">
                      <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                            <TextBlock Text="{Binding FinalGrade}" ToolTip.Tip="{Binding FinalGradeTooltip}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
-                  <DataGridTemplateColumn Header="Actions" Width="120">
+                  <!-- Action buttons stay compact on the right edge -->
+                  <DataGridTemplateColumn Header="Actions" Width="80">
                      <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                            <Button Command="{Binding #GradesRootControl.((vm:GradebookViewModel)DataContext).RemoveStudentCommand}" CommandParameter="{Binding StudentInfo}" Background="Transparent" HorizontalAlignment="Center" ToolTip.Tip="Unenroll Student from Class (Requires Confirmation)">
