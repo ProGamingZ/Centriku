@@ -15,6 +15,17 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> ActiveClasses { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<GradingTemplate> AvailableTemplates { get; set; } = new();
         [ObservableProperty] public partial bool IsAddingClass { get; set; } = false;
+
+        private System.Collections.Generic.List<TeacherClass> _allClasses = new();
+        [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
+        [ObservableProperty] public partial ObservableCollection<string> AvailableYearFilters { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> AvailableTermFilters { get; set; } = new();
+        [ObservableProperty] public partial string SelectedYearFilter { get; set; } = "All Years";
+        [ObservableProperty] public partial string SelectedTermFilter { get; set; } = "All Terms";
+
+        partial void OnSearchQueryChanged(string value) => FilterClasses();
+        partial void OnSelectedYearFilterChanged(string value) => FilterClasses();
+        partial void OnSelectedTermFilterChanged(string value) => FilterClasses();
         
         [ObservableProperty] public partial string NewSubjectName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewSectionLabel { get; set; } = string.Empty;   
@@ -78,9 +89,40 @@ namespace Centriku.ViewModels
         {
             var db = new DatabaseService().GetConnection();
             await db.CreateTableAsync<TeacherClass>();
-            var classes = await db.Table<TeacherClass>().ToListAsync();
+            _allClasses = await db.Table<TeacherClass>().ToListAsync();
+            
+            // Populate Dynamic Filter Dropdowns
+            var years = _allClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
+            AvailableYearFilters.Clear(); AvailableYearFilters.Add("All Years");
+            foreach (var y in years) AvailableYearFilters.Add(y!);
+            if (!AvailableYearFilters.Contains(SelectedYearFilter)) SelectedYearFilter = "All Years";
+
+            var terms = _allClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
+            AvailableTermFilters.Clear(); AvailableTermFilters.Add("All Terms");
+            foreach (var t in terms) AvailableTermFilters.Add(t!);
+            if (!AvailableTermFilters.Contains(SelectedTermFilter)) SelectedTermFilter = "All Terms";
+
+            FilterClasses();
+        }
+
+        private void FilterClasses()
+        {
+            var filtered = _allClasses.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var q = SearchQuery.ToLower();
+                filtered = filtered.Where(c => 
+                    c.SubjectName?.ToLower().Contains(q) == true || 
+                    c.SectionLabel?.ToLower().Contains(q) == true ||
+                    c.Program?.ToLower().Contains(q) == true);
+            }
+
+            if (SelectedYearFilter != "All Years") filtered = filtered.Where(c => c.AcademicYear == SelectedYearFilter);
+            if (SelectedTermFilter != "All Terms") filtered = filtered.Where(c => c.Term == SelectedTermFilter);
+
             ActiveClasses.Clear();
-            foreach (var c in classes)
+            foreach (var c in filtered)
             {
                 var templateName = AvailableTemplates.FirstOrDefault(t => t.TemplateID == c.GradingTemplateID)?.TemplateName ?? "Unknown Template";
                 ActiveClasses.Add(new ClassCardViewModel(c, templateName));

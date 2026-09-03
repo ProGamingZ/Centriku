@@ -5,7 +5,7 @@
              x:DataType="vm:MyClassesViewModel"
              x:Name="RootControl">
 
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <Grid RowDefinitions="Auto, Auto, Auto, *">
             
             <StackPanel Grid.Row="0" Margin="40,30,40,20">
@@ -15,6 +15,20 @@
             </StackPanel>
 
             <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
+                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <TextBox Text="{Binding SearchQuery}" PlaceholderText="Search subjects or sections..." Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Padding="15,10" Width="300" Margin="0,0,15,0"/>
+                    
+                    <StackPanel Margin="0,0,15,0">
+                        <TextBlock Text="Academic Year" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableYearFilters}" SelectedItem="{Binding SelectedYearFilter}" Background="{DynamicResource AppBackground}" Width="130"/>
+                    </StackPanel>
+                    
+                    <StackPanel>
+                        <TextBlock Text="Term" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableTermFilters}" SelectedItem="{Binding SelectedTermFilter}" Background="{DynamicResource AppBackground}" Width="130"/>
+                    </StackPanel>
+                </WrapPanel>
+
                 <Button Grid.Column="1" Command="{Binding ToggleAddClassFormCommand}" 
                         Content="Add New Class" 
                         Background="{DynamicResource PrimaryBrush}" 
