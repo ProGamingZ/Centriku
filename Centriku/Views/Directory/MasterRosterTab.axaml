@@ -5,7 +5,7 @@
    x:DataType="vm:DirectoryViewModel"
    x:Name="MasterRosterRoot">
              
-   <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+   <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <Grid RowDefinitions="Auto, Auto, Auto, *">
          
          <StackPanel Grid.Row="0" Margin="40,30,40,20">
