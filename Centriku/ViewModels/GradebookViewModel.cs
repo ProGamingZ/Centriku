@@ -295,7 +295,7 @@ namespace Centriku.ViewModels
 
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                 var studentIds = roster.Select(r => r.StudentID).ToList();
-                var enrolled = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync()).Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").ToList();
+                var enrolled = (await db.Table<Student>().Where(s => studentIds.Contains(s.StudentID)).ToListAsync()).Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").OrderBy(s => s.LastName).ToList();
 
                 var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
                 var scores = await db.Table<Score>().Where(s => assessmentIds.Contains(s.AssessmentID)).ToListAsync();
