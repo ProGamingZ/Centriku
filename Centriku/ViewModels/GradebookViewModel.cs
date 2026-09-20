@@ -114,7 +114,6 @@ namespace Centriku.ViewModels
         #endregion
 
         #region Setup& Data Loading
-        // DELETED the old checkboxes, ADDED the two new official Excel checkboxes
             [ObservableProperty] public partial bool ExportClassRecord { get; set; } = true;
             [ObservableProperty] public partial bool ExportClassAttendance { get; set; } = true;
             
@@ -220,7 +219,8 @@ namespace Centriku.ViewModels
                 ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
                 SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
                 RemoveStudentCommand = new RelayCommand<Student>(RemoveStudent!);
-
+                OpenTransferModalCommand = new RelayCommand<Student>(OpenTransferModal!);
+                
                 ToggleAddAssessmentCommand = new RelayCommand(() => 
                 {
                     if (IsAddingAssessment) 

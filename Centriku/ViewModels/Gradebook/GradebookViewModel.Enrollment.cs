@@ -14,6 +14,14 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsRemoveStudentModalOpen { get; set; } = false;
         [ObservableProperty] public partial string RemoveModalMessage { get; set; } = string.Empty;
         private Student? _studentToRemove;
+        // --- Transfer Student Properties ---
+        [ObservableProperty] public partial bool IsTransferStudentModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string TransferModalMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial ObservableCollection<TeacherClass> AvailableTransferClasses { get; set; } = new();
+        [ObservableProperty] public partial TeacherClass? SelectedTransferClass { get; set; }
+        private Student? _studentToTransfer;
+        
+        public IRelayCommand<Student> OpenTransferModalCommand { get; }
         
         // Full list of students fetched from DB
         private System.Collections.Generic.List<EnrollmentItemViewModel> _allAvailableStudents = new();
@@ -168,5 +176,68 @@ namespace Centriku.ViewModels
             IsRemoveStudentModalOpen = false;
             _studentToRemove = null;
         }
+    
+        // --- NEW: Transfer Student Logic ---
+        private async void OpenTransferModal(Student student)
+        {
+            if (student == null) return;
+            _studentToTransfer = student;
+            TransferModalMessage = $"Move {student.FirstName} {student.LastName} from {ClassTitle} to another class?";
+            
+            var db = new DatabaseService().GetConnection();
+            var allClasses = await db.Table<TeacherClass>().ToListAsync();
+            
+            // Only show classes that are NOT the current class
+            AvailableTransferClasses = new ObservableCollection<TeacherClass>(allClasses.Where(c => c.ClassID != ClassId));
+            SelectedTransferClass = AvailableTransferClasses.FirstOrDefault();
+
+            IsTransferStudentModalOpen = true;
+        }
+
+        [RelayCommand]
+        public async Task ConfirmTransferStudent()
+        {
+            if (_studentToTransfer == null || SelectedTransferClass == null) return;
+            
+            var db = new DatabaseService().GetConnection();
+            
+            // 1. Remove from CURRENT class roster
+            var oldRosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == _studentToTransfer.StudentID).FirstOrDefaultAsync();
+            if (oldRosterEntry != null)
+            {
+                await db.DeleteAsync(oldRosterEntry);
+            }
+
+            // 2. Add to NEW class roster
+            var newRosterEntry = new ClassRoster
+            {
+                ClassID = SelectedTransferClass.ClassID,
+                StudentID = _studentToTransfer.StudentID
+            };
+            await db.InsertAsync(newRosterEntry);
+
+            // 3. (Optional) Wipe their grades/attendance from the old class? 
+            // If you want to delete their old scores so they don't clutter the database, add this:
+            var oldScores = await db.Table<Score>().Where(s => s.StudentID == _studentToTransfer.StudentID).ToListAsync();
+            // Note: You would need to filter `oldScores` to only delete ones linked to assessments belonging to ClassId
+
+            // 4. Refresh UI and close modal
+            await LoadGradebookData();
+            await LoadAttendanceData();
+            await LoadRecitationData();
+            
+            IsTransferStudentModalOpen = false;
+            _studentToTransfer = null;
+            ShowToastMessage?.Invoke($"Successfully transferred to {SelectedTransferClass.SubjectName}.");
+        }
+
+        [RelayCommand]
+        public void CancelTransferStudent()
+        {
+            IsTransferStudentModalOpen = false;
+            _studentToTransfer = null;
+        }
+    
+    
     }
 }
