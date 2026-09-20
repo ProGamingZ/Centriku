@@ -51,11 +51,11 @@ namespace Centriku.Views.Gradebook
          try
          {
             // 1. Find the fixed columns safely
+            var colCheckbox = grid.Columns.FirstOrDefault(c => c.Width == new DataGridLength(80, DataGridLengthUnitType.Pixel)); 
             var colLRN = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentID");
             var colFirstName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.FirstName");
             var colLastName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.LastName");
             var colFinalGrade = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "FinalGradeNumeric");
-            var colActions = grid.Columns.FirstOrDefault(c => c.Header?.ToString() == "Actions");
 
             // 2. Toggle visibility
             if (colLRN != null) colLRN.IsVisible = vm.ShowStudentId;
@@ -68,13 +68,14 @@ namespace Centriku.Views.Gradebook
                colFinalGrade.Header = vm.DynamicFinalColumnName;
             }
 
-            // 3. Tell the grid to keep ONLY our 5 fixed columns
+            // 3. Tell the grid to keep ONLY our 6 fixed columns
             var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
+            
+            if (colCheckbox != null) staticColumns.Add(colCheckbox); 
             if (colLRN != null) staticColumns.Add(colLRN);
             if (colFirstName != null) staticColumns.Add(colFirstName);
             if (colLastName != null) staticColumns.Add(colLastName);
             if (colFinalGrade != null) staticColumns.Add(colFinalGrade);
-            if (colActions != null) staticColumns.Add(colActions);
 
             var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
 

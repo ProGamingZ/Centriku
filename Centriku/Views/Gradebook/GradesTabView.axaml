@@ -85,6 +85,8 @@
                      </Button>
 
                      <Button Command="{Binding ToggleAddAssessmentCommand}" IsVisible="{Binding ShowAssessmentFilters}" Content="Add Assessment" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
+                     <Button Command="{Binding BulkTransferStudentsCommand}" Content="Transfer" Background="Transparent" Foreground="#3B82F6" BorderBrush="#3B82F6" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
+                     <Button Command="{Binding BulkRemoveStudentsCommand}" Content="Unenroll" Background="Transparent" Foreground="#EF4444" BorderBrush="#EF4444" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
                      <Button Command="{Binding ToggleEnrollmentCommand}" Content="Enroll Students" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,0,15"/>
                   </WrapPanel>
                </Grid>
@@ -230,6 +232,16 @@
                HorizontalAlignment="Stretch"
                FrozenColumnCount="3">
                <DataGrid.Columns>
+                  <DataGridTemplateColumn Width="80" CanUserSort="False">
+                     <DataGridTemplateColumn.Header>
+                        <CheckBox IsChecked="{Binding #GradesRootControl.((vm:GradebookViewModel)DataContext).IsAllRosterSelected}" HorizontalAlignment="Center"/>
+                     </DataGridTemplateColumn.Header>
+                     <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                           <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
                   <!-- Compact, fixed/auto-sized columns -->
                   <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="130"/>
                   <!-- Flexible columns that expand to fill all empty space -->
@@ -240,21 +252,6 @@
                      <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                            <TextBlock Text="{Binding FinalGrade}" ToolTip.Tip="{Binding FinalGradeTooltip}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </DataTemplate>
-                     </DataGridTemplateColumn.CellTemplate>
-                  </DataGridTemplateColumn>
-                  <!-- Action buttons stay compact on the right edge -->
-                  <DataGridTemplateColumn Header="Actions" Width="80">
-                     <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-                              <Button Command="{Binding #GradesRootControl.((vm:GradebookViewModel)DataContext).OpenTransferModalCommand}" CommandParameter="{Binding StudentInfo}" Background="Transparent" ToolTip.Tip="Transfer Student to another class">
-                                 <TextBlock Classes="Icon" Text="🔄" Foreground="#3B82F6" FontSize="16"/>
-                              </Button>
-                              <Button Command="{Binding #GradesRootControl.((vm:GradebookViewModel)DataContext).RemoveStudentCommand}" CommandParameter="{Binding StudentInfo}" Background="Transparent" ToolTip.Tip="Unenroll Student from Class (Requires Confirmation)">
-                                 <TextBlock Classes="Icon" Text="❌" Foreground="#EF4444" FontSize="14"/>
-                              </Button>
-                           </StackPanel>
                         </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>

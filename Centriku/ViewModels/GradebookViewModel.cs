@@ -85,6 +85,14 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial string SelectedAttendanceDateDisplay { get; set; } = string.Empty;
             [ObservableProperty] public partial bool IsAttendancePanelOpen { get; set; } = false;
             [RelayCommand] public void CloseAttendancePanel() => IsAttendancePanelOpen = false;
+
+            // When the master checkbox changes, check/uncheck every row automatically
+            [ObservableProperty] public partial bool IsAllRosterSelected { get; set; } = false;
+            partial void OnIsAllRosterSelectedChanged(bool value)
+            {
+                if (GradebookRows == null) return;
+                foreach (var row in GradebookRows) { row.IsSelected = value; }
+            }
         #endregion
 
         #region Grid Data Collections
@@ -218,8 +226,6 @@ namespace Centriku.ViewModels
             {
                 ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
                 SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
-                RemoveStudentCommand = new RelayCommand<Student>(RemoveStudent!);
-                OpenTransferModalCommand = new RelayCommand<Student>(OpenTransferModal!);
                 
                 ToggleAddAssessmentCommand = new RelayCommand(() => 
                 {

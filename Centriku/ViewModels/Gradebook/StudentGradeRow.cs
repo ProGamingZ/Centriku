@@ -42,7 +42,7 @@ namespace Centriku.ViewModels
 
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
         public string StudentID => StudentInfo.StudentID ?? "";
-        
+        [ObservableProperty] public partial bool IsSelected { get; set; } = false;
         [ObservableProperty] public partial string MidtermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial string FinalTermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial double MidtermGradeNumeric { get; set; } = 0;

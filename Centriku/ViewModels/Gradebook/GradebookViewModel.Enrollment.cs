@@ -9,19 +9,19 @@ using Centriku.Services;
 namespace Centriku.ViewModels
 {
     public partial class GradebookViewModel
-    {
+    {   
         [ObservableProperty] public partial bool IsEnrolling { get; set; } = false;
         [ObservableProperty] public partial bool IsRemoveStudentModalOpen { get; set; } = false;
         [ObservableProperty] public partial string RemoveModalMessage { get; set; } = string.Empty;
-        private Student? _studentToRemove;
-        // --- Transfer Student Properties ---
+        // ---  Modal Control Properties (Now handles Lists!) ---
         [ObservableProperty] public partial bool IsTransferStudentModalOpen { get; set; } = false;
         [ObservableProperty] public partial string TransferModalMessage { get; set; } = string.Empty;
         [ObservableProperty] public partial ObservableCollection<TeacherClass> AvailableTransferClasses { get; set; } = new();
         [ObservableProperty] public partial TeacherClass? SelectedTransferClass { get; set; }
-        private Student? _studentToTransfer;
         
-        public IRelayCommand<Student> OpenTransferModalCommand { get; }
+        private System.Collections.Generic.List<Student> _studentsToRemove = new();
+        private System.Collections.Generic.List<Student> _studentsToTransfer = new();
+        
         
         // Full list of students fetched from DB
         private System.Collections.Generic.List<EnrollmentItemViewModel> _allAvailableStudents = new();
@@ -49,8 +49,6 @@ namespace Centriku.ViewModels
 
         public IRelayCommand ToggleEnrollmentCommand { get; }
         public IRelayCommand SaveEnrollmentCommand { get; }
-        public IRelayCommand<Student> RemoveStudentCommand { get; }
-
         [RelayCommand]
         public void SelectAllStudents()
         {
@@ -143,30 +141,32 @@ namespace Centriku.ViewModels
             await LoadRecitationData(); 
         }
 
-        // --- UPDATED: Modal Control Methods ---
+        // --- Modal Control Methods ---
 
-        private void RemoveStudent(Student student)
+        [RelayCommand]
+        public void BulkRemoveStudents()
         {
-            if (student == null) return;
-            _studentToRemove = student;
-            RemoveModalMessage = $"Are you sure you want to unenroll {student.FirstName} {student.LastName} from this class?\n\nThey will be removed from the class roster immediately, but their permanent data will remain in the directory.";
+            _studentsToRemove = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
+            if (!_studentsToRemove.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
+            
+            RemoveModalMessage = $"Are you sure you want to unenroll {_studentsToRemove.Count} selected student(s) from this class?\n\nThey will be removed from the class roster immediately.";
             IsRemoveStudentModalOpen = true;
         }
-
         [RelayCommand]
         public async Task ConfirmRemoveStudent()
         {
-            if (_studentToRemove == null) return;
+            if (!_studentsToRemove.Any()) return;
             var db = new DatabaseService().GetConnection();
             
-            var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == _studentToRemove.StudentID).FirstOrDefaultAsync();
-            if (rosterEntry != null)
+            foreach (var student in _studentsToRemove)
             {
-                await db.DeleteAsync(rosterEntry);
-                await LoadGradebookData();
-                await LoadAttendanceData();
-                await LoadRecitationData();
+                var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
+                if (rosterEntry != null) await db.DeleteAsync(rosterEntry);
             }
+            
+            await LoadGradebookData();
+            await LoadAttendanceData();
+            await LoadRecitationData();
             CancelRemoveStudent(); 
         }
 
@@ -174,68 +174,57 @@ namespace Centriku.ViewModels
         public void CancelRemoveStudent()
         {
             IsRemoveStudentModalOpen = false;
-            _studentToRemove = null;
+            _studentsToRemove.Clear();
+            IsAllRosterSelected = false; // Reset the master checkbox
         }
     
-        // --- NEW: Transfer Student Logic ---
-        private async void OpenTransferModal(Student student)
+        // --- Transfer Student Logic ---
+
+        [RelayCommand]
+        public async Task BulkTransferStudents()
         {
-            if (student == null) return;
-            _studentToTransfer = student;
-            TransferModalMessage = $"Move {student.FirstName} {student.LastName} from {ClassTitle} to another class?";
+            _studentsToTransfer = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
+            if (!_studentsToTransfer.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
             
+            await PrepareTransferModal($"Move {_studentsToTransfer.Count} selected student(s) from {ClassTitle} to another class?");
+        }
+        private async Task PrepareTransferModal(string message)
+        {
+            TransferModalMessage = message;
             var db = new DatabaseService().GetConnection();
             var allClasses = await db.Table<TeacherClass>().ToListAsync();
-            
-            // Only show classes that are NOT the current class
             AvailableTransferClasses = new ObservableCollection<TeacherClass>(allClasses.Where(c => c.ClassID != ClassId));
             SelectedTransferClass = AvailableTransferClasses.FirstOrDefault();
-
             IsTransferStudentModalOpen = true;
         }
-
         [RelayCommand]
         public async Task ConfirmTransferStudent()
         {
-            if (_studentToTransfer == null || SelectedTransferClass == null) return;
-            
+            if (!_studentsToTransfer.Any() || SelectedTransferClass == null) return;
             var db = new DatabaseService().GetConnection();
             
-            // 1. Remove from CURRENT class roster
-            var oldRosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == _studentToTransfer.StudentID).FirstOrDefaultAsync();
-            if (oldRosterEntry != null)
+            foreach (var student in _studentsToTransfer)
             {
-                await db.DeleteAsync(oldRosterEntry);
+                var oldEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
+                if (oldEntry != null) await db.DeleteAsync(oldEntry);
+
+                await db.InsertAsync(new ClassRoster { ClassID = SelectedTransferClass.ClassID, StudentID = student.StudentID });
             }
 
-            // 2. Add to NEW class roster
-            var newRosterEntry = new ClassRoster
-            {
-                ClassID = SelectedTransferClass.ClassID,
-                StudentID = _studentToTransfer.StudentID
-            };
-            await db.InsertAsync(newRosterEntry);
-
-            // 3. (Optional) Wipe their grades/attendance from the old class? 
-            // If you want to delete their old scores so they don't clutter the database, add this:
-            var oldScores = await db.Table<Score>().Where(s => s.StudentID == _studentToTransfer.StudentID).ToListAsync();
-            // Note: You would need to filter `oldScores` to only delete ones linked to assessments belonging to ClassId
-
-            // 4. Refresh UI and close modal
             await LoadGradebookData();
             await LoadAttendanceData();
             await LoadRecitationData();
             
-            IsTransferStudentModalOpen = false;
-            _studentToTransfer = null;
-            ShowToastMessage?.Invoke($"Successfully transferred to {SelectedTransferClass.SubjectName}.");
+            CancelTransferStudent();
+            ShowToastMessage?.Invoke($"Successfully transferred {_studentsToTransfer.Count} student(s).");
         }
 
         [RelayCommand]
         public void CancelTransferStudent()
         {
             IsTransferStudentModalOpen = false;
-            _studentToTransfer = null;
+            _studentsToTransfer.Clear();
+            IsAllRosterSelected = false; 
         }
     
     
