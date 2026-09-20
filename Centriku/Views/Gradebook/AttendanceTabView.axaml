@@ -74,8 +74,8 @@
                VerticalAlignment="Top"
                FrozenColumnCount="5">
                <DataGrid.Columns>
-                  <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
-                  <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
+                  <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="Auto" MaxWidth="300"/>
+                  <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="Auto" MaxWidth="300"/>
                   <DataGridTextColumn Header="P" Binding="{Binding TotalP}" SortMemberPath="TotalP" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                   <DataGridTextColumn Header="L" Binding="{Binding TotalL}" SortMemberPath="TotalL" CanUserSort="True" IsReadOnly="True" Width="Auto"/>
                   <DataGridTextColumn Header="A" Binding="{Binding TotalA}" SortMemberPath="TotalA" CanUserSort="True" IsReadOnly="True" Width="Auto"/>

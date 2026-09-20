@@ -233,8 +233,8 @@
                   <!-- Compact, fixed/auto-sized columns -->
                   <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="130"/>
                   <!-- Flexible columns that expand to fill all empty space -->
-                  <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" Width="1.2*" MinWidth="130"/>
-                  <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" Width="1.2*" MinWidth="130"/>
+                  <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True"  MinWidth="130" Width="Auto" MaxWidth="300"/>
+                  <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True"  MinWidth="130" Width="Auto" MaxWidth="300"/>
                   <!-- Dynamic / Computed Grade Columns -->
                   <DataGridTemplateColumn Header="Computed Grade Final,Midterm,Semester" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="140">
                      <DataGridTemplateColumn.CellTemplate>
