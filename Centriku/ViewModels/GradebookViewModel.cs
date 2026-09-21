@@ -96,6 +96,32 @@ namespace Centriku.ViewModels
         #endregion
 
         #region Grid Data Collections
+            private System.Collections.Generic.List<StudentGradeRow> _allGradebookRows = new();
+            [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
+
+            partial void OnSearchQueryChanged(string value)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    GradebookRows = new ObservableCollection<StudentGradeRow>(_allGradebookRows);
+                }
+                else
+                {
+                    var query = value.ToLower() ?? "";
+                    
+                    // Fixed: Added '?.' and '== true' to safely satisfy the compiler's strict null reference warnings
+                    var filtered = _allGradebookRows.Where(r => 
+                        (r.StudentID?.ToLower().Contains(query) == true) ||
+                        (r.StudentInfo.LastName?.ToLower().Contains(query) == true) ||
+                        (r.StudentInfo.FirstName?.ToLower().Contains(query) == true)
+                    ).ToList();
+                    
+                    GradebookRows = new ObservableCollection<StudentGradeRow>(filtered);
+                }
+                TriggerGridRedraw(); 
+            }
+
+            // --- EXISTING COLLECTIONS (Ensuring GradebookRows is only declared ONCE!) ---
             [ObservableProperty] public partial ObservableCollection<StudentGradeRow> GradebookRows { get; set; } = new();   
             [ObservableProperty] public partial ObservableCollection<Assessment> ClassAssessments { get; set; } = new();
             [ObservableProperty] public partial ObservableCollection<AttendanceGridRowViewModel> AttendanceGridRows { get; set; } = new();
@@ -103,7 +129,6 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial ObservableCollection<GradingCategory> AvailableCategories { get; set; } = new();
             [ObservableProperty] public partial GradingCategory? SelectedCategory { get; set; }
             [ObservableProperty] public partial ObservableCollection<CategoryFilterViewModel> CategoryFilters { get; set; } = new();
-        
             private void BuildCategoryFilters()
             {
                 if (ClassAssessments == null) return;
@@ -145,7 +170,7 @@ namespace Centriku.ViewModels
                 if (currentClass == null) return;
 
                 // 2. Prepare the Active Rows for both templates
-                var activeRows = GradebookRows.ToList(); 
+                var activeRows = _allGradebookRows.OrderBy(r => r.StudentInfo.LastName).ToList(); 
                 var activeAttRows = AttendanceGridRows.ToList();
 
                 // 3. Export to NwSSU Class Record (Grades)
@@ -308,7 +333,8 @@ namespace Centriku.ViewModels
                 var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
                 var scores = await db.Table<Score>().Where(s => assessmentIds.Contains(s.AssessmentID)).ToListAsync();
 
-                GradebookRows.Clear();
+                
+                _allGradebookRows.Clear();
                 foreach (var student in enrolled)
                 {
                     var row = new StudentGradeRow(student);
@@ -333,10 +359,11 @@ namespace Centriku.ViewModels
                             row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                     }
-                    GradebookRows.Add(row);
+                    _allGradebookRows.Add(row);
                 }
-                TriggerGridRedraw();
+                OnSearchQueryChanged(SearchQuery); 
                 RecalculateFinalGrades();
+                
             }
             private async Task LoadAttendanceData()
             {

@@ -22,8 +22,15 @@
             </StackPanel>
 
             <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" VerticalAlignment="Bottom" IsVisible="{Binding SelectedGroupAssessment, Converter={x:Static ObjectConverters.IsNotNull}}">
-               <TextBlock Text="{Binding SelectedGroupAssessment.GroupWeight, StringFormat='Weight: {0}% Group / '}" Foreground="{DynamicResource TextMainBrush}" FontSize="12">
-                  <!-- Appends Individual Weight in code or text -->
+               <TextBlock Foreground="{DynamicResource TextMainBrush}" FontSize="12" FontWeight="SemiBold">
+                  <Run Text="Max Score: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
+                  <Run Text="{Binding SelectedGroupAssessment.MaxScore}" Foreground="{DynamicResource PrimaryBrush}"/>
+                  <Run Text="   |   " Foreground="{DynamicResource BorderBrush}" FontWeight="Normal"/>
+                  <Run Text="Weight: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
+                  <Run Text="{Binding SelectedGroupAssessment.GroupWeight}" />
+                  <Run Text="% Group / " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
+                  <Run Text="{Binding SelectedGroupAssessment.IndividualWeight}" />
+                  <Run Text="% Individual" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
                </TextBlock>
             </Border>
          </StackPanel>
@@ -55,10 +62,10 @@
                               
                               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" Margin="0,0,10,0" VerticalAlignment="Center">
                                  <TextBlock Text="Group Score:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                 <NumericUpDown Value="{Binding GroupScore}" Minimum="0" Maximum="{Binding MaxScore}" Width="85" Background="{DynamicResource AppBackground}"/>
+                                 <TextBox Text="{Binding GroupScoreDisplay}" Width="65" Background="{DynamicResource AppBackground}" HorizontalContentAlignment="Center"/>
                               </StackPanel>
 
-                              <Button Grid.Column="2" Command="{Binding DeleteGroupCommand}" Background="Transparent" Padding="4" ToolTip.Tip="Delete Group">
+                              <Button Grid.Column="2" Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).PromptDeleteGroupCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Delete Group">
                                  <TextBlock Text="❌" Foreground="#EF4444" FontSize="12"/>
                               </Button>
                            </Grid>
@@ -73,8 +80,7 @@
                                        <TextBlock Grid.Column="0" Text="{Binding FullName}" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
                                        
                                        <!-- Individual Score Input -->
-                                       <NumericUpDown Grid.Column="1" Value="{Binding IndividualScore}" Minimum="0" Margin="4,0" Background="{DynamicResource AppBackground}"/>
-                                       
+                                       <TextBox Grid.Column="1" Text="{Binding IndividualScoreDisplay}" Margin="4,0" Background="{DynamicResource AppBackground}" HorizontalContentAlignment="Center"/>
                                        <!-- Computed Combined Grade -->
                                        <Border Grid.Column="2" Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="4" Padding="4,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                           <TextBlock Text="{Binding TotalComputedGrade}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource PrimaryBrush}"/>
@@ -96,7 +102,7 @@
             <Grid RowDefinitions="Auto, *">
                <StackPanel Grid.Row="0" Margin="0,0,0,10">
                   <TextBlock Text="Unassigned Students" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextMainBrush}"/>
-                  <TextBlock Text="Click 👤 to create a 1-person solo group." FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                  <TextBlock Text="Click 'Solo' to create a 1-person solo group." FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                </StackPanel>
 
                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -105,8 +111,8 @@
                         <DataTemplate>
                            <Grid ColumnDefinitions="*, Auto" Margin="0,4">
                               <TextBlock Grid.Column="0" Text="{Binding FullName}" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMainBrush}"/>
-                              <Button Grid.Column="1" Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).AddSoloGroupCommand}" CommandParameter="{Binding}" Background="Transparent" ToolTip.Tip="Set as 1-person Solo Group">
-                                 <TextBlock Text="👤 Solo" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" FontWeight="SemiBold"/>
+                              <Button Grid.Column="1" Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).AddSoloGroupCommand}" CommandParameter="{Binding}" Background="Transparent" Margin="0,0,11,0" ToolTip.Tip="Set as 1-person Solo Group">
+                                 <TextBlock Text=" Solo" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" FontWeight="SemiBold"/>
                               </Button>
                            </Grid>
                         </DataTemplate>
@@ -151,6 +157,17 @@
             </Grid>
          </Border>
       </Border>
-
+      <Border IsVisible="{Binding IsDeleteGroupModalOpen}" Background="#B3000000" ZIndex="100" Grid.RowSpan="2">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="420" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel>
+               <TextBlock Text="Delete Group?" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,12"/>
+               <TextBlock Text="{Binding DeleteGroupModalMessage}" FontSize="14" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,24"/>
+               <Grid ColumnDefinitions="*, Auto, Auto">
+                  <Button Grid.Column="1" Command="{Binding CancelDeleteGroupCommand}" Content="Cancel" Background="Transparent" Margin="0,0,10,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmDeleteGroupCommand}" Content="Delete Group" Background="#EF4444" Foreground="White" FontWeight="Bold"/>
+               </Grid>
+            </StackPanel>
+         </Border>
+      </Border>
    </Grid>
 </UserControl>

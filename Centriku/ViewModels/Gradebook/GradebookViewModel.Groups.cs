@@ -23,6 +23,10 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewGroupNameInput { get; set; } = string.Empty;
         [ObservableProperty] public partial ObservableCollection<GroupCandidateStudentViewModel> CandidateMembers { get; set; } = new();
 
+        [ObservableProperty] public partial bool IsDeleteGroupModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string DeleteGroupModalMessage { get; set; } = string.Empty;
+        private GroupCardViewModel? _groupToDelete;
+
         partial void OnSelectedGroupAssessmentChanged(Assessment? value)
         {
             _ = LoadGroupsForSelectedAssessmentAsync();
@@ -88,7 +92,7 @@ namespace Centriku.ViewModels
                     var student = enrolledStudents.FirstOrDefault(s => s.StudentID == m.StudentID);
                     if (student != null)
                     {
-                        card.Members.Add(new GroupMemberRowViewModel(m, student, SelectedGroupAssessment, () => _ = SaveAndSyncGroupGradeAsync(card)));
+                        card.Members.Add(new GroupMemberRowViewModel(m, student, SelectedGroupAssessment, card, () => _ = SaveAndSyncGroupGradeAsync(card)));
                     }
                 }
                 card.UpdateAllMemberTotals();
@@ -109,36 +113,43 @@ namespace Centriku.ViewModels
             double gWeight = SelectedGroupAssessment.GroupWeight / 100.0;
             double iWeight = SelectedGroupAssessment.IndividualWeight / 100.0;
 
-            // 2. Persist individual scores and push to main Score table
+            var membersToUpdate = new List<AssessmentGroupMember>();
+            var scoresToInsert = new List<Score>();
+            var scoresToUpdate = new List<Score>();
+
+            // Fetch all existing scores for this group in ONE query instead of inside a loop
+            var memberIds = groupCard.Members.Select(m => m.StudentID).ToList();
+            var existingScores = await db.Table<Score>()
+                .Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && memberIds.Contains(s.StudentID))
+                .ToListAsync();
+
+            // 2. Prepare all the data in memory instantly
             foreach (var member in groupCard.Members)
             {
-                await db.UpdateAsync(member.DbModel);
+                membersToUpdate.Add(member.DbModel);
 
                 // Math: Student Grade = (GroupScore * GroupWeight) + (IndividualScore * IndividualWeight)
                 double totalEarned = Math.Round((groupCard.GroupScore * gWeight) + (member.IndividualScore * iWeight), 2);
                 totalEarned = Math.Min(SelectedGroupAssessment.MaxScore, Math.Max(0, totalEarned));
 
-                var scoreRecord = await db.Table<Score>()
-                    .Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && s.StudentID == member.StudentID)
-                    .FirstOrDefaultAsync();
+                var scoreRecord = existingScores.FirstOrDefault(s => s.StudentID == member.StudentID);
 
                 if (scoreRecord == null)
                 {
-                    scoreRecord = new Score
+                    scoresToInsert.Add(new Score
                     {
                         AssessmentID = SelectedGroupAssessment.AssessmentID,
                         StudentID = member.StudentID,
                         PointsEarned = totalEarned
-                    };
-                    await db.InsertAsync(scoreRecord);
+                    });
                 }
                 else
                 {
                     scoreRecord.PointsEarned = totalEarned;
-                    await db.UpdateAsync(scoreRecord);
+                    scoresToUpdate.Add(scoreRecord);
                 }
 
-                // Update in-memory Grades sheet row
+                // Update in-memory Grades sheet row instantly for UI responsiveness
                 var gradebookRow = GradebookRows.FirstOrDefault(r => r.StudentID == member.StudentID);
                 if (gradebookRow != null && gradebookRow.Scores.ContainsKey(SelectedGroupAssessment.AssessmentID))
                 {
@@ -146,8 +157,18 @@ namespace Centriku.ViewModels
                 }
             }
 
+            // 3. Execute all DB operations in BULK (Instantaneous)
+            await db.UpdateAllAsync(membersToUpdate);
+            if (scoresToInsert.Any()) await db.InsertAllAsync(scoresToInsert, runInTransaction: true);
+            if (scoresToUpdate.Any()) await db.UpdateAllAsync(scoresToUpdate, runInTransaction: true);
+
             groupCard.UpdateAllMemberTotals();
-            RecalculateFinalGrades();
+
+            // 4. Run the heavy final grade recalculation in the background so the UI doesn't freeze!
+            _ = Task.Run(() => 
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => RecalculateFinalGrades());
+            });
         }
 
         [RelayCommand]
@@ -216,17 +237,19 @@ namespace Centriku.ViewModels
             };
             await db.InsertAsync(newGroup);
 
+            // Add all members to a list and insert them in one single transaction
+            var newMembers = new List<AssessmentGroupMember>();
             foreach (var student in selectedStudents)
             {
-                var member = new AssessmentGroupMember
+                newMembers.Add(new AssessmentGroupMember
                 {
                     GroupID = newGroup.GroupID,
                     AssessmentID = SelectedGroupAssessment.AssessmentID,
                     StudentID = student.Student.StudentID!,
                     IndividualScore = 0
-                };
-                await db.InsertAsync(member);
+                });
             }
+            await db.InsertAllAsync(newMembers, runInTransaction: true);
 
             IsCreatingGroupModalOpen = false;
             await LoadGroupsForSelectedAssessmentAsync();
@@ -242,6 +265,39 @@ namespace Centriku.ViewModels
             await db.DeleteAsync(groupCard.DbModel);
             await LoadGroupsForSelectedAssessmentAsync();
             RecalculateFinalGrades();
+        }
+    
+        [RelayCommand]
+        public void PromptDeleteGroup(GroupCardViewModel groupCard)
+        {
+            if (groupCard == null) return;
+            _groupToDelete = groupCard;
+            DeleteGroupModalMessage = $"Are you sure you want to delete '{groupCard.GroupName}'?\n\nThis will remove the group and permanently erase all scores for its members in this assessment.";
+            IsDeleteGroupModalOpen = true;
+        }
+
+        [RelayCommand]
+        public async Task ConfirmDeleteGroupAsync()
+        {
+            if (_groupToDelete == null) return;
+            var db = new DatabaseService().GetConnection();
+            
+            // Delete members first, then the group
+            await db.Table<AssessmentGroupMember>().Where(m => m.GroupID == _groupToDelete.DbModel.GroupID).DeleteAsync();
+            await db.DeleteAsync(_groupToDelete.DbModel);
+            
+            IsDeleteGroupModalOpen = false;
+            _groupToDelete = null;
+            
+            await LoadGroupsForSelectedAssessmentAsync();
+            RecalculateFinalGrades();
+        }
+
+        [RelayCommand]
+        public void CancelDeleteGroup()
+        {
+            IsDeleteGroupModalOpen = false;
+            _groupToDelete = null;
         }
     }
 
@@ -259,34 +315,57 @@ namespace Centriku.ViewModels
         public AssessmentGroupMember DbModel { get; }
         public Student StudentInfo { get; }
         private readonly Assessment _assessment;
+        private readonly GroupCardViewModel _parentCard;
         private readonly System.Action _onScoreChanged;
 
         public string StudentID => StudentInfo.StudentID ?? "";
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
 
-        public double IndividualScore
+        public double IndividualScore => DbModel.IndividualScore;
+
+        // Safely handles empty inputs and letters, and calculates math instantly
+        public string IndividualScoreDisplay
         {
-            get => DbModel.IndividualScore;
+            get => IndividualScore.ToString("0.##");
             set
             {
-                double val = Math.Min(_assessment.MaxScore, Math.Max(0, value));
-                if (DbModel.IndividualScore != val)
-                {
-                    DbModel.IndividualScore = val;
-                    OnPropertyChanged();
-                    _onScoreChanged?.Invoke();
+                if (string.IsNullOrWhiteSpace(value ?? "")) {
+                    SetIndividualScore(0);
+                } else if (double.TryParse(value, out double numericValue)) {
+                    SetIndividualScore(numericValue);
                 }
+                
+                // ALWAYS tell the UI to refresh its text to match the mathematically clamped value.
+                // This instantly erases letters or numbers over the MaxScore!
+                OnPropertyChanged(nameof(IndividualScoreDisplay));
             }
         }
 
         [ObservableProperty] public partial double TotalComputedGrade { get; set; }
 
-        public GroupMemberRowViewModel(AssessmentGroupMember member, Student student, Assessment assessment, System.Action onScoreChanged)
+        public GroupMemberRowViewModel(AssessmentGroupMember member, Student student, Assessment assessment, GroupCardViewModel parentCard, System.Action onScoreChanged)
         {
             DbModel = member;
             StudentInfo = student;
             _assessment = assessment;
+            _parentCard = parentCard;
             _onScoreChanged = onScoreChanged;
+        }
+
+        private void SetIndividualScore(double value)
+        {
+            double val = Math.Min(_assessment.MaxScore, Math.Max(0, value));
+            if (DbModel.IndividualScore != val)
+            {
+                DbModel.IndividualScore = val;
+                OnPropertyChanged(nameof(IndividualScore));
+                OnPropertyChanged(nameof(IndividualScoreDisplay));
+                
+                // INSTANT CALCULATION: Run the math immediately in memory before the background save happens
+                CalculateTotal(_parentCard.GroupScore); 
+                
+                _onScoreChanged?.Invoke();
+            }
         }
 
         public void CalculateTotal(double groupScore)
@@ -302,38 +381,53 @@ namespace Centriku.ViewModels
         public AssessmentGroup DbModel { get; }
         private readonly Assessment _assessment;
         private readonly Func<GroupCardViewModel, Task> _onSave;
-        private readonly Func<GroupCardViewModel, Task> _onDelete;
 
         public string GroupName => DbModel.GroupName;
         public double MaxScore => _assessment.MaxScore;
 
-        public double GroupScore
+        public double GroupScore => DbModel.GroupScore;
+
+        // Safely handles empty inputs and letters, and calculates math instantly
+        public string GroupScoreDisplay
         {
-            get => DbModel.GroupScore;
+            get => GroupScore.ToString("0.##");
             set
             {
-                double val = Math.Min(_assessment.MaxScore, Math.Max(0, value));
-                if (DbModel.GroupScore != val)
-                {
-                    DbModel.GroupScore = val;
-                    OnPropertyChanged();
-                    UpdateAllMemberTotals();
-                    _ = _onSave(this);
+                if (string.IsNullOrWhiteSpace(value ?? "")) {
+                    SetGroupScore(0);
+                } else if (double.TryParse(value, out double numericValue)) {
+                    SetGroupScore(numericValue);
                 }
+                
+                // ALWAYS tell the UI to refresh its text to match the mathematically clamped value.
+                // This instantly erases letters or numbers over the MaxScore!
+                OnPropertyChanged(nameof(GroupScoreDisplay));
             }
         }
 
         [ObservableProperty] public partial ObservableCollection<GroupMemberRowViewModel> Members { get; set; } = new();
-
-        public IRelayCommand DeleteGroupCommand { get; }
 
         public GroupCardViewModel(AssessmentGroup group, Assessment assessment, Func<GroupCardViewModel, Task> onSave, Func<GroupCardViewModel, Task> onDelete)
         {
             DbModel = group;
             _assessment = assessment;
             _onSave = onSave;
-            _onDelete = onDelete;
-            DeleteGroupCommand = new RelayCommand(async () => await _onDelete(this));
+        }
+
+        private void SetGroupScore(double value)
+        {
+            double val = Math.Min(_assessment.MaxScore, Math.Max(0, value));
+            if (DbModel.GroupScore != val)
+            {
+                DbModel.GroupScore = val;
+                OnPropertyChanged(nameof(GroupScore));
+                OnPropertyChanged(nameof(GroupScoreDisplay));
+                
+                // INSTANT CALCULATION: Update all members' math immediately in memory
+                UpdateAllMemberTotals(); 
+                
+                _ = _onSave(this);
+            }
         }
 
         public void UpdateAllMemberTotals()

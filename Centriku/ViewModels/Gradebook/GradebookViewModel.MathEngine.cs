@@ -85,7 +85,7 @@ namespace Centriku.ViewModels
          return (finalTermGrade, tip.ToString().TrimEnd());
       }
 
-      public void RecalculateFinalGrades() => RecalculateFinalGradesForList(GradebookRows, AttendanceGridRows);
+      public void RecalculateFinalGrades() => RecalculateFinalGradesForList(_allGradebookRows, AttendanceGridRows);
 
       public void RecalculateFinalGradesForList(System.Collections.Generic.IEnumerable<StudentGradeRow> targetGradeRows, System.Collections.Generic.IEnumerable<AttendanceGridRowViewModel> targetAttRows)
       {

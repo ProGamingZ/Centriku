@@ -30,7 +30,7 @@ namespace Centriku.ViewModels
          NewAssessmentMaxScore = assessment.MaxScore;
          NewAssessmentDate = assessment.DateGiven;
          SelectedCategory = AvailableCategories.FirstOrDefault(c => c.Name == assessment.Category);
-         NewAssessmentPeriod = assessment.GradingPeriod ?? "Midterm"; 
+         NewAssessmentPeriod = string.IsNullOrWhiteSpace(assessment.GradingPeriod) ? "Midterm" : assessment.GradingPeriod;
          IsAddingAssessment = true;
          IsEnrolling = false; 
          NewAssessmentType = string.IsNullOrEmpty(assessment.AssessmentType) ? "Solo" : assessment.AssessmentType;
