@@ -208,6 +208,18 @@
                            <TextBlock Text="Max Score*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
                            <NumericUpDown Value="{Binding NewAssessmentMaxScore}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
                         </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="130">
+                           <TextBlock Text="Format*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <ComboBox ItemsSource="{Binding AssessmentTypeOptions}" SelectedItem="{Binding NewAssessmentType}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="120" IsVisible="{Binding IsGroupAssessmentSelected}">
+                           <TextBlock Text="Group Weight %" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <NumericUpDown Value="{Binding NewAssessmentGroupWeight}" Minimum="0" Maximum="100" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,15,15" MinWidth="120" IsVisible="{Binding IsGroupAssessmentSelected}">
+                           <TextBlock Text="Individual %" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                           <NumericUpDown Value="{Binding NewAssessmentIndividualWeight}" Minimum="0" Maximum="100" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
                         <StackPanel Margin="0,0,15,15" MinWidth="150">
                            <TextBlock Text="Date Given" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
                            <CalendarDatePicker SelectedDate="{Binding NewAssessmentDate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>

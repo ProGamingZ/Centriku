@@ -11,6 +11,10 @@
             <gb:GradesTabView DataContext="{Binding}" />
         </TabItem>
 
+        <TabItem Header="Groups" FontSize="16" FontWeight="SemiBold">
+            <gb:GroupsTabView DataContext="{Binding}" />
+        </TabItem>
+
         <TabItem Header="Attendance" FontSize="16" FontWeight="SemiBold">
             <gb:AttendanceTabView DataContext="{Binding}" />
         </TabItem>

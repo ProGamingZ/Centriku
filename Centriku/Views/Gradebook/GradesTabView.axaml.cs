@@ -148,6 +148,7 @@ namespace Centriku.Views.Gradebook
                   buttonPanel.Children.Add(delBtn);
                   headerPanel.Children.Add(buttonPanel);
 
+                  bool isGroupAssessment = assessment.AssessmentType == "Group/Pair";
                   var newColumn = new DataGridTemplateColumn
                   {
                      Header = headerPanel,
@@ -155,7 +156,7 @@ namespace Centriku.Views.Gradebook
                      MaxWidth = 250,
                      CanUserSort = true,
                      SortMemberPath = $"Scores[{assessment.AssessmentID}].PointsEarned",
-                     IsReadOnly = false, 
+                     IsReadOnly = isGroupAssessment, 
 
                      CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                      {

@@ -264,6 +264,7 @@ namespace Centriku.ViewModels
                 await LoadCategories();
                 await LoadAttendanceData();
                 await LoadRecitationData();
+                await LoadGroupsDataAsync();
             }
 
             public async Task RefreshRostersAsync()
@@ -271,6 +272,7 @@ namespace Centriku.ViewModels
                 await LoadGradebookData();
                 await LoadAttendanceData();
                 await LoadRecitationData();
+                await LoadGroupsDataAsync();
             }
             private async Task LoadGradebookData()
             {
