@@ -12,6 +12,16 @@ namespace Centriku.Views.Directory
             InitializeComponent();
         }
 
+        // NEW: Triggers the preview table to load its data from SQLite when this tab is opened
+        protected override async void OnDataContextChanged(System.EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+            if (DataContext is DirectoryViewModel vm)
+            {
+                await vm.LoadImportSettingsPreviewAsync();
+            }
+        }
+
         private async void OnImportCsvClicked(object? sender, RoutedEventArgs e)
         {
             var topLevel = TopLevel.GetTopLevel(this);

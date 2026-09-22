@@ -142,19 +142,20 @@ namespace Centriku.ViewModels.Settings
          CurrentSettings.GradeLevelColumnIndex = GetColIndex("Year"); CurrentSettings.ProgramColumnIndex = GetColIndex("Program");
          CurrentSettings.SectionNameColumnIndex = GetColIndex("Section"); CurrentSettings.EnrollmentStatusColumnIndex = GetColIndex("Status");
 
-         Col1Header = _col1Selected; Col1Visible = _col1Selected != "Ignore";
-         Col2Header = _col2Selected; Col2Visible = _col2Selected != "Ignore";
-         Col3Header = _col3Selected; Col3Visible = _col3Selected != "Ignore";
-         Col4Header = _col4Selected; Col4Visible = _col4Selected != "Ignore";
-         Col5Header = _col5Selected; Col5Visible = _col5Selected != "Ignore";
-         Col6Header = _col6Selected; Col6Visible = _col6Selected != "Ignore";
-         Col7Header = _col7Selected; Col7Visible = _col7Selected != "Ignore";
-         Col8Header = _col8Selected; Col8Visible = _col8Selected != "Ignore";
-         Col9Header = _col9Selected; Col9Visible = _col9Selected != "Ignore";
-         Col10Header = _col10Selected; Col10Visible = _col10Selected != "Ignore";
+         Col1Header = _col1Selected; Col1Visible = true; // Always visible
+         Col2Header = _col2Selected; Col2Visible = true;
+         Col3Header = _col3Selected; Col3Visible = true;
+         Col4Header = _col4Selected; Col4Visible = true;
+         Col5Header = _col5Selected; Col5Visible = true;
+         Col6Header = _col6Selected; Col6Visible = true;
+         Col7Header = _col7Selected; Col7Visible = true;
+         Col8Header = _col8Selected; Col8Visible = true;
+         Col9Header = _col9Selected; Col9Visible = true;
+         Col10Header = _col10Selected; Col10Visible = true;
 
          string GetPreview(string field)
          {
+               if (field == "Ignore") return "[ Ignored ]"; // Distinct text for ignored columns
                if (field == "Gender") return DefaultGender == "None" ? "--" : DefaultGender;
                if (field == "Year") return DefaultGradeLevel;
                if (field == "Program") return DefaultProgram;

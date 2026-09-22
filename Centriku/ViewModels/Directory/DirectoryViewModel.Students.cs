@@ -21,7 +21,52 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial string StatusColor { get; set; } = "#FFFFFF";
             public StagedStudent(Centriku.Models.Student student) { DbModel = student; }
         }
+            [ObservableProperty] public partial ObservableCollection<Centriku.ViewModels.Settings.PreviewStudentRow> CurrentSettingsPreview { get; set; } = new();
+            [ObservableProperty] public partial string Col1H { get; set; } = ""; [ObservableProperty] public partial string Col2H { get; set; } = "";
+            [ObservableProperty] public partial string Col3H { get; set; } = ""; [ObservableProperty] public partial string Col4H { get; set; } = "";
+            [ObservableProperty] public partial string Col5H { get; set; } = ""; [ObservableProperty] public partial string Col6H { get; set; } = "";
+            [ObservableProperty] public partial string Col7H { get; set; } = ""; [ObservableProperty] public partial string Col8H { get; set; } = "";
+            [ObservableProperty] public partial string Col9H { get; set; } = ""; [ObservableProperty] public partial string Col10H { get; set; } = "";
 
+            public async Task LoadImportSettingsPreviewAsync()
+            {
+                var db = new Centriku.Services.DatabaseService().GetConnection();
+                var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
+
+                string[] headers = new string[10];
+                for (int i = 0; i < 10; i++) headers[i] = "Ignore";
+
+                void SetHeader(int index, string name) { if (index >= 0 && index < 10) headers[index] = name; }
+                
+                SetHeader(settings.StudentIdColumnIndex, "Student ID"); SetHeader(settings.LastNameColumnIndex, "Last Name");
+                SetHeader(settings.FirstNameColumnIndex, "First Name"); SetHeader(settings.MiddleNameColumnIndex, "Middle Name");
+                SetHeader(settings.SuffixColumnIndex, "Suffix"); SetHeader(settings.GenderColumnIndex, "Gender");
+                SetHeader(settings.GradeLevelColumnIndex, "Year"); SetHeader(settings.ProgramColumnIndex, "Program");
+                SetHeader(settings.SectionNameColumnIndex, "Section"); SetHeader(settings.EnrollmentStatusColumnIndex, "Status");
+
+                Col1H = headers[0]; Col2H = headers[1]; Col3H = headers[2]; Col4H = headers[3]; Col5H = headers[4];
+                Col6H = headers[5]; Col7H = headers[6]; Col8H = headers[7]; Col9H = headers[8]; Col10H = headers[9];
+
+                string GetPreview(string field)
+                {
+                    if (field == "Ignore") return "[ Ignored ]";
+                    if (field == "Gender") return settings.DefaultGender == "None" ? "--" : settings.DefaultGender;
+                    if (field == "Year") return settings.DefaultGradeLevel;
+                    if (field == "Program") return settings.DefaultProgram;
+                    if (field == "Section") return settings.DefaultSectionName;
+                    if (field == "Status") return settings.DefaultEnrollmentStatus;
+                    return "--"; 
+                }
+
+                var singleRow = new Centriku.ViewModels.Settings.PreviewStudentRow {
+                    Col1Text = GetPreview(Col1H), Col2Text = GetPreview(Col2H), Col3Text = GetPreview(Col3H),
+                    Col4Text = GetPreview(Col4H), Col5Text = GetPreview(Col5H), Col6Text = GetPreview(Col6H),
+                    Col7Text = GetPreview(Col7H), Col8Text = GetPreview(Col8H), Col9Text = GetPreview(Col9H),
+                    Col10Text = GetPreview(Col10H)
+                };
+                
+                CurrentSettingsPreview = new ObservableCollection<Centriku.ViewModels.Settings.PreviewStudentRow> { singleRow };
+            }
         private List<StudentRowViewModel> _allStudents = [];
         private List<StudentRowViewModel> _allArchivedStudents = [];
         [ObservableProperty] public partial ObservableCollection<StudentRowViewModel> DisplayedStudents { get; set; } = new();
