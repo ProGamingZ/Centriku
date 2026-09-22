@@ -181,17 +181,10 @@ namespace Centriku.Views.Gradebook
 
         private void OnWheelResetRequested()
         {
-            // Reset our tracking math
             _currentAngle = 0;
+            _wheelTransform?.Angle = 0;
             
-            // If the wheel transform exists, reset it to 0.
-            // Because of the 3-second DoubleTransition in the XAML, 
-            // this will create a satisfying "rewind" animation back to the start!
-            if (_wheelTransform != null)
-            {
-                _wheelTransform.Angle = 0;
-            }
-
+            // Force redraw instantly
             Dispatcher.UIThread.Post(DrawWheel);
         }
     }

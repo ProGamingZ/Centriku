@@ -139,6 +139,8 @@ namespace Centriku.ViewModels
             await LoadGradebookData(); 
             await LoadAttendanceData();
             await LoadRecitationData(); 
+            await LoadGroupsDataAsync();
+            ShowToastMessage?.Invoke($"Successfully enrolled {selectedStudents.Count} student(s).");
         }
 
         // --- Modal Control Methods ---
@@ -158,16 +160,36 @@ namespace Centriku.ViewModels
             if (!_studentsToRemove.Any()) return;
             var db = new DatabaseService().GetConnection();
             
+            // Get all group assessments for this class so we know which groups to clean up
+            var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
+            var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
+
             foreach (var student in _studentsToRemove)
             {
+                // 1. Remove from Main Roster
                 var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
                 if (rosterEntry != null) await db.DeleteAsync(rosterEntry);
+
+                // 2. Remove from any Groups Tab projects in this class!
+                if (assessmentIds.Count != 0)
+                {
+                    var groupMemberships = await db.Table<AssessmentGroupMember>()
+                        .Where(m => m.StudentID == student.StudentID && assessmentIds.Contains(m.AssessmentID))
+                        .ToListAsync();
+                    
+                    foreach (var membership in groupMemberships)
+                    {
+                        await db.DeleteAsync(membership);
+                    }
+                }
             }
             
             await LoadGradebookData();
             await LoadAttendanceData();
             await LoadRecitationData();
+            await LoadGroupsDataAsync(); 
             CancelRemoveStudent(); 
+            ShowToastMessage?.Invoke($"Successfully unenrolled {_studentsToRemove.Count} student(s).");
         }
 
         [RelayCommand]
@@ -203,17 +225,35 @@ namespace Centriku.ViewModels
             if (!_studentsToTransfer.Any() || SelectedTransferClass == null) return;
             var db = new DatabaseService().GetConnection();
             
+            var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
+            var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
+
             foreach (var student in _studentsToTransfer)
             {
+                // 1. Swap Roster
                 var oldEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
                 if (oldEntry != null) await db.DeleteAsync(oldEntry);
 
                 await db.InsertAsync(new ClassRoster { ClassID = SelectedTransferClass.ClassID, StudentID = student.StudentID });
+
+                // 2. Remove from any Groups Tab projects in the OLD class
+                if (assessmentIds.Any())
+                {
+                    var groupMemberships = await db.Table<AssessmentGroupMember>()
+                        .Where(m => m.StudentID == student.StudentID && assessmentIds.Contains(m.AssessmentID))
+                        .ToListAsync();
+                    
+                    foreach (var membership in groupMemberships)
+                    {
+                        await db.DeleteAsync(membership);
+                    }
+                }
             }
 
             await LoadGradebookData();
             await LoadAttendanceData();
             await LoadRecitationData();
+            await LoadGroupsDataAsync(); // Refresh the Groups Tab!
             
             CancelTransferStudent();
             ShowToastMessage?.Invoke($"Successfully transferred {_studentsToTransfer.Count} student(s).");

@@ -54,6 +54,7 @@ namespace Centriku.ViewModels
                   r.Date = targetDate;
                   await db.UpdateAsync(r);
                }
+               ShowToastMessage?.Invoke($"Successfully moved roll call to {targetDate:MMM dd, yyyy}.");
             }
             else
             {
@@ -71,6 +72,7 @@ namespace Centriku.ViewModels
                {
                   await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
                }
+               ShowToastMessage?.Invoke($"Successfully created roll call for {targetDate:MMM dd, yyyy}.");
             }
 
             ResetRollCallForm();
@@ -97,6 +99,7 @@ namespace Centriku.ViewModels
             }
             
             await LoadAttendanceData(); // Refresh the grid!
+            ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
          }
          private void ResetRollCallForm()
       {

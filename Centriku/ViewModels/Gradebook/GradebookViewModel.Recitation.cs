@@ -136,6 +136,7 @@ namespace Centriku.ViewModels
             await LoadRecitationData();
             // Tell the UI to physically spin the wheel back to the start!
             OnWheelResetRequested?.Invoke();
+            ShowToastMessage?.Invoke("Class reset! All students returned to the wheel.");
         }
 
         [RelayCommand]

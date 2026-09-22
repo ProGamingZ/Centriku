@@ -253,6 +253,7 @@ namespace Centriku.ViewModels
 
             IsCreatingGroupModalOpen = false;
             await LoadGroupsForSelectedAssessmentAsync();
+            ShowToastMessage?.Invoke($"Group '{newGroup.GroupName}' created successfully with {newMembers.Count} members.");
         }
 
         [RelayCommand]
@@ -291,6 +292,7 @@ namespace Centriku.ViewModels
             
             await LoadGroupsForSelectedAssessmentAsync();
             RecalculateFinalGrades();
+            ShowToastMessage?.Invoke("Group deleted successfully.");
         }
 
         [RelayCommand]
