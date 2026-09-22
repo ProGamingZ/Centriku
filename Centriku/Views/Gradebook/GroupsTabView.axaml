@@ -36,6 +36,7 @@
          </StackPanel>
 
          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
+            <Button Command="{Binding OpenCopyGroupsModalCommand}" Content="Copy Groups" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="16,8"/>
             <Button Command="{Binding OpenCreateGroupModalCommand}" Content="+ Create Group" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="16,8"/>
          </StackPanel>
       </Grid>
@@ -206,6 +207,29 @@
                   <Button Grid.Column="2" Command="{Binding ConfirmEditGroupCommand}" Content="Save Changes" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
                </Grid>
             </Grid>
+         </Border>
+      </Border>
+      <Border IsVisible="{Binding IsCopyGroupsModalOpen}" Background="#B3000000" ZIndex="100" Grid.RowSpan="2">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="24" Width="440" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel>
+               <TextBlock Text="Copy Groups" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,12"/>
+               
+               <TextBlock Text="Select a previous assessment. All of its groups and members will be cloned into this assessment (grades will be reset to 0)." TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,20"/>
+
+               <TextBlock Text="Copy From:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+               <ComboBox ItemsSource="{Binding CopyFromAssessments}" SelectedItem="{Binding SelectedCopyFromAssessment}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}" Margin="0,0,0,25">
+                  <ComboBox.ItemTemplate>
+                     <DataTemplate>
+                        <TextBlock Text="{Binding Title}"/>
+                     </DataTemplate>
+                  </ComboBox.ItemTemplate>
+               </ComboBox>
+
+               <Grid ColumnDefinitions="*, Auto, Auto">
+                  <Button Grid.Column="1" Command="{Binding CancelCopyGroupsCommand}" Content="Cancel" Background="Transparent" Margin="0,0,10,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmCopyGroupsCommand}" Content="Copy Now" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
+               </Grid>
+            </StackPanel>
          </Border>
       </Border>
    </Grid>
