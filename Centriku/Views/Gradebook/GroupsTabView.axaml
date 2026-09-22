@@ -65,9 +65,16 @@
                                  <TextBox Text="{Binding GroupScoreDisplay}" Width="65" Background="{DynamicResource AppBackground}" HorizontalContentAlignment="Center"/>
                               </StackPanel>
 
-                              <Button Grid.Column="2" Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).PromptDeleteGroupCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Delete Group">
-                                 <TextBlock Text="❌" Foreground="#EF4444" FontSize="12"/>
-                              </Button>
+                              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                 <!-- Edit Button -->
+                                 <Button Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).OpenEditGroupModalCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Edit Group">
+                                    <TextBlock Text="✏️" FontSize="12"/>
+                                 </Button>
+                                 <!-- Delete Button -->
+                                 <Button Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).PromptDeleteGroupCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Delete Group">
+                                    <TextBlock Text="❌" Foreground="#EF4444" FontSize="12"/>
+                                 </Button>
+                              </StackPanel>
                            </Grid>
 
                            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
@@ -167,6 +174,38 @@
                   <Button Grid.Column="2" Command="{Binding ConfirmDeleteGroupCommand}" Content="Delete Group" Background="#EF4444" Foreground="White" FontWeight="Bold"/>
                </Grid>
             </StackPanel>
+         </Border>
+      </Border>
+      <Border IsVisible="{Binding IsEditingGroupModalOpen}" Background="#B3000000" ZIndex="100" Grid.RowSpan="2">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="24" Width="440" MaxHeight="520" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Grid RowDefinitions="Auto, Auto, *, Auto">
+               <TextBlock Grid.Row="0" Text="Edit Group" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,12"/>
+               
+               <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                  <TextBlock Text="Group Name" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                  <TextBox Text="{Binding EditGroupNameInput}" Background="{DynamicResource AppBackground}"/>
+               </StackPanel>
+
+               <TextBlock Grid.Row="1" Text="Select Members:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,65,0,0"/>
+
+               <!-- Student Selection Checkboxes -->
+               <ScrollViewer Grid.Row="2" Margin="0,10,0,16" VerticalScrollBarVisibility="Auto">
+                  <ItemsControl ItemsSource="{Binding EditCandidateMembers}">
+                     <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                           <CheckBox IsChecked="{Binding IsSelected}" Margin="0,2">
+                              <TextBlock Text="{Binding FullName}" FontSize="12" Foreground="{DynamicResource TextMainBrush}"/>
+                           </CheckBox>
+                        </DataTemplate>
+                     </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+               </ScrollViewer>
+
+               <Grid Grid.Row="3" ColumnDefinitions="*, Auto, Auto">
+                  <Button Grid.Column="1" Command="{Binding CancelEditGroupCommand}" Content="Cancel" Background="Transparent" Margin="0,0,10,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmEditGroupCommand}" Content="Save Changes" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
+               </Grid>
+            </Grid>
          </Border>
       </Border>
    </Grid>

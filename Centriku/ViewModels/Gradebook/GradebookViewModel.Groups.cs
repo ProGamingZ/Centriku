@@ -26,6 +26,10 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsDeleteGroupModalOpen { get; set; } = false;
         [ObservableProperty] public partial string DeleteGroupModalMessage { get; set; } = string.Empty;
         private GroupCardViewModel? _groupToDelete;
+        [ObservableProperty] public partial bool IsEditingGroupModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string EditGroupNameInput { get; set; } = string.Empty;
+        [ObservableProperty] public partial ObservableCollection<GroupCandidateStudentViewModel> EditCandidateMembers { get; set; } = new();
+        private GroupCardViewModel? _groupToEdit;
 
         partial void OnSelectedGroupAssessmentChanged(Assessment? value)
         {
@@ -40,16 +44,22 @@ namespace Centriku.ViewModels
             await db.CreateTableAsync<AssessmentGroupMember>();
 
             var groupAssessments = ClassAssessments.Where(a => a.AssessmentType == "Group/Pair").ToList();
+            var previousSelectedId = SelectedGroupAssessment?.AssessmentID;
+            
             AvailableGroupAssessments = new ObservableCollection<Assessment>(groupAssessments);
 
-            if (SelectedGroupAssessment == null || !AvailableGroupAssessments.Any(a => a.AssessmentID == SelectedGroupAssessment.AssessmentID))
+            if (previousSelectedId.HasValue)
             {
-                SelectedGroupAssessment = AvailableGroupAssessments.FirstOrDefault();
+                // Find the matching object in the NEW list and re-select it
+                SelectedGroupAssessment = AvailableGroupAssessments.FirstOrDefault(a => a.AssessmentID == previousSelectedId.Value) 
+                                          ?? AvailableGroupAssessments.FirstOrDefault();
             }
             else
             {
-                await LoadGroupsForSelectedAssessmentAsync();
+                SelectedGroupAssessment = AvailableGroupAssessments.FirstOrDefault();
             }
+            
+            await LoadGroupsForSelectedAssessmentAsync();
         }
 
         public async Task LoadGroupsForSelectedAssessmentAsync()
@@ -300,6 +310,94 @@ namespace Centriku.ViewModels
         {
             IsDeleteGroupModalOpen = false;
             _groupToDelete = null;
+        }
+
+        [RelayCommand]
+        public void OpenEditGroupModal(GroupCardViewModel groupCard)
+        {
+            if (groupCard == null) return;
+            _groupToEdit = groupCard;
+            EditGroupNameInput = groupCard.GroupName;
+
+            var candidates = new List<GroupCandidateStudentViewModel>();
+            
+            // 1. Add current members (Checked)
+            foreach (var member in groupCard.Members)
+            {
+                candidates.Add(new GroupCandidateStudentViewModel(member.StudentInfo) { IsSelected = true });
+            }
+
+            // 2. Add unassigned students (Unchecked)
+            foreach (var unassigned in UnassignedStudents)
+            {
+                candidates.Add(new GroupCandidateStudentViewModel(unassigned.Student) { IsSelected = false });
+            }
+
+            // Sort alphabetically for convenience
+            EditCandidateMembers = new ObservableCollection<GroupCandidateStudentViewModel>(candidates.OrderBy(c => c.Student.LastName));
+            
+            IsEditingGroupModalOpen = true;
+        }
+
+        [RelayCommand]
+        public async Task ConfirmEditGroupAsync()
+        {
+            if (_groupToEdit == null || string.IsNullOrWhiteSpace(EditGroupNameInput) || SelectedGroupAssessment == null) return;
+            
+            var selectedStudents = EditCandidateMembers.Where(m => m.IsSelected).ToList();
+            if (!selectedStudents.Any())
+            {
+                ShowToastMessage?.Invoke("A group must have at least one member.");
+                return;
+            }
+
+            var db = new DatabaseService().GetConnection();
+            
+            // 1. Update Group Name
+            _groupToEdit.DbModel.GroupName = EditGroupNameInput.Trim();
+            await db.UpdateAsync(_groupToEdit.DbModel);
+
+            var existingMemberIds = _groupToEdit.Members.Select(m => m.StudentID).ToList();
+            var newSelectedIds = selectedStudents.Select(s => s.StudentID).ToList();
+
+            // 2. Find members to REMOVE
+            var membersToRemove = _groupToEdit.Members.Where(m => !newSelectedIds.Contains(m.StudentID)).ToList();
+            foreach (var m in membersToRemove)
+            {
+                await db.DeleteAsync(m.DbModel);
+                
+                // Erase their Group assessment score from the main Grades tab
+                var score = await db.Table<Score>().Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && s.StudentID == m.StudentID).FirstOrDefaultAsync();
+                if (score != null) await db.DeleteAsync(score);
+            }
+
+            // 3. Find members to ADD
+            var membersToAdd = selectedStudents.Where(s => !existingMemberIds.Contains(s.StudentID)).ToList();
+            foreach (var s in membersToAdd)
+            {
+                var newMember = new AssessmentGroupMember
+                {
+                    GroupID = _groupToEdit.DbModel.GroupID,
+                    AssessmentID = SelectedGroupAssessment.AssessmentID,
+                    StudentID = s.StudentID,
+                    IndividualScore = 0
+                };
+                await db.InsertAsync(newMember);
+            }
+
+            IsEditingGroupModalOpen = false;
+            _groupToEdit = null;
+            
+            await LoadGroupsForSelectedAssessmentAsync();
+            RecalculateFinalGrades();
+            ShowToastMessage?.Invoke("Group updated successfully.");
+        }
+
+        [RelayCommand]
+        public void CancelEditGroup()
+        {
+            IsEditingGroupModalOpen = false;
+            _groupToEdit = null;
         }
     }
 

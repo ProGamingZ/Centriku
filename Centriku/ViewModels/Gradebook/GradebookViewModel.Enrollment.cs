@@ -140,7 +140,11 @@ namespace Centriku.ViewModels
             await LoadAttendanceData();
             await LoadRecitationData(); 
             await LoadGroupsDataAsync();
-            ShowToastMessage?.Invoke($"Successfully enrolled {selectedStudents.Count} student(s).");
+            int count = selectedStudents.Count;
+            string notificationMessage = count == 1 
+                ? $"Successfully enrolled {selectedStudents[0].DbModel.FirstName} {selectedStudents[0].DbModel.LastName}." 
+                : $"Successfully enrolled {count} students.";
+            ShowToastMessage?.Invoke(notificationMessage);
         }
 
         // --- Modal Control Methods ---
@@ -188,8 +192,14 @@ namespace Centriku.ViewModels
             await LoadAttendanceData();
             await LoadRecitationData();
             await LoadGroupsDataAsync(); 
+            int count = _studentsToRemove.Count;
+            string notificationMessage = count == 1 
+                ? $"Successfully unenrolled {_studentsToRemove[0].FirstName} {_studentsToRemove[0].LastName}." 
+                : $"Successfully unenrolled {count} students.";
+            // 2. Clear the list and close modal
             CancelRemoveStudent(); 
-            ShowToastMessage?.Invoke($"Successfully unenrolled {_studentsToRemove.Count} student(s).");
+            // 3. Show the message
+            ShowToastMessage?.Invoke(notificationMessage);
         }
 
         [RelayCommand]
@@ -255,8 +265,14 @@ namespace Centriku.ViewModels
             await LoadRecitationData();
             await LoadGroupsDataAsync(); // Refresh the Groups Tab!
             
+            int count = _studentsToTransfer.Count;
+            string notificationMessage = count == 1 
+                ? $"Successfully transferred {_studentsToTransfer[0].FirstName} {_studentsToTransfer[0].LastName}." 
+                : $"Successfully transferred {count} students.";
+            // 2. Clear the list and close modal
             CancelTransferStudent();
-            ShowToastMessage?.Invoke($"Successfully transferred {_studentsToTransfer.Count} student(s).");
+            // 3. Show the message
+            ShowToastMessage?.Invoke(notificationMessage);
         }
 
         [RelayCommand]
