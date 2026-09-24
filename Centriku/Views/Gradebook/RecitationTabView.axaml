@@ -12,7 +12,7 @@
             <!-- LEFT COLUMN: Remaining Students -->
             <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" MinHeight="450" MaxHeight="650" VerticalAlignment="Top">
                 <Grid RowDefinitions="Auto, *">
-                    <TextBlock Grid.Row="0" Text="Remaining Students" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <TextBlock Grid.Row="0" Text="{Binding RemainingCounterText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
                     <ListBox Grid.Row="1" ItemsSource="{Binding RemainingStudents}" Background="Transparent" BorderThickness="0">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -47,19 +47,16 @@
                 <WrapPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,15">
                     <Button Command="{Binding SpinRecitationCommand}" Content="SPIN WHEEL" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="25,12" CornerRadius="8" FontSize="15" Margin="0,0,10,10"/>
                     <Button Command="{Binding SkipRecitationCommand}" Content="Skip Animation" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="18,12" CornerRadius="8" FontSize="13" Margin="0,0,10,10"/>
+                    
+                    <Button Command="{Binding OpenManageQuestionsModalCommand}" Content="Manage Questions" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="15,12" CornerRadius="8" FontSize="13" Margin="0,0,10,10"/>
                     <Button Command="{Binding ResetRecitationCommand}" Content="Reset Class" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" Padding="15,12" Margin="0,0,0,10"/>
                 </WrapPanel>
-
-                <!-- Chosen Winner Display -->
-                <Border Grid.Row="2" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="15,20" HorizontalAlignment="Center" MinWidth="300" MaxWidth="450">
-                    <TextBlock Text="{Binding RecitationWinnerName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
-                </Border>
             </Grid>
 
             <!-- RIGHT COLUMN: Chosen Students -->
             <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" MinHeight="450" MaxHeight="650" VerticalAlignment="Top">
                 <Grid RowDefinitions="Auto, *">
-                    <TextBlock Grid.Row="0" Text="Chosen Students" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <TextBlock Grid.Row="0" Text="{Binding ChosenCounterText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
                     <ListBox Grid.Row="1" ItemsSource="{Binding ChosenStudents}" Background="Transparent" BorderThickness="0">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -75,6 +72,103 @@
                 </Grid>
             </Border>
             
+            <!-- 1. GAMIFIED FLASHCARD WINNER MODAL -->
+            <Border IsVisible="{Binding IsWinnerModalOpen}" Background="#E6000000" ZIndex="100" Grid.ColumnSpan="3">
+                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="16" Padding="40" MaxWidth="700" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                    <StackPanel Spacing="20">
+                        <TextBlock Text="🎯 WINNER" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding WinnerModalName}" FontSize="42" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                        
+                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10"/>
+                        
+                        <!-- Question -->
+                        <TextBlock Text="QUESTION:" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding WinnerModalQuestion}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                        
+                        <!-- Answer Toggle Section -->
+                        <StackPanel Spacing="10">
+                            <!-- Show this button if the answer is hidden -->
+                            <Button Command="{Binding ToggleAnswerVisibilityCommand}" Content="Reveal Answer" IsVisible="{Binding !IsAnswerRevealed}" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" CornerRadius="8" HorizontalAlignment="Center"/>
+                            
+                            <!-- Show this box if the answer is revealed -->
+                            <Border IsVisible="{Binding IsAnswerRevealed}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                                <StackPanel>
+                                    <TextBlock Text="ANSWER:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                    <TextBlock Text="{Binding WinnerModalAnswer}" FontSize="20" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        
+                        <!-- Close Button -->
+                        <Button Command="{Binding CloseWinnerModalCommand}" Content="Close &amp; Continue" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="30,15" CornerRadius="8" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Border>
+
+            <!-- 2. QUESTION MANAGER MODAL -->
+            <Border IsVisible="{Binding IsManageQuestionsModalOpen}" Background="#B3000000" ZIndex="100" Grid.ColumnSpan="3">
+                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="700" MaxHeight="750" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
+                        
+                        <!-- Header -->
+                        <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                            <TextBlock Grid.Column="0" Text="Manage Recitation Questions" FontWeight="Bold" FontSize="20" Foreground="{DynamicResource TextMainBrush}"/>
+                            <Button Grid.Column="1" Command="{Binding CloseManageQuestionsModalCommand}" Content="✕" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontSize="18" Padding="5"/>
+                        </Grid>
+                        
+                        <!-- Global Toggles -->
+                        <Border Grid.Row="1" Background="{DynamicResource AppBackground}" CornerRadius="8" Padding="15" Margin="0,15">
+                            <StackPanel Orientation="Horizontal" Spacing="30">
+                                <CheckBox IsChecked="{Binding AllowRepeatQuestions}">
+                                    <TextBlock Text="Allow Repeat Questions (Endless Mode)" FontWeight="SemiBold"/>
+                                </CheckBox>
+                                <CheckBox IsChecked="{Binding ShuffleQuestions}">
+                                    <TextBlock Text="Shuffle Questions Randomly" FontWeight="SemiBold"/>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Create Question Form -->
+                        <Grid Grid.Row="2" ColumnDefinitions="*,*,Auto" Margin="0,0,0,15">
+                            <TextBox Grid.Column="0" Text="{Binding NewQuestionInput}" PlaceholderText="Type a new question..." Background="{DynamicResource AppBackground}" Margin="0,0,10,0"/>
+                            <TextBox Grid.Column="1" Text="{Binding NewAnswerInput}" PlaceholderText="Type the answer (optional)..." Background="{DynamicResource AppBackground}" Margin="0,0,10,0"/>
+                            <Button Grid.Column="2" Command="{Binding SaveNewQuestionCommand}" Content="Add" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="15,8"/>
+                        </Grid>
+
+                        <!-- Question List -->
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15">
+                            <ItemsControl ItemsSource="{Binding QuestionBank}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                                
+                                                <!-- Include/Exclude Toggle -->
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsIncluded}" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ToggleQuestionIncludedCommand}" CommandParameter="{Binding}" Margin="0,0,15,0" ToolTip.Tip="Include in wheel spins"/>
+                                                
+                                                <!-- Text -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding QuestionText}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AnswerText}" Foreground="#22C55E" FontSize="12" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Delete Button -->
+                                                <Button Grid.Column="2" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" VerticalAlignment="Center" ToolTip.Tip="Delete Question">
+                                                    <TextBlock Text="🗑️" Foreground="#EF4444"/>
+                                                </Button>
+
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        
+                        <!-- Total Counter -->
+                        <TextBlock Grid.Row="4" Text="{Binding TotalQuestionsCountText}" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                    </Grid>
+                </Border>
+            </Border>
         </Grid>
     </ScrollViewer>
 </UserControl>

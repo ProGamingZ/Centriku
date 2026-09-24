@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,89 +12,125 @@ namespace Centriku.ViewModels
 {
     public partial class GradebookViewModel
     {
-        // Lists for the UI boxes
+        // --- 1. STUDENT UI STATE ---
         [ObservableProperty] public partial ObservableCollection<StudentGradeRow> RemainingStudents { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<StudentGradeRow> ChosenStudents { get; set; } = new();
+        [ObservableProperty] public partial string RemainingCounterText { get; set; } = "Remaining (0)";
+        [ObservableProperty] public partial string ChosenCounterText { get; set; } = "Chosen (0)";
 
-        // UI Text
+        // --- 2. QUESTION BANK STATE ---
+        [ObservableProperty] public partial ObservableCollection<QuestionRowViewModel> QuestionBank { get; set; } = new();
+        [ObservableProperty] public partial string TotalQuestionsCountText { get; set; } = "Total Questions: 0";
+        [ObservableProperty] public partial bool AllowRepeatQuestions { get; set; } = false;
+        [ObservableProperty] public partial bool ShuffleQuestions { get; set; } = true;
+        
+        // Tracks questions that haven't been asked yet (if Repeat is OFF)
+        private List<RecitationQuestion> _availableQuestionsPool = new(); 
+
+        // --- 3. MODAL STATE ---
+        [ObservableProperty] public partial bool IsManageQuestionsModalOpen { get; set; } = false;
+        [ObservableProperty] public partial bool IsWinnerModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string WinnerModalName { get; set; } = string.Empty;
+        [ObservableProperty] public partial string WinnerModalQuestion { get; set; } = string.Empty;
+        [ObservableProperty] public partial string WinnerModalAnswer { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool IsAnswerRevealed { get; set; } = false;
+
+        // Form Inputs
+        [ObservableProperty] public partial string NewQuestionInput { get; set; } = string.Empty;
+        [ObservableProperty] public partial string NewAnswerInput { get; set; } = string.Empty;
+
+        // --- 4. ENGINE STATE ---
         [ObservableProperty] public partial string RecitationWinnerName { get; set; } = "Ready to Spin!";
         [ObservableProperty] public partial bool IsSpinning { get; set; } = false;
-
-        // An event we will fire to tell the XAML Code-Behind to trigger the physical wheel animation
         public event Action<int>? OnSpinWheelRequested;
         public event Action? OnWheelResetRequested;
 
+        // ==========================================
+        // INITIALIZATION & LOADING
+        // ==========================================
         private async Task LoadRecitationData()
         {
             var db = new DatabaseService().GetConnection();
-            
-            // Re-apply the new column if it doesn't exist yet
             await db.CreateTableAsync<ClassRoster>(); 
+            await db.CreateTableAsync<RecitationQuestion>(); 
 
+            // Load Students
             var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
-            
-            var remaining = new System.Collections.Generic.List<StudentGradeRow>();
-            var chosen = new System.Collections.Generic.List<StudentGradeRow>();
+            var remaining = new List<StudentGradeRow>();
+            var chosen = new List<StudentGradeRow>();
 
-            // GradebookRows is already loaded with the active students from LoadGradebookData!
             foreach (var studentRow in GradebookRows)
             {
                 var rosterEntry = roster.FirstOrDefault(r => r.StudentID == studentRow.StudentID);
-                if (rosterEntry != null && rosterEntry.HasRecited)
-                {
-                    chosen.Add(studentRow);
-                }
-                else
-                {
-                    remaining.Add(studentRow);
-                }
+                if (rosterEntry != null && rosterEntry.HasRecited) chosen.Add(studentRow);
+                else remaining.Add(studentRow);
             }
 
-            RemainingStudents.Clear();
-            foreach (var s in remaining) RemainingStudents.Add(s);
+            RemainingStudents = new ObservableCollection<StudentGradeRow>(remaining);
+            ChosenStudents = new ObservableCollection<StudentGradeRow>(chosen);
+            UpdateCounters();
 
-            ChosenStudents.Clear();
-            foreach (var s in chosen) ChosenStudents.Add(s);
+            // Load Questions
+            var questions = await db.Table<RecitationQuestion>().Where(q => q.ClassID == ClassId).ToListAsync();
+            QuestionBank = new ObservableCollection<QuestionRowViewModel>(questions.Select(q => new QuestionRowViewModel(q)));
+            
+            TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
             RecitationWinnerName = "Ready to Spin!";
+            
+            BuildAvailableQuestionsPool();
+        }
+
+        private void UpdateCounters()
+        {
+            RemainingCounterText = $"Remaining ({RemainingStudents.Count})";
+            ChosenCounterText = $"Chosen ({ChosenStudents.Count})";
+        }
+
+        // Fills the "Deck" of active questions based on user settings
+        private void BuildAvailableQuestionsPool()
+        {
+            var activeQuestions = QuestionBank.Where(q => q.IsIncluded).Select(q => q.DbModel).ToList();
+            
+            if (ShuffleQuestions)
+            {
+                var rng = new Random();
+                _availableQuestionsPool = activeQuestions.OrderBy(q => rng.Next()).ToList();
+            }
+            else
+            {
+                _availableQuestionsPool = activeQuestions.OrderBy(q => q.QuestionID).ToList();
+            }
+        }
+
+        // ==========================================
+        // THE DRAW ENGINE
+        // ==========================================
+        [RelayCommand]
+        public void SpinRecitation()
+        {
+            if (IsSpinning || !RemainingStudents.Any()) return;
+            IsSpinning = true;
+            RecitationWinnerName = "Spinning...";
+
+            var random = new Random();
+            int winnerIndex = random.Next(RemainingStudents.Count);
+            OnSpinWheelRequested?.Invoke(winnerIndex);
         }
 
         [RelayCommand]
         public async Task SkipRecitationAsync()
         {
             if (IsSpinning || !RemainingStudents.Any()) return;
-
-            // Instantly pick a random winner
             var random = new Random();
             int winnerIndex = random.Next(RemainingStudents.Count);
-            var winner = RemainingStudents[winnerIndex];
-
-            // Instantly process the winner without animation
-            await ProcessWinnerAsync(winner);
+            await ProcessWinnerAsync(RemainingStudents[winnerIndex]);
         }
 
-        [RelayCommand]
-        public void SpinRecitation()
-        {
-            if (IsSpinning || !RemainingStudents.Any()) return;
-
-            IsSpinning = true;
-            RecitationWinnerName = "Spinning...";
-
-            // 1. Pick the winner
-            var random = new Random();
-            int winnerIndex = random.Next(RemainingStudents.Count);
-            
-            // 2. Fire the event to tell the UI to physically spin the wheel to this specific index
-            OnSpinWheelRequested?.Invoke(winnerIndex);
-        }
-
-        // The UI will call this method when the 3-second spin animation finishes
         public async Task WheelAnimationCompletedAsync(int winnerIndex)
         {
             if (winnerIndex >= 0 && winnerIndex < RemainingStudents.Count)
             {
-                var winner = RemainingStudents[winnerIndex];
-                await ProcessWinnerAsync(winner);
+                await ProcessWinnerAsync(RemainingStudents[winnerIndex]);
             }
             IsSpinning = false;
         }
@@ -102,39 +139,138 @@ namespace Centriku.ViewModels
         {
             RecitationWinnerName = $"Winner: {winner.FullName}!";
 
-            // Move in UI
+            // 1. Move Student to Chosen List
             RemainingStudents.Remove(winner);
             ChosenStudents.Add(winner);
+            UpdateCounters();
 
-            // Save state to Database
             var db = new DatabaseService().GetConnection();
             var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == winner.StudentID).FirstOrDefaultAsync();
-            
             if (rosterEntry != null)
             {
                 rosterEntry.HasRecited = true;
                 await db.UpdateAsync(rosterEntry);
             }
+
+            // 2. Determine Question
+            RecitationQuestion? pickedQuestion = null;
+
+            if (_availableQuestionsPool.Any())
+            {
+                // Grab the first question from the deck
+                pickedQuestion = _availableQuestionsPool[0]; 
+                
+                if (!AllowRepeatQuestions)
+                {
+                    // Discard it if repeats are disabled
+                    _availableQuestionsPool.RemoveAt(0); 
+                }
+                else if (ShuffleQuestions)
+                {
+                    // If repeating and shuffling, put it back and shuffle the whole deck again
+                    BuildAvailableQuestionsPool(); 
+                }
+                // If repeating and NO shuffle, it naturally stays at index 0 and will be asked again!
+            }
+
+            // 3. Populate & Open Modal
+            WinnerModalName = winner.FullName;
+            IsAnswerRevealed = false;
+
+            if (pickedQuestion != null)
+            {
+                WinnerModalQuestion = pickedQuestion.QuestionText;
+                WinnerModalAnswer = pickedQuestion.AnswerText;
+            }
+            else
+            {
+                WinnerModalQuestion = "No questions available! You have run out of active questions.";
+                WinnerModalAnswer = string.Empty;
+            }
+
+            IsWinnerModalOpen = true;
         }
+
+        [RelayCommand]
+        public void CloseWinnerModal() => IsWinnerModalOpen = false;
+
+        [RelayCommand]
+        public void ToggleAnswerVisibility() => IsAnswerRevealed = !IsAnswerRevealed;
+
+        // ==========================================
+        // QUESTION MANAGER & RESET ACTIONS
+        // ==========================================
+        [RelayCommand]
+        public void OpenManageQuestionsModal() => IsManageQuestionsModalOpen = true;
+
+        [RelayCommand]
+        public void CloseManageQuestionsModal() => IsManageQuestionsModalOpen = false;
+
+        [RelayCommand]
+        public async Task SaveNewQuestionAsync()
+        {
+            if (string.IsNullOrWhiteSpace(NewQuestionInput)) return;
+
+            var db = new DatabaseService().GetConnection();
+            var newQuestion = new RecitationQuestion
+            {
+                ClassID = ClassId,
+                QuestionText = NewQuestionInput.Trim(),
+                AnswerText = NewAnswerInput?.Trim() ?? string.Empty,
+                IsIncluded = true
+            };
+            
+            await db.InsertAsync(newQuestion);
+            
+            QuestionBank.Add(new QuestionRowViewModel(newQuestion));
+            TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
+            
+            NewQuestionInput = string.Empty;
+            NewAnswerInput = string.Empty;
+            
+            BuildAvailableQuestionsPool(); 
+        }
+
+        [RelayCommand]
+        public async Task DeleteQuestionAsync(QuestionRowViewModel qRow)
+        {
+            if (qRow == null) return;
+            var db = new DatabaseService().GetConnection();
+            await db.DeleteAsync(qRow.DbModel);
+            
+            QuestionBank.Remove(qRow);
+            TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
+            BuildAvailableQuestionsPool();
+        }
+
+        // Call this directly from the XAML CheckBox Command to instantly save the IsIncluded state
+        [RelayCommand]
+        public async Task ToggleQuestionIncludedAsync(QuestionRowViewModel qRow)
+        {
+            if (qRow == null) return;
+            var db = new DatabaseService().GetConnection();
+            await db.UpdateAsync(qRow.DbModel);
+            BuildAvailableQuestionsPool(); 
+        }
+
+        // Refreshes the pool if you change the Global Toggles (Shuffle/Repeat)
+        partial void OnShuffleQuestionsChanged(bool value) => BuildAvailableQuestionsPool();
+        partial void OnAllowRepeatQuestionsChanged(bool value) => BuildAvailableQuestionsPool();
 
         [RelayCommand]
         public async Task ResetRecitationAsync()
         {
             if (IsSpinning) return;
-
             var db = new DatabaseService().GetConnection();
             var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
 
-            // Set all to false in DB
             foreach (var r in roster)
             {
                 r.HasRecited = false;
                 await db.UpdateAsync(r);
             }
 
-            // Reload UI
             await LoadRecitationData();
-            // Tell the UI to physically spin the wheel back to the start!
             OnWheelResetRequested?.Invoke();
             ShowToastMessage?.Invoke("Class reset! All students returned to the wheel.");
         }
@@ -144,24 +280,34 @@ namespace Centriku.ViewModels
         {
             if (student == null || IsSpinning) return;
 
-            // Move in UI
             ChosenStudents.Remove(student);
             RemainingStudents.Add(student);
 
-            // Re-sort the remaining students alphabetically so it stays neat
             var sorted = RemainingStudents.OrderBy(s => s.StudentInfo.LastName).ToList();
             RemainingStudents.Clear();
             foreach (var s in sorted) RemainingStudents.Add(s);
+            UpdateCounters();
 
-            // Update Database
             var db = new DatabaseService().GetConnection();
             var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
-            
             if (rosterEntry != null)
             {
                 rosterEntry.HasRecited = false;
                 await db.UpdateAsync(rosterEntry);
             }
+        }
+
+        public partial class QuestionRowViewModel : ObservableObject
+        {
+            public RecitationQuestion DbModel { get; }
+            
+            [ObservableProperty] public partial bool IsEditing { get; set; } = false;
+            
+            public string QuestionText { get => DbModel.QuestionText; set { DbModel.QuestionText = value; OnPropertyChanged(); } }
+            public string AnswerText { get => DbModel.AnswerText; set { DbModel.AnswerText = value; OnPropertyChanged(); } }
+            public bool IsIncluded { get => DbModel.IsIncluded; set { DbModel.IsIncluded = value; OnPropertyChanged(); } }
+
+            public QuestionRowViewModel(RecitationQuestion model) { DbModel = model; }
         }
     }
 }
