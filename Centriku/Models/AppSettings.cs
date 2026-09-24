@@ -54,5 +54,6 @@ namespace Centriku.Models
         public int SectionNameColumnIndex { get; set; } = -1;
         public string DefaultProgram { get; set; } = string.Empty;
         public string DefaultSectionName { get; set; } = string.Empty;
+        public int DatabaseSchemaVersion { get; set; } = 2;
     }
 }

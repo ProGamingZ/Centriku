@@ -87,8 +87,8 @@ namespace Centriku.ViewModels.Settings
 
       private async void LoadSettings()
       {
+         await Centriku.Services.DatabaseService.WaitForDatabaseReadyAsync();
          var db = new Centriku.Services.DatabaseService().GetConnection();
-         await db.CreateTableAsync<AppSettings>(); 
          var savedSettings = await db.Table<AppSettings>().FirstOrDefaultAsync();
          if (savedSettings != null) CurrentSettings = savedSettings;
          else { CurrentSettings = new AppSettings(); await db.InsertAsync(CurrentSettings); }

@@ -60,9 +60,8 @@ namespace Centriku.ViewModels.Settings
 
         private async void LoadSettings()
         {
+            await DatabaseService.WaitForDatabaseReadyAsync();
             var db = new DatabaseService().GetConnection();
-            
-            await db.CreateTableAsync<AppSettings>();
             var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
 
             if (settings != null)
