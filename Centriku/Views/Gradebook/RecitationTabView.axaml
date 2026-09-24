@@ -76,14 +76,14 @@
             <Border IsVisible="{Binding IsWinnerModalOpen}" Background="#E6000000" ZIndex="100" Grid.ColumnSpan="3">
                 <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="16" Padding="40" MaxWidth="700" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
                     <StackPanel Spacing="20">
-                        <TextBlock Text="🎯 WINNER" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                        
                         <TextBlock Text="{Binding WinnerModalName}" FontSize="42" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                         
                         <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10"/>
                         
                         <!-- Question -->
                         <TextBlock Text="QUESTION:" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding WinnerModalQuestion}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                        <TextBlock Text="{Binding WinnerModalQuestion}" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
                         
                         <!-- Answer Toggle Section -->
                         <StackPanel Spacing="10">
@@ -94,7 +94,7 @@
                             <Border IsVisible="{Binding IsAnswerRevealed}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                                 <StackPanel>
                                     <TextBlock Text="ANSWER:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                    <TextBlock Text="{Binding WinnerModalAnswer}" FontSize="20" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding WinnerModalAnswer}" FontSize="22" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -154,7 +154,7 @@
                                                 
                                                 <!-- Delete Button -->
                                                 <Button Grid.Column="2" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" VerticalAlignment="Center" ToolTip.Tip="Delete Question">
-                                                    <TextBlock Text="🗑️" Foreground="#EF4444"/>
+                                                    <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="20" Foreground="#EF4444"/>
                                                 </Button>
 
                                             </Grid>

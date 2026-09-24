@@ -69,11 +69,11 @@
                               <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                                  <!-- Edit Button -->
                                  <Button Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).OpenEditGroupModalCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Edit Group">
-                                    <TextBlock Text="✏️" FontSize="12"/>
+                                    <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
                                  </Button>
                                  <!-- Delete Button -->
                                  <Button Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).PromptDeleteGroupCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Delete Group">
-                                    <TextBlock Text="❌" Foreground="#EF4444" FontSize="12"/>
+                                    <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="16" Foreground="#EF4444"/>
                                  </Button>
                               </StackPanel>
                            </Grid>
