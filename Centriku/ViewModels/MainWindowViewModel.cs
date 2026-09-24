@@ -14,7 +14,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsSidebarOpen { get; set; } = true;
         [ObservableProperty] public partial double MinWidth { get; set; } = 1024;
         [ObservableProperty] public partial double MinHeight { get; set; } = 700;
-        [ObservableProperty] public partial WindowState CurrentWindowState { get; set; } = WindowState.Normal;
+        [ObservableProperty] public partial WindowState CurrentWindowState { get; set; } = WindowState.Maximized;
         [ObservableProperty] public partial bool IsDarkTheme { get; set; } = true;
         
         // --- NEW: ACTIVE TAB TRACKERS ---

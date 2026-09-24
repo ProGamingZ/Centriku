@@ -86,7 +86,7 @@
                         <TextBlock Text="{Binding WinnerModalQuestion}" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
                         
                         <!-- Answer Toggle Section -->
-                        <StackPanel Spacing="10">
+                        <StackPanel Spacing="10" IsVisible="{Binding HasWinnerAnswer}">
                             <!-- Show this button if the answer is hidden -->
                             <Button Command="{Binding ToggleAnswerVisibilityCommand}" Content="Reveal Answer" IsVisible="{Binding !IsAnswerRevealed}" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" CornerRadius="8" HorizontalAlignment="Center"/>
                             
@@ -94,7 +94,7 @@
                             <Border IsVisible="{Binding IsAnswerRevealed}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                                 <StackPanel>
                                     <TextBlock Text="ANSWER:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                    <TextBlock Text="{Binding WinnerModalAnswer}" FontSize="22" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding WinnerModalAnswer}" FontSize="20" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -146,16 +146,33 @@
                                                 <!-- Include/Exclude Toggle -->
                                                 <CheckBox Grid.Column="0" IsChecked="{Binding IsIncluded}" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ToggleQuestionIncludedCommand}" CommandParameter="{Binding}" Margin="0,0,15,0" ToolTip.Tip="Include in wheel spins"/>
                                                 
-                                                <!-- Text -->
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <!-- Text (Read Mode) -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}" Margin="0,0,15,0">
                                                     <TextBlock Text="{Binding QuestionText}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
                                                     <TextBlock Text="{Binding AnswerText}" Foreground="#22C55E" FontSize="12" TextWrapping="Wrap"/>
                                                 </StackPanel>
+
+                                                <!-- Form (Edit Mode) -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Spacing="5" Margin="0,0,15,0">
+                                                    <TextBox Text="{Binding QuestionText}" Background="{DynamicResource AppBackground}" TextWrapping="Wrap"/>
+                                                    <TextBox Text="{Binding AnswerText}" Background="{DynamicResource AppBackground}" TextWrapping="Wrap"/>
+                                                </StackPanel>
                                                 
-                                                <!-- Delete Button -->
-                                                <Button Grid.Column="2" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" VerticalAlignment="Center" ToolTip.Tip="Delete Question">
-                                                    <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="20" Foreground="#EF4444"/>
-                                                </Button>
+                                                <!-- Action Buttons -->
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="5">
+                                                    <!-- Edit / Save Toggle -->
+                                                    <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).EditOrSaveQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Edit/Save">
+                                                        <Panel>
+                                                            <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" FontSize="18" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsEditing}"/>
+                                                            <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" FontSize="18" Foreground="{DynamicResource PrimaryBrush}" IsVisible="{Binding IsEditing}"/>
+                                                        </Panel>
+                                                    </Button>
+                                                    
+                                                    <!-- Delete Button -->
+                                                    <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Delete Question">
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="20" Foreground="#EF4444"/>
+                                                    </Button>
+                                                </StackPanel>
 
                                             </Grid>
                                         </Border>

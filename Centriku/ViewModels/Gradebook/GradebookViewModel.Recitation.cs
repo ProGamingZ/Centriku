@@ -28,11 +28,13 @@ namespace Centriku.ViewModels
         private List<RecitationQuestion> _availableQuestionsPool = new(); 
 
         // --- 3. MODAL STATE ---
+        
         [ObservableProperty] public partial bool IsManageQuestionsModalOpen { get; set; } = false;
         [ObservableProperty] public partial bool IsWinnerModalOpen { get; set; } = false;
         [ObservableProperty] public partial string WinnerModalName { get; set; } = string.Empty;
         [ObservableProperty] public partial string WinnerModalQuestion { get; set; } = string.Empty;
         [ObservableProperty] public partial string WinnerModalAnswer { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool HasWinnerAnswer { get; set; } = false;
         [ObservableProperty] public partial bool IsAnswerRevealed { get; set; } = false;
 
         // Form Inputs
@@ -181,11 +183,13 @@ namespace Centriku.ViewModels
             {
                 WinnerModalQuestion = pickedQuestion.QuestionText;
                 WinnerModalAnswer = pickedQuestion.AnswerText;
+                HasWinnerAnswer = !string.IsNullOrWhiteSpace(pickedQuestion.AnswerText);
             }
             else
             {
                 WinnerModalQuestion = "No questions available! You have run out of active questions.";
                 WinnerModalAnswer = string.Empty;
+                HasWinnerAnswer = false;
             }
 
             IsWinnerModalOpen = true;
@@ -197,9 +201,26 @@ namespace Centriku.ViewModels
         [RelayCommand]
         public void ToggleAnswerVisibility() => IsAnswerRevealed = !IsAnswerRevealed;
 
-        // ==========================================
+        
         // QUESTION MANAGER & RESET ACTIONS
-        // ==========================================
+        [RelayCommand]
+        public async Task EditOrSaveQuestionAsync(QuestionRowViewModel qRow)
+        {
+            if (qRow == null) return;
+            
+            if (!qRow.IsEditing)
+            {
+                qRow.IsEditing = true; // Flips the UI to show TextBoxes
+            }
+            else
+            {
+                var db = new DatabaseService().GetConnection();
+                await db.UpdateAsync(qRow.DbModel);
+                
+                qRow.IsEditing = false; // Flips UI back to TextBlocks
+                BuildAvailableQuestionsPool(); // Update the deck with the new text
+            }
+        }
         [RelayCommand]
         public void OpenManageQuestionsModal() => IsManageQuestionsModalOpen = true;
 
@@ -267,7 +288,12 @@ namespace Centriku.ViewModels
             foreach (var r in roster)
             {
                 r.HasRecited = false;
-                await db.UpdateAsync(r);
+            }
+
+            // High-speed transaction: Updates all 40+ rows in one massive database hit instantly!
+            if (roster.Count != 0)
+            {
+                await db.UpdateAllAsync(roster, runInTransaction: true);
             }
 
             await LoadRecitationData();
