@@ -63,14 +63,26 @@ namespace Centriku.ViewModels
 
         private async void ToggleEnrollment()
         {
-            IsEnrolling = !IsEnrolling;
-            
             if (IsEnrolling)
             {
-                IsAddingAssessment = false;
+                IsEnrolling = false; // Just close it if it's already open
+                return;
+            }
+            
+            IsEnrolling = true;
+            IsAddingAssessment = false;
+            IsProcessing = true; // Turn on the loading spinner instantly!
+
+            try
+            {
+                // Give the Avalonia UI thread a microsecond to draw the spinner before we lock the CPU
+                await Task.Delay(50); 
+
                 var db = new DatabaseService().GetConnection();
                 var allStudents = await db.Table<Student>().ToListAsync();
-                var enrolledIds = GradebookRows.Select(s => s.StudentID).ToList();
+                
+                // O(1) HASHSET: Instant memory lookup instead of a slow loop
+                var enrolledIds = new System.Collections.Generic.HashSet<string>(GradebookRows.Select(s => s.StudentID));
 
                 _allAvailableStudents.Clear();
                 var uniqueYears = new System.Collections.Generic.HashSet<string> { "All" };
@@ -80,7 +92,6 @@ namespace Centriku.ViewModels
 
                 foreach (var s in allStudents)
                 {
-                    // Only show students who are NOT already enrolled in this class
                     if (s.StudentID != null && !enrolledIds.Contains(s.StudentID) && !s.IsArchived)
                     {
                         _allAvailableStudents.Add(new EnrollmentItemViewModel(s));
@@ -103,6 +114,10 @@ namespace Centriku.ViewModels
                 SelectedEnrollmentStatus = "All";
                 
                 FilterAvailableStudents();
+            }
+            finally
+            {
+                IsProcessing = false; // Hide the spinner
             }
         }
 
