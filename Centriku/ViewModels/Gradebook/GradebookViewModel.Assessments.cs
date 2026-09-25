@@ -29,8 +29,8 @@ namespace Centriku.ViewModels
          NewAssessmentTitle = assessment.Title ?? string.Empty;
          NewAssessmentMaxScore = assessment.MaxScore;
          NewAssessmentDate = assessment.DateGiven;
-         SelectedCategory = AvailableCategories.FirstOrDefault(c => c.Name == assessment.Category);
-         NewAssessmentPeriod = string.IsNullOrWhiteSpace(assessment.GradingPeriod) ? "Midterm" : assessment.GradingPeriod;
+         SelectedCategory = AvailableCategories.FirstOrDefault(c => MatchesCategory(c.Name, assessment.Category));
+         NewAssessmentPeriod = string.IsNullOrWhiteSpace(assessment.GradingPeriod) ? "Midterm" : assessment.GradingPeriod.Trim();
          IsAddingAssessment = true;
          IsEnrolling = false; 
          NewAssessmentType = string.IsNullOrEmpty(assessment.AssessmentType) ? "Solo" : assessment.AssessmentType;
@@ -52,12 +52,12 @@ namespace Centriku.ViewModels
          }
 
          // EXCEL LIMIT VALIDATION ---
-         int existingCount = ClassAssessments.Count(a => a.Category == SelectedCategory.Name && a.GradingPeriod == NewAssessmentPeriod);
+         int existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod));
          
          // If editing, don't count the current assessment against the limit
          if (_editingAssessmentId.HasValue) 
          {
-            existingCount = ClassAssessments.Count(a => a.Category == SelectedCategory.Name && a.GradingPeriod == NewAssessmentPeriod && a.AssessmentID != _editingAssessmentId.Value);
+            existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod) && a.AssessmentID != _editingAssessmentId.Value);
          }
 
          int maxAllowed = SelectedCategory.SequenceOrder switch {

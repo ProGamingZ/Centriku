@@ -33,7 +33,9 @@ namespace Centriku.Services
             double weightDecimal = category.Weight / 100.0;
             totalCategoryWeight += weightDecimal;
 
-            var categoryAssessments = targetAssessments.Where(a => a.Category == category.Name).ToList();
+            var categoryAssessments = targetAssessments
+               .Where(a => string.Equals((a.Category ?? string.Empty).Trim(), (category.Name ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase))
+               .ToList();
             double catEarned = 0;
             double catMax = 0;
 

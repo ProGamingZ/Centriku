@@ -114,7 +114,8 @@ namespace Centriku.Views.Gradebook
             {
                if (!category.IsCategoryVisible) continue; // Skip hidden categories
 
-               var dbCategory = vm.AvailableCategories.FirstOrDefault(c => c.Name == category.CategoryName);
+               var dbCategory = vm.AvailableCategories.FirstOrDefault(c =>
+                   string.Equals((c.Name ?? string.Empty).Trim(), (category.CategoryName ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase));
                category.SequenceOrder = dbCategory != null ? dbCategory.SequenceOrder : 0;
 
                foreach (var filter in category.Assessments)
@@ -122,7 +123,7 @@ namespace Centriku.Views.Gradebook
                   if (!filter.IsVisible) continue; 
 
                   var assessment = filter.DbModel;
-                  if (assessment.GradingPeriod != vm.SelectedTermView) continue;
+                  if (!string.Equals((assessment.GradingPeriod ?? string.Empty).Trim(), (vm.SelectedTermView ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase)) continue;
 
                   var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 5) };
                   headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = assessment.Title, FontWeight = Avalonia.Media.FontWeight.Bold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
@@ -183,9 +184,16 @@ namespace Centriku.Views.Gradebook
                }
 
                // Append the TS and WS Columns right after all the quizzes for this category are drawn
-               var periodAssessments = vm.ClassAssessments.Where(a => a.Category == category.CategoryName && a.GradingPeriod == vm.SelectedTermView).ToList();
+               var periodAssessments = vm.ClassAssessments
+                   .Where(a => string.Equals((a.Category ?? string.Empty).Trim(), (category.CategoryName ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase)
+                       && string.Equals((a.GradingPeriod ?? string.Empty).Trim(), (vm.SelectedTermView ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase))
+                   .ToList();
+                   
                if (periodAssessments.Any())
                {
+                  // Ask for the exact semantic key (e.g. "classstanding")
+                  string safeKey = (category.CategoryName ?? "unknown").Replace(" ", "").ToLower();
+
                   // Create TS Column
                   var tsHeader = new Avalonia.Controls.TextBlock { Text = "TS", FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.MediumPurple };
                   Avalonia.Controls.ToolTip.SetTip(tsHeader, $"Transmuted Score for {category.CategoryName}");
@@ -194,8 +202,8 @@ namespace Centriku.Views.Gradebook
                   tsColumn.CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                   {
                      var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.SemiBold, Foreground = Avalonia.Media.Brushes.MediumPurple };
-                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].TsDisplay"));
-                     tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].TsTooltip"));
+                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].TsDisplay"));
+                     tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].TsTooltip"));
                      return tb;
                   });
                   grid.Columns.Insert(insertIndex++, tsColumn);
@@ -208,8 +216,8 @@ namespace Centriku.Views.Gradebook
                   wsColumn.CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                   {
                      var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.DarkOrange };
-                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].WsDisplay"));
-                     tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{category.SequenceOrder}].WsTooltip"));
+                     tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].WsDisplay"));
+                     tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].WsTooltip"));
                      return tb;
                   });
                   grid.Columns.Insert(insertIndex++, wsColumn);

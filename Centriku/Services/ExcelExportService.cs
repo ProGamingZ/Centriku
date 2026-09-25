@@ -102,7 +102,9 @@ namespace Centriku.Services
          List<GradingCategory> categories)
       {
          // 1. Get only the assessments for this specific term
-         var termAssessments = classAssessments.Where(a => a.GradingPeriod == termName).ToList();
+         var termAssessments = classAssessments
+            .Where(a => string.Equals((a.GradingPeriod ?? string.Empty).Trim(), (termName ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
          // 2. We loop through the 3 possible sequence categories
          for (int sequence = 1; sequence <= 3; sequence++)
@@ -112,7 +114,9 @@ namespace Centriku.Services
             if (currentCategory == null) continue;
 
             // Get the actual quizzes the teacher made for this category
-            var targetAssessments = termAssessments.Where(a => a.Category == currentCategory.Name).ToList();
+            var targetAssessments = termAssessments
+               .Where(a => string.Equals((a.Category ?? string.Empty).Trim(), (currentCategory.Name ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase))
+               .ToList();
 
             // Set up the Excel Column Mapping Rules based on the Sequence Order
             string[] targetColumns;

@@ -1,35 +1,35 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Centriku.Models;
+using System.Linq;
 
 namespace Centriku.ViewModels
 {
-    // 1. SAFE DICTIONARIES TO PREVENT AVALONIA BINDING CRASHES
+    // 1. SAFE DICTIONARY FOR SCORES
     public class SafeScoreDictionary : System.Collections.Generic.Dictionary<int, ScoreCellViewModel>
     {
         public new ScoreCellViewModel this[int key]
         {
             get
             {
-                // If the UI asks for a score cell that hasn't been loaded yet, return a safe dummy cell!
-                if (!ContainsKey(key))
-                    Add(key, new ScoreCellViewModel(new Score(), 100, null!));
+                if (!ContainsKey(key)) Add(key, new ScoreCellViewModel(new Score(), 100, null!));
                 return base[key];
             }
             set => base[key] = value;
         }
     }
 
-    public class SafeCategoryDictionary : System.Collections.Generic.Dictionary<int, CategoryGradeViewModel> // <-- Changed string to int
+    // 2. SAFE SEMANTIC DICTIONARY FOR CATEGORIES (Uses String Keys to prevent XAML binding failures)
+    public class SafeCategoryDictionary : System.Collections.Generic.Dictionary<string, CategoryGradeViewModel>
     {
-        public new CategoryGradeViewModel this[int key] // <-- Changed string to int
+        public new CategoryGradeViewModel this[string key]
         {
             get
             {
-                if (!ContainsKey(key))
-                    Add(key, new CategoryGradeViewModel());
-                return base[key];
+                string k = key ?? "unknown";
+                if (!ContainsKey(k)) Add(k, new CategoryGradeViewModel());
+                return base[k];
             }
-            set => base[key] = value;
+            set => base[key ?? "unknown"] = value;
         }
     }
 
@@ -38,11 +38,14 @@ namespace Centriku.ViewModels
     {
         public Student StudentInfo { get; } = student;
         public SafeScoreDictionary Scores { get; set; } = new();
+        
+        // NEW: Binds via strict text names (e.g. "majorexam") instead of fragile numbers
         public SafeCategoryDictionary CategoryGrades { get; set; } = new();
 
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
         public string StudentID => StudentInfo.StudentID ?? "";
         [ObservableProperty] public partial bool IsSelected { get; set; } = false;
+        
         [ObservableProperty] public partial string MidtermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial string FinalTermGradeDisplay { get; set; } = "---";
         [ObservableProperty] public partial double MidtermGradeNumeric { get; set; } = 0;

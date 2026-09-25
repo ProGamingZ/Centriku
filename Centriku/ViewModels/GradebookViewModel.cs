@@ -135,12 +135,12 @@ namespace Centriku.ViewModels
                 if (ClassAssessments == null) return;
                 CategoryFilters.Clear();
                 // If viewing the Semester Average, the flyout hides assessments anyway, so stop here!
-                if (SelectedTermView == "Semester Average") return; 
+                if (SelectedTermView == "Semester Average") return;
 
                 // Filter the assessments so the flyout ONLY shows quizzes for the currently viewed term!
-                var relevantAssessments = ClassAssessments.Where(a => a.GradingPeriod == SelectedTermView).ToList();
+                var relevantAssessments = ClassAssessments.Where(a => MatchesGradingPeriod(a.GradingPeriod, SelectedTermView)).ToList();
                 var allFilters = relevantAssessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
-                var grouped = allFilters.GroupBy(f => f.DbModel.Category ?? "Uncategorized");
+                var grouped = allFilters.GroupBy(f => NormalizeCategoryName(f.DbModel.Category) ?? "Uncategorized");
 
                 foreach (var group in grouped)
                 { CategoryFilters.Add(new CategoryFilterViewModel(group.Key, group)); }
@@ -286,8 +286,8 @@ namespace Centriku.ViewModels
                 ClassId = classId;
                 ClassTitle = classTitle;
                 SelectedTabIndex = startingTab;
-                await LoadGradebookData();
                 await LoadCategories();
+                await LoadGradebookData();
                 await LoadAttendanceData();
                 await LoadRecitationData();
                 await LoadGroupsDataAsync();
@@ -343,7 +343,9 @@ namespace Centriku.ViewModels
 
                     foreach (var assessment in ClassAssessments)
                     {
-                        var existingScore = studentScores.FirstOrDefault(s => s.AssessmentID == assessment.AssessmentID);
+                        var existingScore = studentScores.FirstOrDefault(s =>
+                            s.AssessmentID == assessment.AssessmentID &&
+                            string.Equals((s.StudentID ?? string.Empty).Trim(), (student.StudentID ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase));
                         
                         if (existingScore != null)
                         {

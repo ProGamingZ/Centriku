@@ -11,10 +11,40 @@ namespace Centriku.ViewModels
    public partial class GradebookViewModel
    {
       // 1. Core Calculator & String Builder (EXCEL TEMPLATE MATH)
+      private static string NormalizeCategoryName(string? categoryName)
+      {
+         return string.IsNullOrWhiteSpace(categoryName) ? string.Empty : categoryName.Trim();
+      }
+
+      private static string NormalizeGradingPeriod(string? gradingPeriod)
+      {
+         return string.IsNullOrWhiteSpace(gradingPeriod) ? string.Empty : gradingPeriod.Trim();
+      }
+
+      private static bool MatchesCategory(string? left, string? right)
+      {
+         return string.Equals(NormalizeCategoryName(left), NormalizeCategoryName(right), StringComparison.OrdinalIgnoreCase);
+      }
+
+      private static bool MatchesGradingPeriod(string? left, string? right)
+      {
+         return string.Equals(NormalizeGradingPeriod(left), NormalizeGradingPeriod(right), StringComparison.OrdinalIgnoreCase);
+      }
+
+      private static string NormalizeStudentId(string? studentId)
+      {
+         return string.IsNullOrWhiteSpace(studentId) ? string.Empty : studentId.Trim();
+      }
+
+      private static bool MatchesStudentId(string? left, string? right)
+      {
+         return string.Equals(NormalizeStudentId(left), NormalizeStudentId(right), StringComparison.OrdinalIgnoreCase);
+      }
+
       private (double TermGrade, string Breakdown) GetTermGradeWithDetails(StudentGradeRow row, string targetPeriod)
       {
-         var termAssessments = ClassAssessments.Where(a => a.GradingPeriod == targetPeriod).ToList();
-         var rawScores = row.Scores.Values.Select(v => v.DbModel).ToList();
+         var termAssessments = ClassAssessments.Where(a => MatchesGradingPeriod(a.GradingPeriod, targetPeriod)).ToList();
+         var rawScores = row.Scores.Values.Select(v => v.DbModel).Where(s => MatchesStudentId(s.StudentID, row.StudentID)).ToList();
 
          if (!AvailableCategories.Any() || !termAssessments.Any())
             return (-1, "No assessments recorded yet."); // -1 = Incomplete
@@ -27,14 +57,21 @@ namespace Centriku.ViewModels
 
          foreach (var category in AvailableCategories)
          {
+            // NEW: Create a bulletproof Semantic Key (e.g. "Class Standing" -> "classstanding")
+            string safeKey = (category.Name ?? "unknown").Replace(" ", "").ToLower();
+
             // Ensure the dictionary entry exists for binding
-            if (!row.CategoryGrades.ContainsKey(category.SequenceOrder))
-               row.CategoryGrades[category.SequenceOrder] = new CategoryGradeViewModel();
-            var catGrade = row.CategoryGrades[category.SequenceOrder];
+            if (!row.CategoryGrades.ContainsKey(safeKey))
+               row.CategoryGrades[safeKey] = new CategoryGradeViewModel();
+            var catGrade = row.CategoryGrades[safeKey];
+            
+            var normalizedCategoryName = NormalizeCategoryName(category.Name);
 
             double weightDec = category.Weight / 100.0;
-            var catAssessments = termAssessments.Where(a => a.Category == category.Name).ToList();
-            
+            var catAssessments = termAssessments
+               .Where(a => MatchesCategory(a.Category, normalizedCategoryName))
+               .ToList();
+
             double earned = 0, max = 0;
             foreach (var a in catAssessments)
             {
@@ -52,7 +89,6 @@ namespace Centriku.ViewModels
                double ws = Math.Round(ts * weightDec, 2, MidpointRounding.AwayFromZero);
                totalExcelWS += ws;
 
-               // Save the TS and WS logic to the specific category cells
                catGrade.TsDisplay = $"{ts:0.00}";
                catGrade.WsDisplay = $"{ws:0.00}";
                catGrade.TsTooltip = $"Formula: (Earned ÷ Max) × (100 - Base) + Base\nMath: ({earned:0.##} ÷ {max:0.##}) × {100 - this.NrfgBaseValue} + {this.NrfgBaseValue} = {ts:0.00}";
@@ -62,18 +98,22 @@ namespace Centriku.ViewModels
             }
             else
             {
-               isMissingCategory = true; // Trigger the block!
+               isMissingCategory = true; 
                
                catGrade.TsDisplay = "--";
                catGrade.WsDisplay = "--";
-               catGrade.TsTooltip = "Missing assessments for this category.";
-               catGrade.WsTooltip = "Missing assessments for this category.";
+               var missingReason = catAssessments.Count == 0
+                  ? $"No assessments were found for category '{category.Name}' in {targetPeriod}."
+                  : $"No valid score records were found for {category.Name} in {targetPeriod}. Check the roster ID mapping and score data.";
+
+               catGrade.TsTooltip = missingReason;
+               catGrade.WsTooltip = missingReason;
                
                tip.AppendLine($"• {category.Name} ({category.Weight}%): INCOMPLETE");
             }
          }
 
-         // NEW: If any category is empty, we return -1 so the term grade stays blank!
+         //If any category is empty, we return -1 so the term grade stays blank!
          if (isMissingCategory)
              return (-1, "Incomplete: One or more categories are missing assessments.");
 
@@ -94,7 +134,7 @@ namespace Centriku.ViewModels
          foreach (var row in targetGradeRows)
          {
             // === 1. MIDTERM & FINAL MATH ===
-            bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Midterm");
+            bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => MatchesGradingPeriod(a.GradingPeriod, "Midterm"));
             var midResult = GetTermGradeWithDetails(row, "Midterm");
             bool isMidComplete = midResult.TermGrade >= 0;
             
@@ -102,7 +142,7 @@ namespace Centriku.ViewModels
             row.MidtermGradeDisplay = isMidComplete ? $"{midResult.TermGrade}%" : "--";
             row.MidtermComputationTooltip = midResult.Breakdown;
 
-            bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => a.GradingPeriod == "Final");
+            bool hasFinal = ClassAssessments != null && ClassAssessments.Any(a => MatchesGradingPeriod(a.GradingPeriod, "Final"));
             var finResult = GetTermGradeWithDetails(row, "Final");
             bool isFinComplete = finResult.TermGrade >= 0;
             
