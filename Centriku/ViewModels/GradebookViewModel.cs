@@ -11,6 +11,7 @@ namespace Centriku.ViewModels
     public partial class GradebookViewModel : ViewModelBase
     {
         #region Core Properties & UI Toggles
+            [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
             [ObservableProperty] public partial int SelectedTabIndex { get; set; } = 0;
             [ObservableProperty] public partial int ClassId { get; set; }
             [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        

@@ -114,23 +114,64 @@ namespace Centriku.ViewModels
          await LoadGradebookData(); // Refresh the grid!
          await LoadGroupsDataAsync(); // Refreshes the Groups Tab Dropdown!
       }
-      private async void DeleteAssessment(Assessment assessment)
+      [ObservableProperty] public partial bool IsDeleteAssessmentModalOpen { get; set; } = false;
+      [ObservableProperty] public partial string DeleteAssessmentMessage { get; set; } = string.Empty;
+      private Assessment? _assessmentToDelete;
+
+      // 1. Opens the confirmation modal
+      private void DeleteAssessment(Assessment assessment)
       {
          if (assessment == null) return;
-         var db = new DatabaseService().GetConnection();
+         _assessmentToDelete = assessment;
+         DeleteAssessmentMessage = $"Are you sure you want to delete '{assessment.Title}'?\n\nThis will permanently erase all student scores and group data tied to this column.";
+         IsDeleteAssessmentModalOpen = true;
+      }
+
+      // 2. The Bulk Deletion Engine
+      [RelayCommand]
+      public async Task ConfirmDeleteAssessment()
+      {
+         if (_assessmentToDelete == null) return;
+         IsProcessing = true; // Turn on the loading spinner!
          
-         // 1. Delete the Assessment column (Table 4)
-         await db.DeleteAsync(assessment);
-
-         // 2. Wipe all the student scores associated with this exact Quiz (Table 5)
-         var scoresToDelete = await db.Table<Score>().Where(s => s.AssessmentID == assessment.AssessmentID).ToListAsync();
-         foreach (var score in scoresToDelete)
+         try
          {
-            await db.DeleteAsync(score);
-         }
+               var db = new DatabaseService().GetConnection();
+               int id = _assessmentToDelete.AssessmentID;
 
-         await LoadGradebookData(); // Refresh the grid
-         await LoadGroupsDataAsync(); // NEW: Removes it from the Groups Tab Dropdown!
+               // 1. Safely fetch all related records using the ORM (No raw SQL strings!)
+               var scoresToDelete = await db.Table<Score>().Where(s => s.AssessmentID == id).ToListAsync();
+               var membersToDelete = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == id).ToListAsync();
+               var groupsToDelete = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == id).ToListAsync();
+
+               // 2. Perform a single Bulk Transaction. This locks the database once, deletes all 50+ items instantly, and unlocks.
+               await db.RunInTransactionAsync(tran => 
+               {
+                   foreach (var s in scoresToDelete) tran.Delete(s);
+                   foreach (var m in membersToDelete) tran.Delete(m);
+                   foreach (var g in groupsToDelete) tran.Delete(g);
+                   
+                   // Finally, delete the Assessment column itself
+                   tran.Delete(_assessmentToDelete); 
+               });
+
+               await LoadGradebookData();
+               ShowToastMessage?.Invoke($"Deleted assessment: '{_assessmentToDelete.Title}'.");
+               CancelDeleteAssessment();
+         }
+         catch (Exception ex)
+         {
+               // If anything fails, gently show a toast instead of crashing the app!
+               ShowToastMessage?.Invoke($"Error deleting assessment: {ex.Message}");
+         }
+         finally { IsProcessing = false; }
+      }
+
+      [RelayCommand]
+      public void CancelDeleteAssessment()
+      {
+         IsDeleteAssessmentModalOpen = false;
+         _assessmentToDelete = null;
       }
       private void ResetAssessmentForm()
       {

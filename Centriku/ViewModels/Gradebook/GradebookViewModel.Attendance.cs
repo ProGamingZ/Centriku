@@ -5,12 +5,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
 using Centriku.Services;
+using System;
 
 namespace Centriku.ViewModels
 {
    public partial class GradebookViewModel
    {
       #region Attendance 
+         
          [ObservableProperty] public partial bool IsAddingRollCall { get; set; } = false;
          [ObservableProperty] public partial System.DateTime? NewRollCallDate { get; set; } = System.DateTime.Today;
          private System.DateTime? _editingRollCallDate = null;
@@ -32,52 +34,62 @@ namespace Centriku.ViewModels
          private async void SaveRollCallDay()
          {
             if (!NewRollCallDate.HasValue) return;
-            var targetDate = NewRollCallDate.Value.Date;
-            var db = new DatabaseService().GetConnection();
-
-            if (_editingRollCallDate.HasValue)
+            IsProcessing = true;
+            
+            try 
             {
-               // === UPDATE MODE ===
-               var oldDate = _editingRollCallDate.Value;
-               
-               // If they changed the date, check if the new date already exists!
-               if (oldDate != targetDate && AttendanceDates.Contains(targetDate))
+               var targetDate = NewRollCallDate.Value.Date;
+               var db = new DatabaseService().GetConnection();
+
+               if (_editingRollCallDate.HasValue)
                {
-                  ShowToastMessage?.Invoke("Roll call for this date already exists!");
-                  return;
+                  var oldDate = _editingRollCallDate.Value;
+                  if (oldDate != targetDate && AttendanceDates.Contains(targetDate))
+                  {
+                     ShowToastMessage?.Invoke("Roll call for this date already exists!");
+                     return;
+                  }
+
+                  var recordsToUpdate = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == oldDate).ToListAsync();
+                  foreach (var r in recordsToUpdate)
+                  {
+                     r.Date = targetDate;
+                  }
+                  
+                  // BULK UPDATE
+                  await db.UpdateAllAsync(recordsToUpdate);
+                  ShowToastMessage?.Invoke($"Successfully moved roll call to {targetDate:MMM dd, yyyy}.");
+               }
+               else
+               {
+                  if (AttendanceDates.Contains(targetDate))
+                  {
+                     ShowToastMessage?.Invoke("Roll call for this date already exists!");
+                     return;
+                  }
+
+                  // Build a list in memory
+                  var newRecords = new System.Collections.Generic.List<AttendanceRecord>
+                  {
+                     new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST" }
+                  };
+
+                  var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
+                  foreach (var r in roster)
+                  {
+                     newRecords.Add(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
+                  }
+
+                  // BULK INSERT
+                  await db.InsertAllAsync(newRecords);
+                  ShowToastMessage?.Invoke($"Successfully created roll call for {targetDate:MMM dd, yyyy}.");
                }
 
-               // Update all records that belonged to the old date
-               var recordsToUpdate = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == oldDate).ToListAsync();
-               foreach (var r in recordsToUpdate)
-               {
-                  r.Date = targetDate;
-                  await db.UpdateAsync(r);
-               }
-               ShowToastMessage?.Invoke($"Successfully moved roll call to {targetDate:MMM dd, yyyy}.");
+               ResetRollCallForm();
+               await LoadAttendanceData(); 
             }
-            else
-            {
-               // === CREATE MODE ===
-               if (AttendanceDates.Contains(targetDate))
-               {
-                  ShowToastMessage?.Invoke("Roll call for this date already exists!");
-                  return;
-               }
-
-               await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST" });
-
-               var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
-               foreach (var r in roster)
-               {
-                  await db.InsertAsync(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
-               }
-               ShowToastMessage?.Invoke($"Successfully created roll call for {targetDate:MMM dd, yyyy}.");
-            }
-
-            ResetRollCallForm();
-            await LoadAttendanceData(); // Refresh the grid!
-         } 
+            finally { IsProcessing = false; }
+         }
          private void EditRollCall(System.DateTime? dateParam)
          {
             if (!dateParam.HasValue) return;
@@ -85,21 +97,59 @@ namespace Centriku.ViewModels
             NewRollCallDate = dateParam.Value.Date;
             IsAddingRollCall = true; // Slide the panel open!
          }
-         private async void DeleteRollCall(System.DateTime? dateParam)
+         [ObservableProperty] public partial bool IsDeleteRollCallModalOpen { get; set; } = false;
+         [ObservableProperty] public partial string DeleteRollCallMessage { get; set; } = string.Empty;
+         private System.DateTime? _rollCallToDelete = null;
+
+         // 1. Opens the confirmation modal instead of deleting immediately
+         private void DeleteRollCall(System.DateTime? dateParam)
          {
             if (!dateParam.HasValue) return;
-            var targetDate = dateParam.Value.Date;
-            var db = new DatabaseService().GetConnection();
+            _rollCallToDelete = dateParam.Value.Date;
+            DeleteRollCallMessage = $"Are you sure you want to delete the attendance column for {_rollCallToDelete.Value:MMM dd, yyyy}?\n\nThis will permanently erase the attendance records of all students for this date.";
+            IsDeleteRollCallModalOpen = true;
+         }
+
+         // 2. The Bulk Deletion Engine
+         [RelayCommand]
+         private async Task ConfirmDeleteRollCall()
+         {
+            if (!_rollCallToDelete.HasValue) return;
+            IsProcessing = true; // Turn on the loading spinner!
             
-            // Delete ALL records for this class on this specific date
-            var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
-            foreach (var r in recordsToDelete)
+            try
             {
-               await db.DeleteAsync(r);
+               var targetDate = _rollCallToDelete.Value.Date;
+               var db = new DatabaseService().GetConnection();
+               
+               // 1. Safely fetch all related records using the ORM
+               var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
+               
+               // 2. Perform a single Bulk Transaction
+               if (recordsToDelete.Any())
+               {
+                   await db.RunInTransactionAsync(tran => 
+                   {
+                       foreach (var r in recordsToDelete) tran.Delete(r);
+                   });
+               }
+               
+               await LoadAttendanceData(); 
+               ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
+               CancelDeleteRollCall();
             }
-            
-            await LoadAttendanceData(); // Refresh the grid!
-            ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error deleting roll call: {ex.Message}");
+            }
+            finally { IsProcessing = false; }
+         }
+
+         [RelayCommand]
+         private void CancelDeleteRollCall()
+         {
+            IsDeleteRollCallModalOpen = false;
+            _rollCallToDelete = null;
          }
          private void ResetRollCallForm()
       {

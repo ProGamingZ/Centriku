@@ -308,5 +308,27 @@
             </StackPanel>
          </Border>
       </Border>
+      <Border IsVisible="{Binding IsDeleteAssessmentModalOpen}" Background="#B3000000" ZIndex="100">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+            <StackPanel>
+               <TextBlock Text="Delete Assessment Column?" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+               <TextBlock Text="{Binding DeleteAssessmentMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+               
+               <Grid ColumnDefinitions="*, Auto, Auto">
+                  <Button Grid.Column="1" Command="{Binding CancelDeleteAssessmentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmDeleteAssessmentCommand}" Content="Delete Column" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+               </Grid>
+            </StackPanel>
+         </Border>
+      </Border>
+      <Border IsVisible="{Binding IsProcessing}" Background="#B3000000" ZIndex="999">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+            <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
+               <!-- Avalonia's built-in animated loading bar -->
+               <ProgressBar IsIndeterminate="True" Width="150" Height="6" CornerRadius="3" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackground}"/>
+               <TextBlock Text="Processing Action..." FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+            </StackPanel>
+         </Border>
+      </Border>
    </Grid>
 </UserControl>

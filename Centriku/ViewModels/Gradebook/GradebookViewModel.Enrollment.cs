@@ -120,31 +120,33 @@ namespace Centriku.ViewModels
 
         private async void SaveEnrollment()
         {
-            var db = new DatabaseService().GetConnection();
-            
-            // We check the full list so selections aren't lost if a filter hides them
-            var selectedStudents = _allAvailableStudents.Where(s => s.IsSelected).ToList();
-
-            foreach (var student in selectedStudents)
+            IsProcessing = true;
+            try 
             {
-                var newRosterEntry = new ClassRoster
+                var db = new DatabaseService().GetConnection();
+                var selectedStudents = _allAvailableStudents.Where(s => s.IsSelected).ToList();
+
+                // 1. Create a list in memory
+                var newRosters = selectedStudents.Select(student => new ClassRoster
                 {
                     ClassID = ClassId, 
                     StudentID = student.DbModel.StudentID 
-                };
-                await db.InsertAsync(newRosterEntry); 
-            }
+                }).ToList();
 
-            IsEnrolling = false;
-            await LoadGradebookData(); 
-            await LoadAttendanceData();
-            await LoadRecitationData(); 
-            await LoadGroupsDataAsync();
-            int count = selectedStudents.Count;
-            string notificationMessage = count == 1 
-                ? $"Successfully enrolled {selectedStudents[0].DbModel.FirstName} {selectedStudents[0].DbModel.LastName}." 
-                : $"Successfully enrolled {count} students.";
-            ShowToastMessage?.Invoke(notificationMessage);
+                // 2. BULK INSERT: This hits the hard drive exactly 1 time instead of 50+ times.
+                await db.InsertAllAsync(newRosters);
+
+                IsEnrolling = false;
+                
+                // Use your existing helper to refresh all data seamlessly
+                await RefreshRostersAsync(); 
+                
+                int count = selectedStudents.Count;
+                ShowToastMessage?.Invoke(count == 1 
+                    ? $"Successfully enrolled {selectedStudents[0].DbModel.FirstName} {selectedStudents[0].DbModel.LastName}." 
+                    : $"Successfully enrolled {count} students.");
+            }
+            finally { IsProcessing = false; }
         }
 
         // --- Modal Control Methods ---
@@ -161,45 +163,50 @@ namespace Centriku.ViewModels
         [RelayCommand]
         public async Task ConfirmRemoveStudent()
         {
-            if (!_studentsToRemove.Any()) return;
-            var db = new DatabaseService().GetConnection();
-            
-            // Get all group assessments for this class so we know which groups to clean up
-            var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
-            var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-
-            foreach (var student in _studentsToRemove)
+            IsProcessing = true;
+            try 
             {
-                // 1. Remove from Main Roster
-                var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
-                if (rosterEntry != null) await db.DeleteAsync(rosterEntry);
+                if (!_studentsToRemove.Any()) return;
+                var db = new DatabaseService().GetConnection();
+                
+                var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
+                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
+                var studentIds = _studentsToRemove.Select(s => s.StudentID).ToList();
 
-                // 2. Remove from any Groups Tab projects in this class!
-                if (assessmentIds.Count != 0)
+                // 1. Fetch records safely using the ORM (Translates to a safe SQL 'IN' clause automatically)
+                var rostersToDelete = await db.Table<ClassRoster>()
+                    .Where(r => r.ClassID == ClassId && studentIds.Contains(r.StudentID))
+                    .ToListAsync();
+
+                var groupMembersToDelete = new System.Collections.Generic.List<AssessmentGroupMember>();
+                if (assessmentIds.Any())
                 {
-                    var groupMemberships = await db.Table<AssessmentGroupMember>()
-                        .Where(m => m.StudentID == student.StudentID && assessmentIds.Contains(m.AssessmentID))
+                    groupMembersToDelete = await db.Table<AssessmentGroupMember>()
+                        .Where(m => studentIds.Contains(m.StudentID) && assessmentIds.Contains(m.AssessmentID))
                         .ToListAsync();
-                    
-                    foreach (var membership in groupMemberships)
-                    {
-                        await db.DeleteAsync(membership);
-                    }
                 }
+
+                // 2. Perform a single Bulk Transaction
+                await db.RunInTransactionAsync(tran => 
+                {
+                    foreach (var r in rostersToDelete) tran.Delete(r);
+                    foreach (var m in groupMembersToDelete) tran.Delete(m);
+                });
+                
+                await RefreshRostersAsync(); 
+                
+                int count = _studentsToRemove.Count;
+                ShowToastMessage?.Invoke(count == 1 
+                    ? $"Successfully unenrolled {_studentsToRemove[0].FirstName} {_studentsToRemove[0].LastName}." 
+                    : $"Successfully unenrolled {count} students.");
+                    
+                CancelRemoveStudent(); 
             }
-            
-            await LoadGradebookData();
-            await LoadAttendanceData();
-            await LoadRecitationData();
-            await LoadGroupsDataAsync(); 
-            int count = _studentsToRemove.Count;
-            string notificationMessage = count == 1 
-                ? $"Successfully unenrolled {_studentsToRemove[0].FirstName} {_studentsToRemove[0].LastName}." 
-                : $"Successfully unenrolled {count} students.";
-            // 2. Clear the list and close modal
-            CancelRemoveStudent(); 
-            // 3. Show the message
-            ShowToastMessage?.Invoke(notificationMessage);
+            catch (System.Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error unenrolling students: {ex.Message}");
+            }
+            finally { IsProcessing = false; }
         }
 
         [RelayCommand]
@@ -232,47 +239,57 @@ namespace Centriku.ViewModels
         [RelayCommand]
         public async Task ConfirmTransferStudent()
         {
-            if (!_studentsToTransfer.Any() || SelectedTransferClass == null) return;
-            var db = new DatabaseService().GetConnection();
-            
-            var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
-            var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-
-            foreach (var student in _studentsToTransfer)
+            IsProcessing = true;
+            try 
             {
-                // 1. Swap Roster
-                var oldEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
-                if (oldEntry != null) await db.DeleteAsync(oldEntry);
+                if (!_studentsToTransfer.Any() || SelectedTransferClass == null) return;
+                var db = new DatabaseService().GetConnection();
+                
+                var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
+                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
+                var studentIds = _studentsToTransfer.Select(s => s.StudentID).ToList();
 
-                await db.InsertAsync(new ClassRoster { ClassID = SelectedTransferClass.ClassID, StudentID = student.StudentID });
+                // 1. Fetch records safely using the ORM
+                var rostersToUpdate = await db.Table<ClassRoster>()
+                    .Where(r => r.ClassID == ClassId && studentIds.Contains(r.StudentID))
+                    .ToListAsync();
 
-                // 2. Remove from any Groups Tab projects in the OLD class
+                var groupMembersToDelete = new System.Collections.Generic.List<AssessmentGroupMember>();
                 if (assessmentIds.Any())
                 {
-                    var groupMemberships = await db.Table<AssessmentGroupMember>()
-                        .Where(m => m.StudentID == student.StudentID && assessmentIds.Contains(m.AssessmentID))
+                    groupMembersToDelete = await db.Table<AssessmentGroupMember>()
+                        .Where(m => studentIds.Contains(m.StudentID) && assessmentIds.Contains(m.AssessmentID))
                         .ToListAsync();
-                    
-                    foreach (var membership in groupMemberships)
-                    {
-                        await db.DeleteAsync(membership);
-                    }
                 }
-            }
 
-            await LoadGradebookData();
-            await LoadAttendanceData();
-            await LoadRecitationData();
-            await LoadGroupsDataAsync(); // Refresh the Groups Tab!
-            
-            int count = _studentsToTransfer.Count;
-            string notificationMessage = count == 1 
-                ? $"Successfully transferred {_studentsToTransfer[0].FirstName} {_studentsToTransfer[0].LastName}." 
-                : $"Successfully transferred {count} students.";
-            // 2. Clear the list and close modal
-            CancelTransferStudent();
-            // 3. Show the message
-            ShowToastMessage?.Invoke(notificationMessage);
+                // 2. Perform a single Bulk Transaction
+                await db.RunInTransactionAsync(tran => 
+                {
+                    // Update the ClassID for all selected rosters
+                    foreach (var r in rostersToUpdate) 
+                    {
+                        r.ClassID = SelectedTransferClass.ClassID;
+                        tran.Update(r);
+                    }
+                    
+                    // Erase their group memberships from the old class
+                    foreach (var m in groupMembersToDelete) tran.Delete(m);
+                });
+
+                await RefreshRostersAsync(); 
+                
+                int count = _studentsToTransfer.Count;
+                ShowToastMessage?.Invoke(count == 1 
+                    ? $"Successfully transferred {_studentsToTransfer[0].FirstName} {_studentsToTransfer[0].LastName}." 
+                    : $"Successfully transferred {count} students.");
+                    
+                CancelTransferStudent();
+            }
+            catch (System.Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error transferring students: {ex.Message}");
+            }
+            finally { IsProcessing = false; }
         }
 
         [RelayCommand]
