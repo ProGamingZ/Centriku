@@ -282,23 +282,29 @@ namespace Centriku.ViewModels
         public async Task ResetRecitationAsync()
         {
             if (IsSpinning) return;
-            var db = new DatabaseService().GetConnection();
-            var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
-
-            foreach (var r in roster)
+            IsProcessing = true; // Turn on the loading spinner!
+            
+            try 
             {
-                r.HasRecited = false;
-            }
+                var db = new DatabaseService().GetConnection();
+                var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
 
-            // High-speed transaction: Updates all 40+ rows in one massive database hit instantly!
-            if (roster.Count != 0)
-            {
-                await db.UpdateAllAsync(roster, runInTransaction: true);
-            }
+                foreach (var r in roster)
+                {
+                    r.HasRecited = false;
+                }
 
-            await LoadRecitationData();
-            OnWheelResetRequested?.Invoke();
-            ShowToastMessage?.Invoke("Class reset! All students returned to the wheel.");
+                // High-speed transaction: Updates all rows in one massive hit instantly!
+                if (roster.Count != 0)
+                {
+                    await db.UpdateAllAsync(roster, runInTransaction: true);
+                }
+
+                await LoadRecitationData();
+                OnWheelResetRequested?.Invoke();
+                ShowToastMessage?.Invoke("Class reset! All students returned to the wheel.");
+            }
+            finally { IsProcessing = false; }
         }
 
         [RelayCommand]

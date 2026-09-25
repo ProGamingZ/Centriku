@@ -242,54 +242,47 @@ namespace Centriku.ViewModels
         public async Task ConfirmCreateGroupAsync()
         {
             if (SelectedGroupAssessment == null || string.IsNullOrWhiteSpace(NewGroupNameInput)) return;
+            IsProcessing = true;
             
-            var db = new DatabaseService().GetConnection();
-            string trimmedName = NewGroupNameInput.Trim();
-
-            // NEW: Check if the group name already exists in this assessment
-            var existingGroup = await db.Table<AssessmentGroup>()
-                .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID && g.GroupName == trimmedName)
-                .FirstOrDefaultAsync();
-
-            if (existingGroup != null)
+            try
             {
-                ShowToastMessage?.Invoke($"A group named '{trimmedName}' already exists.");
-                return; // Stops here, leaves the modal open so they can change the name
-            }
+                var db = new DatabaseService().GetConnection();
+                string trimmedName = NewGroupNameInput.Trim();
 
-            var selectedStudents = CandidateMembers.Where(m => m.IsSelected).ToList();
+                var existingGroup = await db.Table<AssessmentGroup>()
+                    .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID && g.GroupName == trimmedName)
+                    .FirstOrDefaultAsync();
 
-            if (!selectedStudents.Any())
-            {
-                ShowToastMessage?.Invoke("Please check at least one student for this group.");
-                return;
-            }
-
-            var newGroup = new AssessmentGroup
-            {
-                AssessmentID = SelectedGroupAssessment.AssessmentID,
-                ClassID = ClassId,
-                GroupName = trimmedName,
-                GroupScore = 0
-            };
-            await db.InsertAsync(newGroup);
-
-            var newMembers = new List<AssessmentGroupMember>();
-            foreach (var student in selectedStudents)
-            {
-                newMembers.Add(new AssessmentGroupMember
+                if (existingGroup != null)
                 {
-                    GroupID = newGroup.GroupID,
-                    AssessmentID = SelectedGroupAssessment.AssessmentID,
-                    StudentID = student.Student.StudentID!,
-                    IndividualScore = 0
-                });
-            }
-            await db.InsertAllAsync(newMembers);
+                    ShowToastMessage?.Invoke($"A group named '{trimmedName}' already exists.");
+                    return; 
+                }
 
-            IsCreatingGroupModalOpen = false;
-            await LoadGroupsForSelectedAssessmentAsync();
-            ShowToastMessage?.Invoke($"Group '{newGroup.GroupName}' created successfully with {newMembers.Count} members.");
+                var selectedStudents = CandidateMembers.Where(m => m.IsSelected).ToList();
+                if (!selectedStudents.Any())
+                {
+                    ShowToastMessage?.Invoke("Please check at least one student for this group.");
+                    return;
+                }
+
+                var newGroup = new AssessmentGroup { AssessmentID = SelectedGroupAssessment.AssessmentID, ClassID = ClassId, GroupName = trimmedName, GroupScore = 0 };
+                
+                // BULK TRANSACTION: Insert the group and all members in a single lock
+                await db.RunInTransactionAsync(tran => 
+                {
+                    tran.Insert(newGroup); // Generates the ID instantly
+                    foreach (var student in selectedStudents)
+                    {
+                        tran.Insert(new AssessmentGroupMember { GroupID = newGroup.GroupID, AssessmentID = SelectedGroupAssessment.AssessmentID, StudentID = student.Student.StudentID!, IndividualScore = 0 });
+                    }
+                });
+
+                IsCreatingGroupModalOpen = false;
+                await LoadGroupsForSelectedAssessmentAsync();
+                ShowToastMessage?.Invoke($"Group '{newGroup.GroupName}' created successfully.");
+            }
+            finally { IsProcessing = false; }
         }
 
         [RelayCommand]
@@ -317,18 +310,27 @@ namespace Centriku.ViewModels
         public async Task ConfirmDeleteGroupAsync()
         {
             if (_groupToDelete == null) return;
-            var db = new DatabaseService().GetConnection();
-            
-            // Delete members first, then the group
-            await db.Table<AssessmentGroupMember>().Where(m => m.GroupID == _groupToDelete.DbModel.GroupID).DeleteAsync();
-            await db.DeleteAsync(_groupToDelete.DbModel);
-            
-            IsDeleteGroupModalOpen = false;
-            _groupToDelete = null;
-            
-            await LoadGroupsForSelectedAssessmentAsync();
-            RecalculateFinalGrades();
-            ShowToastMessage?.Invoke("Group deleted successfully.");
+            IsProcessing = true;
+
+            try 
+            {
+                var db = new DatabaseService().GetConnection();
+                
+                // BULK DELETE
+                await db.RunInTransactionAsync(tran => 
+                {
+                    tran.Execute($"DELETE FROM AssessmentGroupMember WHERE GroupID = {_groupToDelete.DbModel.GroupID}");
+                    tran.Delete(_groupToDelete.DbModel);
+                });
+                
+                IsDeleteGroupModalOpen = false;
+                _groupToDelete = null;
+                
+                await LoadGroupsForSelectedAssessmentAsync();
+                RecalculateFinalGrades();
+                ShowToastMessage?.Invoke("Group deleted successfully.");
+            }
+            finally { IsProcessing = false; }
         }
 
         [RelayCommand]
@@ -369,64 +371,68 @@ namespace Centriku.ViewModels
         public async Task ConfirmEditGroupAsync()
         {
             if (_groupToEdit == null || string.IsNullOrWhiteSpace(EditGroupNameInput) || SelectedGroupAssessment == null) return;
-            
-            var db = new DatabaseService().GetConnection();
-            string trimmedName = EditGroupNameInput.Trim();
+            IsProcessing = true;
 
-            // NEW: Check if the new name exists on a DIFFERENT group
-            var existingGroup = await db.Table<AssessmentGroup>()
-                .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID && g.GroupName == trimmedName && g.GroupID != _groupToEdit.DbModel.GroupID)
-                .FirstOrDefaultAsync();
-
-            if (existingGroup != null)
+            try 
             {
-                ShowToastMessage?.Invoke($"A group named '{trimmedName}' already exists.");
-                return;
-            }
+                var db = new DatabaseService().GetConnection();
+                string trimmedName = EditGroupNameInput.Trim();
 
-            var selectedStudents = EditCandidateMembers.Where(m => m.IsSelected).ToList();
-            if (!selectedStudents.Any())
-            {
-                ShowToastMessage?.Invoke("A group must have at least one member.");
-                return;
-            }
-            
-            // 1. Update Group Name
-            _groupToEdit.DbModel.GroupName = trimmedName;
-            await db.UpdateAsync(_groupToEdit.DbModel);
+                var existingGroup = await db.Table<AssessmentGroup>()
+                    .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID && g.GroupName == trimmedName && g.GroupID != _groupToEdit.DbModel.GroupID)
+                    .FirstOrDefaultAsync();
 
-            var existingMemberIds = _groupToEdit.Members.Select(m => m.StudentID).ToList();
-            var newSelectedIds = selectedStudents.Select(s => s.StudentID).ToList();
-
-            // 2. Find members to REMOVE
-            var membersToRemove = _groupToEdit.Members.Where(m => !newSelectedIds.Contains(m.StudentID)).ToList();
-            foreach (var m in membersToRemove)
-            {
-                await db.DeleteAsync(m.DbModel);
-                var score = await db.Table<Score>().Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && s.StudentID == m.StudentID).FirstOrDefaultAsync();
-                if (score != null) await db.DeleteAsync(score);
-            }
-
-            // 3. Find members to ADD
-            var membersToAdd = selectedStudents.Where(s => !existingMemberIds.Contains(s.StudentID)).ToList();
-            foreach (var s in membersToAdd)
-            {
-                var newMember = new AssessmentGroupMember
+                if (existingGroup != null)
                 {
-                    GroupID = _groupToEdit.DbModel.GroupID,
-                    AssessmentID = SelectedGroupAssessment.AssessmentID,
-                    StudentID = s.StudentID,
-                    IndividualScore = 0
-                };
-                await db.InsertAsync(newMember);
-            }
+                    ShowToastMessage?.Invoke($"A group named '{trimmedName}' already exists.");
+                    return;
+                }
 
-            IsEditingGroupModalOpen = false;
-            _groupToEdit = null;
-            
-            await LoadGroupsForSelectedAssessmentAsync();
-            RecalculateFinalGrades();
-            ShowToastMessage?.Invoke("Group updated successfully.");
+                var selectedStudents = EditCandidateMembers.Where(m => m.IsSelected).ToList();
+                if (!selectedStudents.Any())
+                {
+                    ShowToastMessage?.Invoke("A group must have at least one member.");
+                    return;
+                }
+                
+                _groupToEdit.DbModel.GroupName = trimmedName;
+
+                var existingMemberIds = _groupToEdit.Members.Select(m => m.StudentID).ToList();
+                var newSelectedIds = selectedStudents.Select(s => s.StudentID).ToList();
+
+                var membersToRemove = _groupToEdit.Members.Where(m => !newSelectedIds.Contains(m.StudentID)).ToList();
+                var memberIdsToRemove = membersToRemove.Select(m => m.StudentID).ToList();
+                
+                var scoresToRemove = new List<Score>();
+                if (memberIdsToRemove.Count != 0) 
+                {
+                    scoresToRemove = await db.Table<Score>().Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && memberIdsToRemove.Contains(s.StudentID)).ToListAsync();
+                }
+
+                var membersToAdd = selectedStudents.Where(s => !existingMemberIds.Contains(s.StudentID)).ToList();
+
+                // BULK TRANSACTION: Replaces the slow N+1 foreach loops!
+                await db.RunInTransactionAsync(tran => 
+                {
+                    tran.Update(_groupToEdit.DbModel);
+                    
+                    foreach (var m in membersToRemove) tran.Delete(m.DbModel);
+                    foreach (var s in scoresToRemove) tran.Delete(s);
+                    
+                    foreach (var s in membersToAdd)
+                    {
+                        tran.Insert(new AssessmentGroupMember { GroupID = _groupToEdit.DbModel.GroupID, AssessmentID = SelectedGroupAssessment.AssessmentID, StudentID = s.StudentID, IndividualScore = 0 });
+                    }
+                });
+
+                IsEditingGroupModalOpen = false;
+                _groupToEdit = null;
+                
+                await LoadGroupsForSelectedAssessmentAsync();
+                RecalculateFinalGrades();
+                ShowToastMessage?.Invoke("Group updated successfully.");
+            }
+            finally { IsProcessing = false; }
         }
 
         [RelayCommand]
@@ -457,88 +463,65 @@ namespace Centriku.ViewModels
         public async Task ConfirmCopyGroupsAsync()
         {
             if (SelectedGroupAssessment == null || SelectedCopyFromAssessment == null) return;
-            
-            var db = new DatabaseService().GetConnection();
-            
-            // 1. Fetch data from the SOURCE assessment
-            var sourceGroups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == SelectedCopyFromAssessment.AssessmentID).ToListAsync();
-            var sourceMembers = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == SelectedCopyFromAssessment.AssessmentID).ToListAsync();
+            IsProcessing = true;
 
-            if (!sourceGroups.Any())
+            try 
             {
-                ShowToastMessage?.Invoke("The selected assessment has no groups to copy.");
-                return;
-            }
-
-            // 2. Fetch data from the DESTINATION assessment to enforce uniqueness
-            var destGroups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID).ToListAsync();
-            var destMembers = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == SelectedGroupAssessment.AssessmentID).ToListAsync();
-
-            var existingDestGroupNames = destGroups.Select(g => g.GroupName?.ToLower()).ToHashSet();
-            var alreadyAssignedStudentIds = destMembers.Select(m => m.StudentID).ToHashSet();
-
-            var newMembersToInsert = new List<AssessmentGroupMember>();
-            int groupsCopied = 0;
-
-            // 3. Clone and Filter
-            foreach (var srcGroup in sourceGroups)
-            {
-                var srcGroupMembers = sourceMembers.Where(m => m.GroupID == srcGroup.GroupID).ToList();
+                var db = new DatabaseService().GetConnection();
                 
-                // RESTRICTION: Only copy students who aren't already in a group in the destination!
-                var validMembersToCopy = srcGroupMembers.Where(m => !alreadyAssignedStudentIds.Contains(m.StudentID)).ToList();
+                var sourceGroups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == SelectedCopyFromAssessment.AssessmentID).ToListAsync();
+                var sourceMembers = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == SelectedCopyFromAssessment.AssessmentID).ToListAsync();
 
-                // If all members of this group are already assigned elsewhere, completely skip copying this group
-                if (!validMembersToCopy.Any()) continue;
-
-                // RESTRICTION: Auto-rename the group if the name already exists
-                string newGroupName = srcGroup.GroupName ?? "Unnamed Group";
-                int copyCounter = 1;
-                while (existingDestGroupNames.Contains(newGroupName.ToLower()))
+                if (!sourceGroups.Any())
                 {
-                    newGroupName = $"{srcGroup.GroupName} ({copyCounter})";
-                    copyCounter++;
+                    ShowToastMessage?.Invoke("The selected assessment has no groups to copy.");
+                    return;
                 }
-                existingDestGroupNames.Add(newGroupName.ToLower()); // Reserve the name so the next iteration doesn't use it
 
-                var newGroup = new AssessmentGroup
-                {
-                    AssessmentID = SelectedGroupAssessment.AssessmentID,
-                    ClassID = ClassId,
-                    GroupName = newGroupName,
-                    GroupScore = 0 
-                };
-                await db.InsertAsync(newGroup);
-                groupsCopied++;
+                var destGroups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID).ToListAsync();
+                var destMembers = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == SelectedGroupAssessment.AssessmentID).ToListAsync();
 
-                foreach(var m in validMembersToCopy)
+                var existingDestGroupNames = destGroups.Select(g => g.GroupName?.ToLower()).ToHashSet();
+                var alreadyAssignedStudentIds = destMembers.Select(m => m.StudentID).ToHashSet();
+
+                int groupsCopied = 0;
+
+                // BULK TRANSACTION: Solves the N+1 Insert problem for copying groups
+                await db.RunInTransactionAsync(tran => 
                 {
-                    newMembersToInsert.Add(new AssessmentGroupMember
+                    foreach (var srcGroup in sourceGroups)
                     {
-                        GroupID = newGroup.GroupID,
-                        AssessmentID = SelectedGroupAssessment.AssessmentID,
-                        StudentID = m.StudentID,
-                        IndividualScore = 0 
-                    });
-                }
-            }
+                        var validMembersToCopy = sourceMembers.Where(m => m.GroupID == srcGroup.GroupID && !alreadyAssignedStudentIds.Contains(m.StudentID)).ToList();
+                        if (!validMembersToCopy.Any()) continue;
 
-            if (newMembersToInsert.Any())
-            {
-                await db.InsertAllAsync(newMembersToInsert);
-            }
+                        string newGroupName = srcGroup.GroupName ?? "Unnamed Group";
+                        int copyCounter = 1;
+                        while (existingDestGroupNames.Contains(newGroupName.ToLower()))
+                        {
+                            newGroupName = $"{srcGroup.GroupName} ({copyCounter})";
+                            copyCounter++;
+                        }
+                        existingDestGroupNames.Add(newGroupName.ToLower());
 
-            IsCopyGroupsModalOpen = false;
-            await LoadGroupsForSelectedAssessmentAsync();
+                        var newGroup = new AssessmentGroup { AssessmentID = SelectedGroupAssessment.AssessmentID, ClassID = ClassId, GroupName = newGroupName, GroupScore = 0 };
+                        tran.Insert(newGroup); // Gets ID instantly
+                        groupsCopied++;
 
-            if (groupsCopied == 0)
-            {
-                ShowToastMessage?.Invoke("No groups copied. All students from the source are already assigned to groups here.");
+                        foreach(var m in validMembersToCopy)
+                        {
+                            tran.Insert(new AssessmentGroupMember { GroupID = newGroup.GroupID, AssessmentID = SelectedGroupAssessment.AssessmentID, StudentID = m.StudentID, IndividualScore = 0 });
+                        }
+                    }
+                });
+
+                IsCopyGroupsModalOpen = false;
+                await LoadGroupsForSelectedAssessmentAsync();
+
+                ShowToastMessage?.Invoke(groupsCopied == 0 
+                    ? "No groups copied. All students from the source are already assigned to groups here." 
+                    : $"Successfully copied {groupsCopied} groups.");
             }
-            else
-            {
-                ShowToastMessage?.Invoke($"Successfully copied {groupsCopied} groups.");
-            }
+            finally { IsProcessing = false; }
         }
         [RelayCommand]
         public void CancelCopyGroups() => IsCopyGroupsModalOpen = false;
