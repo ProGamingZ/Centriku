@@ -269,7 +269,26 @@
                <TextBlock Text="{Binding TransferModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,20"/>
                <TextBlock Text="Select Destination Class:" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
                <ComboBox ItemsSource="{Binding AvailableTransferClasses}" SelectedItem="{Binding SelectedTransferClass}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}" Margin="0,0,0,30">
-                  <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding SubjectName}"/></DataTemplate></ComboBox.ItemTemplate>
+                  <ComboBox.ItemTemplate>
+                     <DataTemplate>
+                        <WrapPanel Orientation="Horizontal">
+                           <!-- Primary: The Subject Name -->
+                           <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                           
+                           <!-- Secondary: Program and Section (e.g., BSIT 3A) -->
+                           <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="4" Padding="4,0" Margin="0,0,8,0">
+                              <StackPanel Orientation="Horizontal">
+                                 <TextBlock Text="{Binding Program}" FontSize="12" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                 <TextBlock Text="{Binding SectionLabel}" FontSize="12" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                              </StackPanel>
+                           </Border>
+
+                           <!-- Tertiary: Term and Year (e.g., 1st Sem, 2025-2026) -->
+                           <TextBlock Text="{Binding Term}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                           <TextBlock Text="{Binding AcademicYear, StringFormat='({0})'}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        </WrapPanel>
+                     </DataTemplate>
+                  </ComboBox.ItemTemplate>
                </ComboBox>
                <Grid ColumnDefinitions="*, Auto, Auto">
                   <Button Grid.Column="1" Command="{Binding CancelTransferStudentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
