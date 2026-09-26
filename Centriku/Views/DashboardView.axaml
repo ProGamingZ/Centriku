@@ -7,39 +7,48 @@
 
     <Grid RowDefinitions="Auto, *">
         
-        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="40,30,40,30">
+        <StackPanel Grid.Row="0" Margin="40,30,40,15">
+            <TextBlock Text="Welcome back, Instructor!" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
             
-            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                <TextBlock Text="Welcome back, Instructor!" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                
-                <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,5,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Classes="Icon" Text="{DynamicResource IconBooks}" FontSize="32" Foreground="{DynamicResource TextMutedBrush}"/>
-                        <TextBlock Text="Managing" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding ActiveClasses}" Foreground="{DynamicResource PrimaryBrush}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <TextBlock Text="active classes with" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalStudents}" Foreground="{DynamicResource PrimaryBrush}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <TextBlock Text="total students." Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,15,0,0">
+                <!-- KPI Card 1: Active Classes -->
+                <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,15" MinWidth="160">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,5">
+                            <TextBlock Text="Active Classes" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding ActiveClasses}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                     </StackPanel>
-
-                    
-                </StackPanel>
+                </Border>
+                <!-- KPI Card 2: Total Students -->
+                <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,15" MinWidth="160">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,5">
+                            <TextBlock Text="Total Enrolled" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding TotalStudents}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
-            
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="40,0,40,20">
+            <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,0,0,15">
                 <StackPanel>
-                    <TextBlock Text="School Year Filter" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBlock Text="School Year" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
                     <ComboBox ItemsSource="{Binding AvailableYears}" SelectedItem="{Binding SelectedYear}" Width="160" Background="{DynamicResource AppBackground}"/>
                 </StackPanel>
 
                 <StackPanel>
-                    <TextBlock Text="Term Filter" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Term" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
                     <ComboBox ItemsSource="{Binding AvailableTerms}" SelectedItem="{Binding SelectedTerm}" Width="160" Background="{DynamicResource AppBackground}"/>
                 </StackPanel>
             </StackPanel>
-        </Grid>
+            
+            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+        </StackPanel>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*, 350" Margin="40,0,40,40">
+        <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,40">
             
             <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="0,0,20,0"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
@@ -58,7 +67,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="20" Margin="0,0,15,15" Width="255" 
+                                    <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="15" Margin="10,10,10,10"
                                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="{Binding FullTitle}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
@@ -95,29 +104,33 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20"
+            <!-- EARLY WARNINGS PANEL -->
+            <Border Grid.Column="1" MinWidth="320" MaxWidth="400" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,15">
+                
+                <!-- FIX 1: Replaced StackPanel with Grid so it stretches to fill all vertical space -->
+                <Grid RowDefinitions="Auto, *">
+                    
+                    <!-- Title -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,15">
                         <TextBlock Classes="Icon" Text="{DynamicResource IconEarlyWarning}" FontSize="20" Foreground="#EF4444"/>
                         <TextBlock Text="{Binding NeedsAttention, StringFormat='Early Warnings ({0})'}" FontSize="18" FontWeight="Bold" Foreground="#EF4444" VerticalAlignment="Center"/>
                     </StackPanel>
                     
-                    <Grid>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                    <!-- Content Area -->
+                    <Grid Grid.Row="1">
+                        <!-- FIX 2: Removed MaxHeight="400" and disabled horizontal scrolling -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding AttentionAlerts}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="15" Margin="0,0,0,10"
-                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="4,1,1,1">
+                                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                             <StackPanel>
                                                 
                                                 <Grid ColumnDefinitions="*, Auto">
-                                                    <TextBlock Grid.Column="0" Text="{Binding StudentName}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
-                                                    
-                                                    <Border Grid.Column="1" Padding="6,2" CornerRadius="4" 
-                                                            Background="{Binding IsCritical, Converter={x:Static ObjectConverters.IsNull}}" >
-                                                        </Border>
+                                                    <!-- FIX 3: Added TextTrimming to prevent long names from pushing the badges off-screen -->
+                                                    <TextBlock Grid.Column="0" Text="{Binding StudentName}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
                                                     
                                                     <StackPanel Grid.Column="1">
                                                         <Border IsVisible="{Binding !IsCritical}" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="6,2">
@@ -136,31 +149,30 @@
                                                     </StackPanel>
                                                 </Grid>
 
-                                                <TextBlock Text="{Binding ClassName}" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" Margin="0,5,0,0"/>
-                                                <TextBlock Text="{Binding AbsencesText}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,10"/>
+                                                <!-- FIX 4: Added TextWrapping="Wrap" so long class names stack neatly instead of overflowing -->
+                                                <TextBlock Text="{Binding ClassName}" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding AbsencesText}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,10" TextWrapping="Wrap"/>
 
-                                                <Border Background="{DynamicResource AppBackground}" CornerRadius="6" Padding="10">
-                                                    <ItemsControl ItemsSource="{Binding TermGrades}">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <UniformGrid Rows="1"/> 
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <StackPanel HorizontalAlignment="Center">
-                                                                    <TextBlock Text="{Binding TermLabel}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
-                                                                    
-                                                                    <Grid HorizontalAlignment="Center">
-                                                                        <TextBlock Text="{Binding GradeDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsFailing}"/>
-                                                                        
-                                                                        <TextBlock Text="{Binding GradeDisplay}" FontSize="13" FontWeight="Bold" Foreground="#EF4444" IsVisible="{Binding IsFailing}"/>
-                                                                    </Grid>
-                                                                </StackPanel>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </Border>
+                                                <!-- Decluttered Grades Display (From previous optimization) -->
+                                                <ItemsControl ItemsSource="{Binding TermGrades}" Margin="0,10,0,0">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <UniformGrid Rows="1"/> 
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel HorizontalAlignment="Center">
+                                                                <TextBlock Text="{Binding TermLabel}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                                                
+                                                                <Grid HorizontalAlignment="Center">
+                                                                    <TextBlock Text="{Binding GradeDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsFailing}"/>
+                                                                    <TextBlock Text="{Binding GradeDisplay}" FontSize="13" FontWeight="Bold" Foreground="#EF4444" IsVisible="{Binding IsFailing}"/>
+                                                                </Grid>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -168,12 +180,13 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <StackPanel IsVisible="{Binding HasNoAlerts}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,50,0,0">
+                        <!-- Empty State Wrapper perfectly centered -->
+                        <StackPanel IsVisible="{Binding HasNoAlerts}" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconEmptyState}" FontSize="48" Foreground="#10B981" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                             <TextBlock Text="All students are currently passing!" Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" FontSize="14" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
-                </StackPanel>
+                </Grid>
             </Border>
 
         </Grid>

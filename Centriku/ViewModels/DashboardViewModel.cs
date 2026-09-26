@@ -6,6 +6,7 @@ using Centriku.Services;
 using Centriku.Models;
 using System.Linq;
 using System.Collections.Generic;
+using System;
 
 namespace Centriku.ViewModels
 {
@@ -154,11 +155,8 @@ namespace Centriku.ViewModels
                         // Check if term is fully graded (100% weight)
                         bool isTerm100Percent = classCategories.All(c => termAssessments.Any(a => a.Category == c.Name && a.MaxScore > 0));
 
-                        double rawAcademicGrade = GradeCalculationService.CalculateRawAcademicGrade(
-                            classCategories, termAssessments, studentScores);
-
                         var termResult = GradeCalculationService.EvaluateFinalGrade(
-                            rawAcademicGrade, template ?? new GradingTemplate());
+                            classCategories, termAssessments, studentScores, template ?? new GradingTemplate());
 
                         bool isFailingTerm = isTerm100Percent && termResult.IsFailing;
                         if (isFailingTerm) triggersWarning = true;
@@ -172,7 +170,7 @@ namespace Centriku.ViewModels
 
                         if (isTerm100Percent) 
                         {
-                            sumOfRawTerms += rawAcademicGrade;
+                            sumOfRawTerms += termResult.TermNumericGrade;
                             completedTermsCount++;
                         }
                     }
@@ -183,14 +181,11 @@ namespace Centriku.ViewModels
 
                     if (completedTermsCount == termsToEvaluate.Count)
                     {
-                        double finalAcademicAverage = sumOfRawTerms / termsToEvaluate.Count;
-
-                        var finalResult = GradeCalculationService.EvaluateFinalGrade(
-                            finalAcademicAverage, template ?? new GradingTemplate());
+                        double finalAcademicAverage = Math.Round(sumOfRawTerms / termsToEvaluate.Count, 0, MidpointRounding.AwayFromZero);
                         
-                        finalGradeItem.GradeDisplay = finalResult.FinalOutput;
+                        finalGradeItem.GradeDisplay = $"{finalAcademicAverage}%";
                         
-                        if (finalResult.IsFailing) 
+                        if (finalAcademicAverage < (template?.PassingGrade ?? 75.0)) 
                         {
                             triggersWarning = true;
                             finalGradeItem.IsFailing = true;
