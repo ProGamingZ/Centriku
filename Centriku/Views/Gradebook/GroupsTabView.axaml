@@ -57,7 +57,7 @@
                      <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="15" Margin="0,0,15,15" Width="380">
                         <StackPanel Spacing="12">
                            
-                           <!-- Card Header -->
+                           <!-- Card Header (Group Name & Actions) -->
                            <Grid ColumnDefinitions="*, Auto, Auto">
                               <TextBlock Grid.Column="0" Text="{Binding GroupName}" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
                               
@@ -67,11 +67,9 @@
                               </StackPanel>
 
                               <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                 <!-- Edit Button -->
                                  <Button Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).OpenEditGroupModalCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Edit Group">
                                     <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
                                  </Button>
-                                 <!-- Delete Button -->
                                  <Button Command="{Binding #GroupsTabRoot.((vm:GradebookViewModel)DataContext).PromptDeleteGroupCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="4" ToolTip.Tip="Delete Group">
                                     <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="16" Foreground="#EF4444"/>
                                  </Button>
@@ -80,17 +78,35 @@
 
                            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
 
-                           <!-- Member Rows -->
+                           <!-- Member Rows (Individual Students & Crown Toggle) -->
                            <ItemsControl ItemsSource="{Binding Members}">
                               <ItemsControl.ItemTemplate>
                                  <DataTemplate>
-                                    <Grid ColumnDefinitions="*, 80, 60" Margin="0,4">
-                                       <TextBlock Grid.Column="0" Text="{Binding FullName}" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
+                                    <Grid ColumnDefinitions="Auto, *, 80, 60" Margin="0,4">
                                        
-                                       <!-- Individual Score Input -->
-                                       <TextBox Grid.Column="1" Text="{Binding IndividualScoreDisplay}" Margin="4,0" Background="{DynamicResource AppBackground}" HorizontalContentAlignment="Center"/>
-                                       <!-- Computed Combined Grade -->
-                                       <Border Grid.Column="2" Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="4" Padding="4,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                       <!-- Crown Toggle Button using Fluent Icon -->
+                                       <Button Grid.Column="0" 
+                                               Command="{Binding ToggleLeaderCommand}" 
+                                               Background="Transparent" 
+                                               Padding="4,0,8,0" 
+                                               ToolTip.Tip="{Binding LeaderTooltipText}">
+                                           <TextBlock Classes="Icon" 
+                                                      Text="{DynamicResource IconCrown}" 
+                                                      FontSize="18" 
+                                                      Foreground="{Binding LeaderIconColor}"/>
+                                       </Button>
+
+                                       <!-- Name & Leader Badge -->
+                                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                           <TextBlock Text="{Binding FullName}" FontSize="12" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
+                                           <Border IsVisible="{Binding DbModel.IsLeader}" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="4,1" VerticalAlignment="Center">
+                                               <TextBlock Text="Leader" FontSize="9" FontWeight="Bold" Foreground="#D97706"/>
+                                           </Border>
+                                       </StackPanel>
+                                       
+                                       <TextBox Grid.Column="2" Text="{Binding IndividualScoreDisplay}" Margin="4,0" Background="{DynamicResource AppBackground}" HorizontalContentAlignment="Center"/>
+                                       
+                                       <Border Grid.Column="3" Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="4" Padding="4,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                           <TextBlock Text="{Binding TotalComputedGrade}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource PrimaryBrush}"/>
                                        </Border>
                                     </Grid>

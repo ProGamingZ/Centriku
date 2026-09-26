@@ -18,5 +18,6 @@ namespace Centriku.Models
         public string StudentID { get; set; } = string.Empty;
 
         public double IndividualScore { get; set; } = 0;
+        public bool IsLeader { get; set; } = false;
     }
 }

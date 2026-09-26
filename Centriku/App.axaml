@@ -171,6 +171,7 @@
             <x:String x:Key="IconPerson">&#62912;</x:String>
             <x:String x:Key="IconArchive">&#61756;</x:String>
             <x:String x:Key="IconRestore">&#57577;</x:String>
+            <x:String x:Key="IconCrown">&#xf020f;</x:String>
 
 
         </ResourceDictionary>

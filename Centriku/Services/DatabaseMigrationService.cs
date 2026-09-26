@@ -10,13 +10,14 @@ namespace Centriku.Services
     public class DatabaseMigrationService
     {
         // 1. Force execution by bumping the Target Version to 4
-        public const int TARGET_SCHEMA_VERSION = 4;
+        public const int TARGET_SCHEMA_VERSION = 5;
 
         private readonly Dictionary<int, Func<SQLiteAsyncConnection, Task>> _migrationScripts = new()
         {
             { 2, MigrateToVersion2Async },
             { 3, MigrateToVersion3Async },
-            { 4, MigrateToVersion4Async } // Add V4
+            { 4, MigrateToVersion4Async },
+            { 5, MigrateToVersion5Async } 
         };
 
         public async Task RunMigrationsAsync(SQLiteAsyncConnection db)
@@ -133,5 +134,12 @@ namespace Centriku.Services
             } 
             catch { }
         }
+    
+        private static async Task MigrateToVersion5Async(SQLiteAsyncConnection db)
+        {
+            // Safely add the new IsLeader column if it doesn't exist
+            try { await db.ExecuteAsync("ALTER TABLE AssessmentGroupMember ADD COLUMN IsLeader INTEGER DEFAULT 0;"); } catch { }
+        }
+    
     }
 }

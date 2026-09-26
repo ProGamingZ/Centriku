@@ -83,12 +83,12 @@ namespace Centriku.ViewModels
                                      .Where(m => m.AssessmentID == SelectedGroupAssessment.AssessmentID)
                                      .ToListAsync();
 
-            var enrolledStudents = GradebookRows.Select(r => r.StudentInfo).ToList();
-            var assignedStudentIds = allMembers.Select(m => m.StudentID).ToHashSet();
+            var enrolledStudents = GradebookRows.Select(r => r.StudentInfo).Where(s => s.StudentID != null).ToList();
+            var assignedStudentIds = allMembers.Select(m => m.StudentID).Where(id => id != null).ToHashSet();
+            
 
-            // 1. Identify unassigned students (eligible for 1-person solo groups or assignment)
             var unassignedList = enrolledStudents
-                .Where(s => !assignedStudentIds.Contains(s.StudentID!))
+                .Where(s => !assignedStudentIds.Contains(s.StudentID!)) // The compiler is now happy
                 .Select(s => new GroupCandidateStudentViewModel(s))
                 .ToList();
             UnassignedStudents = new ObservableCollection<GroupCandidateStudentViewModel>(unassignedList);
@@ -108,6 +108,7 @@ namespace Centriku.ViewModels
                         card.Members.Add(new GroupMemberRowViewModel(m, student, SelectedGroupAssessment, card, () => _ = SaveAndSyncGroupGradeAsync(card)));
                     }
                 }
+                card.SortMembers();
                 card.UpdateAllMemberTotals();
                 groupCards.Add(card);
             }
@@ -547,8 +548,10 @@ namespace Centriku.ViewModels
 
         public string StudentID => StudentInfo.StudentID ?? "";
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
-
         public double IndividualScore => DbModel.IndividualScore;
+
+        public string LeaderIconColor => DbModel.IsLeader ? "#F59E0B" : "#4B5563"; // Gold if true, Muted Gray if false
+        public string LeaderTooltipText => DbModel.IsLeader ? "Remove Leader Status" : "Appoint as Leader";
 
         // Safely handles empty inputs and letters, and calculates math instantly
         public string IndividualScoreDisplay
@@ -577,6 +580,23 @@ namespace Centriku.ViewModels
             _assessment = assessment;
             _parentCard = parentCard;
             _onScoreChanged = onScoreChanged;
+        }
+        [RelayCommand]
+        public async Task ToggleLeaderAsync()
+        {
+            DbModel.IsLeader = !DbModel.IsLeader; // Flip the boolean
+            
+            // 1. Update the UI colors
+            OnPropertyChanged(nameof(LeaderIconColor));
+            OnPropertyChanged(nameof(LeaderTooltipText));
+            OnPropertyChanged(nameof(DbModel));
+
+            // 2. Save instantly to the Database
+            var db = new DatabaseService().GetConnection();
+            await db.UpdateAsync(DbModel);
+
+            // 3. Tell the parent card to re-sort the list instantly
+            _parentCard.SortMembers();
         }
 
         private void SetIndividualScore(double value)
@@ -639,6 +659,20 @@ namespace Centriku.ViewModels
             DbModel = group;
             _assessment = assessment;
             _onSave = onSave;
+        }
+
+        public void SortMembers()
+        {
+            // Sort: Leaders first (True), then alphabetically by Last Name
+            var sortedList = Members.OrderByDescending(m => m.DbModel.IsLeader)
+                                    .ThenBy(m => m.StudentInfo.LastName)
+                                    .ToList();
+
+            Members.Clear();
+            foreach (var member in sortedList)
+            {
+                Members.Add(member);
+            }
         }
 
         private void SetGroupScore(double value)
