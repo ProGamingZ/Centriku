@@ -11,6 +11,7 @@
                 <TextBlock Text="Grading Policies" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                 <TextBlock Text="Build and manage your custom grading rubrics." 
                         Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
             </StackPanel>
 
             <!-- Master-Detail Layout -->
@@ -29,14 +30,20 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
-                                            <Grid ColumnDefinitions="*, Auto, Auto">
-                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
                                                     <TextBlock Text="{Binding TemplateName}" Foreground="{DynamicResource TextMainBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                                     <TextBlock Text="{Binding PassingGrade, StringFormat='Passing Grade: {0}%'}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
                                                 </StackPanel>
                                                 
-                                                <Button Grid.Column="1" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).EditTemplateCommand}" CommandParameter="{Binding}" Content="Edit" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Padding="10,5" Margin="0,0,5,0"/>
-                                                <Button Grid.Column="2" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).InitiateDeleteCommand}" CommandParameter="{Binding}" Content="✕" Background="Transparent" Foreground="#EF4444" FontWeight="Bold" Padding="10,5"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                                    <Button Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).EditTemplateCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Edit Template">
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMutedBrush}" FontSize="18"/>
+                                                    </Button>
+                                                    <Button Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).InitiateDeleteCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Delete Template">
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="#EF4444" FontSize="18"/>
+                                                    </Button>
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -60,7 +67,7 @@
                             <StackPanel>
                                 <TextBlock Text="Template Details" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
                                 
-                                <Grid ColumnDefinitions="*, *, *">
+                                <Grid ColumnDefinitions="2*, 1*, 1*">
                                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
                                         <TextBlock Text="Template Name" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
                                         <TextBox Text="{Binding TemplateName}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
@@ -71,7 +78,6 @@
                                         <NumericUpDown Value="{Binding PassingGrade}" Minimum="1" Maximum="100" ShowButtonSpinner="False" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
                                     </StackPanel>
 
-                                    <!-- NRFG Base Value Restored -->
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Formula Base Value" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
                                         <NumericUpDown Value="{Binding NrfgBaseValue}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" ToolTip.Tip="The lowest possible percentage a student can receive (e.g., Base 50)"/>
@@ -102,7 +108,18 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <Button Command="{Binding AddCategoryCommand}" Content="+ Add Category" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                                <Button Command="{Binding AddCategoryCommand}" 
+                                        Content="+ Add Category" 
+                                        Background="Transparent" 
+                                        BorderBrush="{DynamicResource PrimaryBrush}" 
+                                        BorderThickness="1" 
+                                        Foreground="{DynamicResource PrimaryBrush}" 
+                                        FontWeight="Bold" 
+                                        HorizontalAlignment="Stretch" 
+                                        HorizontalContentAlignment="Center" 
+                                        CornerRadius="6" 
+                                        Padding="10" 
+                                        Margin="0,10,0,0"/>
                             </StackPanel>
                         </Border>
 
