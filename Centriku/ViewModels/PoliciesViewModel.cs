@@ -9,8 +9,10 @@ namespace Centriku.ViewModels
 {
     public partial class PoliciesViewModel : ViewModelBase
     {
+        public System.Action<string>? ShowToastMessage { get; set; }
+        [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
         // --- 1. UI STATE TRACKERS ---
-        [ObservableProperty] public partial string EditorTitleText { get; set; } = "✨ Create New Template";
+        [ObservableProperty] public partial string EditorTitleText { get; set; } = "Create New Template";
         [ObservableProperty] public partial string SaveButtonText { get; set; } = "Create Template";
         [ObservableProperty] public partial bool IsEditing { get; set; } = false;
         private int? _editingTemplateId = null;
@@ -20,7 +22,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<Centriku.Models.GradingTemplate> SavedTemplates { get; set; } = new();
         [ObservableProperty] public partial string TemplateName { get; set; } = "New Grading Template";
         [ObservableProperty] public partial decimal? PassingGrade { get; set; } = 75m;
-        [ObservableProperty] public partial double? NrfgBaseValue { get; set; } = 50.0; // Defaulting to NwSSU's Base 50!
+        [ObservableProperty] public partial double? NrfgBaseValue { get; set; } = 50.0;
         [ObservableProperty] public partial decimal TotalWeight { get; set; }
         [ObservableProperty] public partial bool IsValidPolicy { get; set; }
 
@@ -34,24 +36,24 @@ namespace Centriku.ViewModels
         // --- 4. COMMANDS ---
         public IRelayCommand AddCategoryCommand { get; }
         public IRelayCommand<PolicyCategoryItem> RemoveCategoryCommand { get; }
-        public IRelayCommand SavePolicyCommand { get; }
+        public IAsyncRelayCommand SavePolicyCommand { get; }
         public IRelayCommand<Centriku.Models.GradingTemplate> EditTemplateCommand { get; }
         public IRelayCommand ResetFormCommand { get; }
         public IRelayCommand<Centriku.Models.GradingTemplate> InitiateDeleteCommand { get; }
-        public IRelayCommand ConfirmDeleteCommand { get; }
+        public IAsyncRelayCommand ConfirmDeleteCommand { get; }
         public IRelayCommand CancelDeleteCommand { get; }
 
         public PoliciesViewModel()
         {
             AddCategoryCommand = new RelayCommand(() => AddCategory("New Category", 0m));
             RemoveCategoryCommand = new RelayCommand<PolicyCategoryItem>(RemoveCategory!);
-            SavePolicyCommand = new RelayCommand(SavePolicy, () => IsValidPolicy);
+            SavePolicyCommand = new AsyncRelayCommand(SavePolicyAsync, () => IsValidPolicy);
             
             EditTemplateCommand = new RelayCommand<Centriku.Models.GradingTemplate>(EditTemplate!);
             ResetFormCommand = new RelayCommand(ResetForm);
 
             InitiateDeleteCommand = new RelayCommand<Centriku.Models.GradingTemplate>(InitiateDelete!);
-            ConfirmDeleteCommand = new RelayCommand(ConfirmDelete);
+            ConfirmDeleteCommand = new AsyncRelayCommand(ConfirmDeleteAsync);
             CancelDeleteCommand = new RelayCommand(CancelDelete);
 
             ResetForm(); 
@@ -77,60 +79,85 @@ namespace Centriku.ViewModels
             foreach (var dbCat in savedCategories) { AddCategory(dbCat.Name ?? "Category", (decimal)dbCat.Weight); }
         }
 
-        private async void SavePolicy()
+        private async Task SavePolicyAsync()
         {
-            if (IsValidPolicy)
+            if (!IsValidPolicy) return;
+
+            IsProcessing = true;
+
+            try
             {
                 var db = new Centriku.Services.DatabaseService().GetConnection();
+                
+                // DEFENSIVE: Sanitize the template name
+                string safeTemplateName = string.IsNullOrWhiteSpace(TemplateName) ? "Unnamed Policy" : TemplateName.Trim();
 
                 if (_editingTemplateId.HasValue)
                 {
-                    var templateToUpdate = await db.Table<Centriku.Models.GradingTemplate>().Where(t => t.TemplateID == _editingTemplateId.Value).FirstOrDefaultAsync();
-                    templateToUpdate.TemplateName = this.TemplateName;
-                    templateToUpdate.PassingGrade = (double)(this.PassingGrade ?? 0m);
-                    // Deleted CalculationMode Assignment
-                    templateToUpdate.NrfgBaseValue = this.NrfgBaseValue ?? 0.0;
-                    
-                    await db.UpdateAsync(templateToUpdate);
+                    // TRANSACTION: Protects against corruption if the app crashes halfway!
+                    await db.RunInTransactionAsync(tran => 
+                    {
+                        var templateToUpdate = tran.Table<Centriku.Models.GradingTemplate>().FirstOrDefault(t => t.TemplateID == _editingTemplateId.Value);
+                        if (templateToUpdate != null)
+                        {
+                            templateToUpdate.TemplateName = safeTemplateName;
+                            templateToUpdate.PassingGrade = (double)(this.PassingGrade ?? 0m);
+                            templateToUpdate.NrfgBaseValue = this.NrfgBaseValue ?? 0.0;
+                            tran.Update(templateToUpdate);
 
-                    await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == templateToUpdate.TemplateID).DeleteAsync();
+                            // Wipe old categories
+                            tran.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == templateToUpdate.TemplateID).Delete();
+                            
+                            // ALIGNMENT: Must strictly start at 0 for UI Arrays!
+                            int order = 0;
+                            foreach (var uiCat in Categories) 
+                            { 
+                                tran.Insert(new Centriku.Models.GradingCategory { 
+                                    TemplateID = templateToUpdate.TemplateID, 
+                                    Name = uiCat.Name?.Trim() ?? "Unknown", // DEFENSIVE: Strip invisible characters!
+                                    Weight = (double)(uiCat.Weight ?? 0m),
+                                    SequenceOrder = order++ 
+                                }); 
+                            }
+                        }
+                    });
                     
-                    int order = 1;
-                    foreach (var uiCat in Categories) 
-                    { 
-                        await db.InsertAsync(new Centriku.Models.GradingCategory { 
-                            TemplateID = templateToUpdate.TemplateID, 
-                            Name = uiCat.Name, 
-                            Weight = (double)(uiCat.Weight ?? 0m),
-                            SequenceOrder = order++ 
-                        }); 
-                    }
+                    ShowToastMessage?.Invoke($"Policy '{safeTemplateName}' updated successfully.");
                 }
                 else
                 {
                     var newTemplate = new Centriku.Models.GradingTemplate 
                     { 
-                        TemplateName = this.TemplateName, 
+                        TemplateName = safeTemplateName, 
                         PassingGrade = (double)(this.PassingGrade ?? 0m), 
-                        // Deleted CalculationMode Assignment
                         NrfgBaseValue = this.NrfgBaseValue ?? 0.0 
                     };                    
                     await db.InsertAsync(newTemplate);
 
-                    int orderCreate = 1;
-                    foreach (var uiCat in Categories) 
-                    { 
-                        await db.InsertAsync(new Centriku.Models.GradingCategory { 
-                            TemplateID = newTemplate.TemplateID, 
-                            Name = uiCat.Name, 
-                            Weight = (double)(uiCat.Weight ?? 0m),
-                            SequenceOrder = orderCreate++ 
-                        }); 
-                    }
+                    // ALIGNMENT: Must strictly start at 0!
+                    int orderCreate = 0;
+                    var newCategories = Categories.Select(uiCat => new Centriku.Models.GradingCategory 
+                    {
+                        TemplateID = newTemplate.TemplateID, 
+                        Name = uiCat.Name?.Trim() ?? "Unknown", // DEFENSIVE: Strip invisible characters!
+                        Weight = (double)(uiCat.Weight ?? 0m),
+                        SequenceOrder = orderCreate++
+                    }).ToList();
+
+                    await db.InsertAllAsync(newCategories);
+                    ShowToastMessage?.Invoke($"New policy '{safeTemplateName}' created successfully.");
                 }
 
                 await LoadSavedTemplatesAsync();
                 ResetForm(); 
+            }
+            catch (System.Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error saving policy: {ex.Message}");
+            }
+            finally
+            {
+                IsProcessing = false;
             }
         }
 
@@ -177,16 +204,34 @@ namespace Centriku.ViewModels
             IsDeleteModalOpen = true;
         }
 
-        private async void ConfirmDelete()
+        private async Task ConfirmDeleteAsync()
         {
             if (_templateToDelete != null && CanConfirmDelete)
             {
-                var db = new Centriku.Services.DatabaseService().GetConnection();
-                await db.DeleteAsync(_templateToDelete);
-                await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == _templateToDelete.TemplateID).DeleteAsync();
-                
-                if (_editingTemplateId == _templateToDelete.TemplateID) ResetForm();
-                await LoadSavedTemplatesAsync();
+                IsProcessing = true;
+                try
+                {
+                    var db = new Centriku.Services.DatabaseService().GetConnection();
+                    
+                    // Transaction ensures both the template and its categories die together
+                    await db.RunInTransactionAsync(tran => 
+                    {
+                        tran.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == _templateToDelete.TemplateID).Delete();
+                        tran.Delete(_templateToDelete);
+                    });
+                    
+                    if (_editingTemplateId == _templateToDelete.TemplateID) ResetForm();
+                    await LoadSavedTemplatesAsync();
+                    ShowToastMessage?.Invoke($"Deleted policy: '{_templateToDelete.TemplateName}'");
+                }
+                catch(System.Exception ex)
+                {
+                    ShowToastMessage?.Invoke($"Error deleting policy: {ex.Message}");
+                }
+                finally
+                {
+                    IsProcessing = false;
+                }
             }
             CancelDelete();
         }
@@ -231,7 +276,8 @@ namespace Centriku.ViewModels
         {
             TotalWeight = Categories.Sum(c => c.Weight ?? 0m);
             IsValidPolicy = TotalWeight == 100m;
-            ((RelayCommand)SavePolicyCommand).NotifyCanExecuteChanged();
+            ((AsyncRelayCommand)SavePolicyCommand).NotifyCanExecuteChanged();
+
         }
     }
 
