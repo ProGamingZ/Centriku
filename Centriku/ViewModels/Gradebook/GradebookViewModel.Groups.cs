@@ -134,8 +134,10 @@ namespace Centriku.ViewModels
             // Fetch all existing scores for this group in ONE query instead of inside a loop
             var memberIds = groupCard.Members.Select(m => m.StudentID).ToList();
             var existingScores = await db.Table<Score>()
-                .Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && memberIds.Contains(s.StudentID))
-                .ToListAsync();
+                .Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID
+                    && s.StudentID != null
+                    && memberIds.Contains(s.StudentID))
+                .ToListAsync();;
 
             // 2. Prepare all the data in memory instantly
             foreach (var member in groupCard.Members)
@@ -405,10 +407,15 @@ namespace Centriku.ViewModels
                 var memberIdsToRemove = membersToRemove.Select(m => m.StudentID).ToList();
                 
                 var scoresToRemove = new List<Score>();
-                if (memberIdsToRemove.Count != 0) 
+                if (memberIdsToRemove.Count != 0)
                 {
-                    scoresToRemove = await db.Table<Score>().Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID && memberIdsToRemove.Contains(s.StudentID)).ToListAsync();
+                    scoresToRemove = await db.Table<Score>()
+                        .Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID
+                            && s.StudentID != null
+                            && memberIdsToRemove.Contains(s.StudentID))
+                        .ToListAsync();
                 }
+                
 
                 var membersToAdd = selectedStudents.Where(s => !existingMemberIds.Contains(s.StudentID)).ToList();
 
