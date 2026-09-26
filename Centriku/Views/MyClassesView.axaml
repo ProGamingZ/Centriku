@@ -5,149 +5,181 @@
              x:DataType="vm:MyClassesViewModel"
              x:Name="RootControl">
 
-    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <Grid RowDefinitions="Auto, Auto, Auto, *">
-            
-            <StackPanel Grid.Row="0" Margin="40,30,40,20">
-                <TextBlock Text="My Classes" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                <TextBlock Text="Manage your workload and assign grading policies to your subjects." 
-                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
-            </StackPanel>
+    <Grid>
+        <!-- MAIN CONTENT -->
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <Grid RowDefinitions="Auto, Auto, Auto, *">
+                <!-- Keep all your existing grid content here (StackPanel, Grid, Border, ItemsControl) exactly as it is -->
+                
+                <StackPanel Grid.Row="0" Margin="40,30,40,20">
+                    <TextBlock Text="My Classes" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <TextBlock Text="Manage your workload and assign grading policies to your subjects." 
+                               Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+                </StackPanel>
 
-            <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
-                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Bottom">
-                    <TextBox Text="{Binding SearchQuery}" PlaceholderText="Search subjects or sections..." Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Padding="15,10" Width="300" Margin="0,0,15,0"/>
-                    
-                    <StackPanel Margin="0,0,15,0">
-                        <TextBlock Text="Academic Year" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding AvailableYearFilters}" SelectedItem="{Binding SelectedYearFilter}" Background="{DynamicResource AppBackground}" Width="130"/>
-                    </StackPanel>
-                    
-                    <StackPanel>
-                        <TextBlock Text="Term" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding AvailableTermFilters}" SelectedItem="{Binding SelectedTermFilter}" Background="{DynamicResource AppBackground}" Width="130"/>
-                    </StackPanel>
-                </WrapPanel>
-
-                <Button Grid.Column="1" Command="{Binding ToggleAddClassFormCommand}" 
-                        Content="Add New Class" 
-                        Background="{DynamicResource PrimaryBrush}" 
-                        Foreground="White" FontWeight="Bold" 
-                        CornerRadius="8" Padding="20,10"/>
-            </Grid>
-
-            <Border Grid.Row="2" IsVisible="{Binding IsAddingClass}" 
-                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
-                    BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,30">
-                <Grid RowDefinitions="*, Auto">
-                    
-                    <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
-                        <StackPanel Margin="0,0,15,15" MinWidth="200">
-                            <TextBlock Text="Course Code &amp; Title*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewSubjectName}" PlaceholderText="e.g. CS101 Mobile Prog" Background="{DynamicResource AppBackground}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,15,15" MinWidth="150">
-                            <TextBlock Text="Program" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewProgram}" PlaceholderText="e.g. BSCS" Background="{DynamicResource AppBackground}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,15,15" MinWidth="150">
-                            <TextBlock Text="Section Label" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewSectionLabel}" PlaceholderText="e.g. 3A" Background="{DynamicResource AppBackground}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,15,15" MinWidth="200">
-                            <TextBlock Text="Professor Name" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewProfessorName}" PlaceholderText="e.g. Yuri Joseph A. Ortiz" Background="{DynamicResource AppBackground}"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,15,15" MinWidth="120">
-                            <TextBlock Text="Term*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <ComboBox ItemsSource="{Binding AvailableTerms}" SelectedItem="{Binding NewTerm}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,0,15,15" MinWidth="120">
-                            <TextBlock Text="Academic Year" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NewAcademicYear}" Background="{DynamicResource AppBackground}"/>
+                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,20">
+                    <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Bottom">
+                        <TextBox Text="{Binding SearchQuery}" PlaceholderText="Search subjects or sections..." Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Padding="15,10" Width="300" Margin="0,0,15,0"/>
+                        
+                        <StackPanel Margin="0,0,15,0">
+                            <TextBlock Text="Academic Year" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableYearFilters}" SelectedItem="{Binding SelectedYearFilter}" Background="{DynamicResource AppBackground}" Width="130"/>
                         </StackPanel>
                         
-                        <StackPanel Margin="0,0,15,15" MinWidth="250">
-                            <TextBlock Text="Grading Policy*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                            <ComboBox ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedTemplate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch" PlaceholderText="Select a saved template...">
-                                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding TemplateName}"/></DataTemplate></ComboBox.ItemTemplate>
-                            </ComboBox>
+                        <StackPanel>
+                            <TextBlock Text="Term" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                            <ComboBox ItemsSource="{Binding AvailableTermFilters}" SelectedItem="{Binding SelectedTermFilter}" Background="{DynamicResource AppBackground}" Width="130"/>
                         </StackPanel>
                     </WrapPanel>
 
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-                        <Button Command="{Binding ToggleAddClassFormCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
-                        <Button Command="{Binding SaveClassCommand}" Content="Save Class" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
-                    </StackPanel>
+                    <Button Grid.Column="1" Command="{Binding ToggleAddClassFormCommand}" 
+                            Content="Add New Class" 
+                            Background="{DynamicResource PrimaryBrush}" 
+                            Foreground="White" FontWeight="Bold" 
+                            CornerRadius="8" Padding="20,10"/>
                 </Grid>
-            </Border>
 
-            <ItemsControl Grid.Row="3" ItemsSource="{Binding ActiveClasses}" Margin="40,0,40,40">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Background="{DynamicResource SurfaceBrush}" 
-                                BorderBrush="{DynamicResource BorderBrush}" 
-                                BorderThickness="1" 
-                                CornerRadius="12" 
-                                Padding="20" 
-                                Margin="0,0,20,20" 
-                                Width="240">
-                            <Grid RowDefinitions="Auto, Auto, *, Auto">
-                                
-                                <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,15">
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                        <Border  CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Term}" FontSize="16" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold"/>
-                                        </Border>
-                                    </StackPanel>
+                <Border Grid.Row="2" IsVisible="{Binding IsAddingClass}" 
+                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
+                        BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,30">
+                    <Grid RowDefinitions="*, Auto">
+                        
+                        <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+                            <StackPanel Margin="0,0,15,15" MinWidth="200">
+                                <TextBlock Text="Course Code &amp; Title*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding NewSubjectName}" PlaceholderText="e.g. CS101 Mobile Prog" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,15,15" MinWidth="150">
+                                <TextBlock Text="Program" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding NewProgram}" PlaceholderText="e.g. BSCS" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,15,15" MinWidth="150">
+                                <TextBlock Text="Section Label" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding NewSectionLabel}" PlaceholderText="e.g. 3A" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,15,15" MinWidth="200">
+                                <TextBlock Text="Professor Name" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding NewProfessorName}" PlaceholderText="e.g. Yuri Joseph A. Ortiz" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,15,15" MinWidth="120">
+                                <TextBlock Text="Term*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding AvailableTerms}" SelectedItem="{Binding NewTerm}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,15,15" MinWidth="120">
+                                <TextBlock Text="Academic Year" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding NewAcademicYear}" Background="{DynamicResource AppBackground}"/>
+                            </StackPanel>
+                            
+                            <StackPanel Margin="0,0,15,15" MinWidth="250">
+                                <TextBlock Text="Grading Policy*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedTemplate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch" PlaceholderText="Select a saved template...">
+                                    <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding TemplateName}"/></DataTemplate></ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </WrapPanel>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                            <Button Command="{Binding ToggleAddClassFormCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <Button Command="{Binding SaveClassCommand}" Content="Save Class" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <ItemsControl Grid.Row="3" ItemsSource="{Binding ActiveClasses}" Margin="40,0,40,40">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource SurfaceBrush}" 
+                                    BorderBrush="{DynamicResource BorderBrush}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="12" 
+                                    Padding="20" 
+                                    Margin="0,0,20,20" 
+                                    Width="240">
+                                <Grid RowDefinitions="Auto, Auto, *, Auto">
                                     
-                                    <Button Grid.Column="1" Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).EditClassCommand}" CommandParameter="{Binding}" Background="Transparent" Margin="0,0,5,0" ToolTip.Tip="Edit Class">
-                                        <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMainBrush}" FontSize="24"/>
-                                    </Button>
-                                    <Button Grid.Column="2" Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).DeleteClassCommand}" CommandParameter="{Binding}" Background="Transparent" ToolTip.Tip="Delete Class">
-                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="#EF4444" FontSize="24"/>
-                                    </Button>
+                                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,15">
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                            <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Term}" FontSize="16" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold"/>
+                                            </Border>
+                                        </StackPanel>
+                                        
+                                        <Button Grid.Column="1" Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).EditClassCommand}" CommandParameter="{Binding}" Background="Transparent" Margin="0,0,5,0" ToolTip.Tip="Edit Class">
+                                            <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMainBrush}" FontSize="24"/>
+                                        </Button>
+                                        <Button Grid.Column="2" Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).DeleteClassCommand}" CommandParameter="{Binding}" Background="Transparent" ToolTip.Tip="Delete Class">
+                                            <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="#EF4444" FontSize="24"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <StackPanel Grid.Row="1" Margin="0,0,0,20">
+                                        <TextBlock Text="{Binding SubjectName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding ProgramSectionDisplay}" FontSize="14" Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0"/>
+                                        <TextBlock Text="{Binding AcademicYear}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="2" Margin="0,0,0,25" VerticalAlignment="Bottom">
+                                        <TextBlock Text="Grading Policy:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <TextBlock Text="{Binding TemplateName}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <Button Grid.Row="3" 
+                                            Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).OpenClassCommand}" 
+                                            CommandParameter="{Binding}" 
+                                            Content="Open Gradebook →" 
+                                            Background="{DynamicResource AppBackground}" 
+                                            Foreground="{DynamicResource TextMainBrush}" 
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1"
+                                            FontWeight="Bold" 
+                                            HorizontalAlignment="Stretch" 
+                                            HorizontalContentAlignment="Center"/>
                                 </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </ScrollViewer>
 
-                                <StackPanel Grid.Row="1" Margin="0,0,0,20">
-                                    <TextBlock Text="{Binding SubjectName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding ProgramSectionDisplay}" FontSize="14" Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0"/>
-                                    <TextBlock Text="{Binding AcademicYear}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,0"/>
-                                </StackPanel>
+        <!-- ========================================== -->
+        <!-- FLOATING OVERLAYS (Z-Index guarantees top) -->
+        <!-- ========================================== -->
 
-                                <StackPanel Grid.Row="2" Margin="0,0,0,25" VerticalAlignment="Bottom">
-                                    <TextBlock Text="Grading Policy:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <TextBlock Text="{Binding TemplateName}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
-                                </StackPanel>
+        <!-- 1. DELETE CONFIRMATION MODAL -->
+        <Border IsVisible="{Binding IsDeleteModalOpen}" Background="#B3000000" ZIndex="100">
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel>
+                    <TextBlock Text="Delete Class?" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <TextBlock Text="{Binding DeleteConfirmationMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+                    <Grid ColumnDefinitions="*, Auto, Auto">
+                        <Button Grid.Column="1" Command="{Binding CancelDeleteCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                        <Button Grid.Column="2" Command="{Binding ConfirmDeleteCommand}" Content="Delete Class" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
 
-                                <Button Grid.Row="3" 
-                                        Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).OpenClassCommand}" 
-                                        CommandParameter="{Binding}" 
-                                        Content="Open Gradebook →" 
-                                        Background="{DynamicResource AppBackground}" 
-                                        Foreground="{DynamicResource TextMainBrush}" 
-                                        BorderBrush="{DynamicResource BorderBrush}"
-                                        BorderThickness="1"
-                                        FontWeight="Bold" 
-                                        HorizontalAlignment="Stretch" 
-                                        HorizontalContentAlignment="Center"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            
-        </Grid>
-    </ScrollViewer>
+        <!-- 2. PROCESSING SPINNER OVERLAY -->
+        <Border IsVisible="{Binding IsProcessing}" Background="#B3000000" ZIndex="999">
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="150" Height="6" CornerRadius="3" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackground}"/>
+                    <TextBlock Text="Processing Action..." FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Border>
+
+    </Grid>
 </UserControl>

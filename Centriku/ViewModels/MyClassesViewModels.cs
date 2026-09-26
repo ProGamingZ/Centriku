@@ -12,6 +12,11 @@ namespace Centriku.ViewModels
     public partial class MyClassesViewModel : ViewModelBase
     {
         private readonly Action<ViewModelBase> _navigateAction;
+        public System.Action<string>? ShowToastMessage { get; set; }
+        [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
+        [ObservableProperty] public partial bool IsDeleteModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string DeleteConfirmationMessage { get; set; } = string.Empty;
+        private ClassCardViewModel? _classToDelete;
         [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> ActiveClasses { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<GradingTemplate> AvailableTemplates { get; set; } = new();
         [ObservableProperty] public partial bool IsAddingClass { get; set; } = false;
@@ -43,7 +48,10 @@ namespace Centriku.ViewModels
         public IRelayCommand SaveClassCommand { get; }
         public IRelayCommand<ClassCardViewModel> EditClassCommand { get; } 
         public IRelayCommand<ClassCardViewModel> DeleteClassCommand { get; }
+        public IRelayCommand ConfirmDeleteCommand { get; }
+        public IRelayCommand CancelDeleteCommand { get; }
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
+
 
         public MyClassesViewModel(Action<ViewModelBase> navigateAction)
         {
@@ -57,7 +65,9 @@ namespace Centriku.ViewModels
             
             SaveClassCommand = new RelayCommand(SaveClass);
             EditClassCommand = new RelayCommand<ClassCardViewModel>(EditClass!);
-            DeleteClassCommand = new RelayCommand<ClassCardViewModel>(DeleteClass!);
+            DeleteClassCommand = new RelayCommand<ClassCardViewModel>(PromptDeleteClass!);
+            ConfirmDeleteCommand = new AsyncRelayCommand(ConfirmDeleteAsync);
+            CancelDeleteCommand = new RelayCommand(CancelDelete);
             OpenClassCommand = new RelayCommand<ClassCardViewModel>(OpenClass!);
 
             DirectoryViewModel.OnStudentRosterChanged += () =>
@@ -147,48 +157,96 @@ namespace Centriku.ViewModels
         private async void SaveClass()
         {
             if (string.IsNullOrWhiteSpace(NewSubjectName) || SelectedTemplate == null) return;
-            var db = new DatabaseService().GetConnection();
+            
+            IsProcessing = true; // Show loading spinner
+            
+            try
+            {
+                var db = new DatabaseService().GetConnection();
+                bool isUpdate = _editingClassId.HasValue;
 
-            if (_editingClassId.HasValue)
-            {
-                // UPDATE
-                var classToUpdate = await db.Table<TeacherClass>().Where(c => c.ClassID == _editingClassId.Value).FirstOrDefaultAsync();
-                classToUpdate.SubjectName = NewSubjectName;
-                classToUpdate.SectionLabel = NewSectionLabel;
-                classToUpdate.Program = NewProgram;
-                classToUpdate.ProfessorName = NewProfessorName;
-                classToUpdate.AcademicYear = NewAcademicYear;
-                classToUpdate.Term = NewTerm;
-                classToUpdate.GradingTemplateID = SelectedTemplate.TemplateID;
-                
-                await db.UpdateAsync(classToUpdate);
-            }
-            else
-            {
-                // CREATE
-                var newClass = new TeacherClass
+                if (isUpdate)
                 {
-                    SubjectName = NewSubjectName,
-                    SectionLabel = NewSectionLabel,
-                    Program = NewProgram,
-                    ProfessorName = NewProfessorName,
-                    AcademicYear = NewAcademicYear,
-                    Term = NewTerm,
-                    GradingTemplateID = SelectedTemplate.TemplateID
-                };
-                await db.InsertAsync(newClass);
+                    // UPDATE
+                    var classToUpdate = await db.Table<TeacherClass>().Where(c => c.ClassID == _editingClassId.Value).FirstOrDefaultAsync();
+                    classToUpdate.SubjectName = NewSubjectName;
+                    classToUpdate.SectionLabel = NewSectionLabel;
+                    classToUpdate.Program = NewProgram;
+                    classToUpdate.ProfessorName = NewProfessorName;
+                    classToUpdate.AcademicYear = NewAcademicYear;
+                    classToUpdate.Term = NewTerm;
+                    classToUpdate.GradingTemplateID = SelectedTemplate.TemplateID;
+                    
+                    await db.UpdateAsync(classToUpdate);
+                    ShowToastMessage?.Invoke($"Class '{NewSubjectName}' updated successfully.");
+                }
+                else
+                {
+                    // CREATE
+                    var newClass = new TeacherClass
+                    {
+                        SubjectName = NewSubjectName,
+                        SectionLabel = NewSectionLabel,
+                        Program = NewProgram,
+                        ProfessorName = NewProfessorName,
+                        AcademicYear = NewAcademicYear,
+                        Term = NewTerm,
+                        GradingTemplateID = SelectedTemplate.TemplateID
+                    };
+                    await db.InsertAsync(newClass);
+                    ShowToastMessage?.Invoke($"Class '{NewSubjectName}' created successfully.");
+                }
+
+                ResetForm();
+                await LoadClasses();
             }
-
-            ResetForm();
-            await LoadClasses();
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error saving class: {ex.Message}");
+            }
+            finally
+            {
+                IsProcessing = false; // Hide spinner
+            }
         }
-
-        private async void DeleteClass(ClassCardViewModel classCard)
+        private void PromptDeleteClass(ClassCardViewModel classCard)
         {
             if (classCard == null) return;
-            var db = new DatabaseService().GetConnection();
-            await db.DeleteAsync(classCard.DbModel);
-            await LoadClasses();
+            _classToDelete = classCard;
+            DeleteConfirmationMessage = $"Are you sure you want to delete '{classCard.SubjectName} - {classCard.SectionLabel}'?\n\nThis will permanently erase the class record. Student grades and records tied to this class will be lost.";
+            IsDeleteModalOpen = true;
+        }
+
+        private void CancelDelete()
+        {
+            IsDeleteModalOpen = false;
+            _classToDelete = null;
+        }
+        private async Task ConfirmDeleteAsync()
+        {
+            if (_classToDelete == null) return;
+            
+            IsProcessing = true; // Show spinner
+            
+            try
+            {
+                var db = new DatabaseService().GetConnection();
+                
+                // Optional: You may want to add raw SQL here to cascade delete Assessment columns and Scores tied to this ClassID
+                
+                await db.DeleteAsync(_classToDelete.DbModel);
+                ShowToastMessage?.Invoke($"Deleted class: '{_classToDelete.SubjectName}'");
+                await LoadClasses();
+            }
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error deleting class: {ex.Message}");
+            }
+            finally
+            {
+                IsProcessing = false; // Hide spinner
+                CancelDelete();       // Close modal
+            }
         }
 
         private void ResetForm()
