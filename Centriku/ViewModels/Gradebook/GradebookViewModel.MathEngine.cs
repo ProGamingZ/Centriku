@@ -20,10 +20,18 @@ namespace Centriku.ViewModels
       {
          return string.IsNullOrWhiteSpace(gradingPeriod) ? string.Empty : gradingPeriod.Trim();
       }
+      
+      public static string GenerateSafeKey(string? rawString)
+      {
+         if (string.IsNullOrWhiteSpace(rawString)) return "unknown";
+         var chars = rawString.Where(char.IsLetterOrDigit).ToArray();
+         return new string(chars).ToLowerInvariant();
+      }
 
+      // 2. Update MatchesCategory to use the new sanitizer
       private static bool MatchesCategory(string? left, string? right)
       {
-         return string.Equals(NormalizeCategoryName(left), NormalizeCategoryName(right), StringComparison.OrdinalIgnoreCase);
+         return string.Equals(GenerateSafeKey(left), GenerateSafeKey(right), StringComparison.OrdinalIgnoreCase);
       }
 
       private static bool MatchesGradingPeriod(string? left, string? right)
@@ -57,9 +65,8 @@ namespace Centriku.ViewModels
 
          foreach (var category in AvailableCategories)
          {
-            // NEW: Create a bulletproof Semantic Key (e.g. "Class Standing" -> "classstanding")
-            string safeKey = (category.Name ?? "unknown").Replace(" ", "").ToLower();
-
+            string rawKey = $"{targetPeriod}_{category.Name}";
+            string safeKey = GenerateSafeKey(rawKey);
             // Ensure the dictionary entry exists for binding
             if (!row.CategoryGrades.ContainsKey(safeKey))
                row.CategoryGrades[safeKey] = new CategoryGradeViewModel();
@@ -187,5 +194,7 @@ namespace Centriku.ViewModels
             }
          }
       }
+   
+      
    }
 }

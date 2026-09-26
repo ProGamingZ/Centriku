@@ -192,7 +192,8 @@ namespace Centriku.Views.Gradebook
                if (periodAssessments.Any())
                {
                   // Ask for the exact semantic key (e.g. "classstanding")
-                  string safeKey = (category.CategoryName ?? "unknown").Replace(" ", "").ToLower();
+                  string rawKey = $"{vm.SelectedTermView}_{category.CategoryName}";
+                  string safeKey = GradebookViewModel.GenerateSafeKey(rawKey);
 
                   // Create TS Column
                   var tsHeader = new Avalonia.Controls.TextBlock { Text = "TS", FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.MediumPurple };
