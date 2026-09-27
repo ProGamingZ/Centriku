@@ -145,9 +145,9 @@ namespace Centriku.ViewModels
                 membersToUpdate.Add(member.DbModel);
 
                 // Math: Student Grade = (GroupScore * GroupWeight) + (IndividualScore * IndividualWeight)
-                double totalEarned = Math.Round((groupCard.GroupScore * gWeight) + (member.IndividualScore * iWeight), 2);
+                double totalEarned = groupCard.GroupScore + member.IndividualScore;
                 totalEarned = Math.Min(SelectedGroupAssessment.MaxScore, Math.Max(0, totalEarned));
-
+                
                 var scoreRecord = existingScores.FirstOrDefault(s => s.StudentID == member.StudentID);
 
                 if (scoreRecord == null)
@@ -624,9 +624,10 @@ namespace Centriku.ViewModels
 
         public void CalculateTotal(double groupScore)
         {
-            double gWeight = _assessment.GroupWeight / 100.0;
-            double iWeight = _assessment.IndividualWeight / 100.0;
-            TotalComputedGrade = Math.Round((groupScore * gWeight) + (IndividualScore * iWeight), 2);
+            // Straight Addition
+            double rawTotal = groupScore + IndividualScore;
+            // Ensure the score never drops below 0 or exceeds the max score!
+            TotalComputedGrade = Math.Min(_assessment.MaxScore, Math.Max(0, rawTotal));
         }
     }
 

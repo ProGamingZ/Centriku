@@ -26,11 +26,8 @@
                   <Run Text="Max Score: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
                   <Run Text="{Binding SelectedGroupAssessment.MaxScore}" Foreground="{DynamicResource PrimaryBrush}"/>
                   <Run Text="   |   " Foreground="{DynamicResource BorderBrush}" FontWeight="Normal"/>
-                  <Run Text="Weight: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
-                  <Run Text="{Binding SelectedGroupAssessment.GroupWeight}" />
-                  <Run Text="% Group / " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
-                  <Run Text="{Binding SelectedGroupAssessment.IndividualWeight}" />
-                  <Run Text="% Individual" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
+                  <Run Text="Formula: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
+                  <Run Text="Group Score + Individual Score" Foreground="{DynamicResource PrimaryBrush}" />
                </TextBlock>
             </Border>
          </StackPanel>

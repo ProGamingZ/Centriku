@@ -34,22 +34,11 @@ namespace Centriku.ViewModels
          IsAddingAssessment = true;
          IsEnrolling = false; 
          NewAssessmentType = string.IsNullOrEmpty(assessment.AssessmentType) ? "Solo" : assessment.AssessmentType;
-         NewAssessmentGroupWeight = assessment.GroupWeight > 0 ? assessment.GroupWeight : 30;
-         NewAssessmentIndividualWeight = assessment.IndividualWeight > 0 ? assessment.IndividualWeight : 70;
       }
       private async void SaveAssessment()
       {
          if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
             return;
-
-         if (NewAssessmentType == "Group/Pair")
-         {
-             if (Math.Round(NewAssessmentGroupWeight + NewAssessmentIndividualWeight, 2) != 100.0)
-             {
-                 ShowToastMessage?.Invoke("Group Weight and Individual Weight must total exactly 100%.");
-                 return;
-             }
-         }
 
          // EXCEL LIMIT VALIDATION ---
          int existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod));
@@ -87,8 +76,8 @@ namespace Centriku.ViewModels
             assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
             assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
             assessmentToUpdate.AssessmentType = NewAssessmentType;
-            assessmentToUpdate.GroupWeight = NewAssessmentGroupWeight;
-            assessmentToUpdate.IndividualWeight = NewAssessmentIndividualWeight;
+            assessmentToUpdate.GroupWeight = 0;
+            assessmentToUpdate.IndividualWeight = 0;
 
             await db.UpdateAsync(assessmentToUpdate);
          }
@@ -104,8 +93,8 @@ namespace Centriku.ViewModels
                MaxScore = NewAssessmentMaxScore,
                DateGiven = NewAssessmentDate ?? System.DateTime.Now,
                AssessmentType = NewAssessmentType,
-               GroupWeight = NewAssessmentGroupWeight,
-               IndividualWeight = NewAssessmentIndividualWeight
+               GroupWeight = 0,
+               IndividualWeight = 0
             };
             await db.InsertAsync(newAssessment);
 
@@ -183,14 +172,10 @@ namespace Centriku.ViewModels
          NewAssessmentPeriod = IsSemesterAverageView ? (GradingPeriods.FirstOrDefault() ?? "Midterm") : SelectedTermView;
          IsAddingAssessment = false; // Hides the form
          NewAssessmentType = "Solo";
-         NewAssessmentGroupWeight = 30;
-         NewAssessmentIndividualWeight = 70;
       }
 
       [ObservableProperty] public partial ObservableCollection<string> AssessmentTypeOptions { get; set; } = new() { "Solo", "Group/Pair" };
       [ObservableProperty] public partial string NewAssessmentType { get; set; } = "Solo";
-      [ObservableProperty] public partial double NewAssessmentGroupWeight { get; set; } = 30;
-      [ObservableProperty] public partial double NewAssessmentIndividualWeight { get; set; } = 70;
       public bool IsGroupAssessmentSelected => NewAssessmentType == "Group/Pair";
 
       partial void OnNewAssessmentTypeChanged(string value)
