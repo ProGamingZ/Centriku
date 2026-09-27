@@ -87,7 +87,7 @@
       <Border Grid.Row="2" IsVisible="{Binding IsAddingStudent}" 
                Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
                BorderThickness="1" CornerRadius="8" Padding="20" Margin="24,0,24,20"
-               MaxWidth="1080" HorizontalAlignment="Left">
+               HorizontalAlignment="Stretch">
             <Grid RowDefinitions="*, Auto">
                <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
                   <StackPanel Margin="0,0,12,12">
@@ -168,7 +168,7 @@
                </DataGridTemplateColumn>
 
                <!-- Expanding star columns absorb horizontal void -->
-               <DataGridTemplateColumn Header="Last Name" SortMemberPath="LastName" Width="1.4*" MinWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowLastNameColumn}">
+               <DataGridTemplateColumn Header="Last Name" SortMemberPath="LastName" Width="1.4*" MinWidth="130" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowLastNameColumn}">
                   <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                            <Panel Margin="8,0">
@@ -179,7 +179,7 @@
                   </DataGridTemplateColumn.CellTemplate>
                </DataGridTemplateColumn>
                                     
-               <DataGridTemplateColumn Header="First Name" SortMemberPath="FirstName" Width="1.4*" MinWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowFirstNameColumn}">
+               <DataGridTemplateColumn Header="First Name" SortMemberPath="FirstName" Width="1.4*" MinWidth="130" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowFirstNameColumn}">
                   <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                            <Panel Margin="8,0">

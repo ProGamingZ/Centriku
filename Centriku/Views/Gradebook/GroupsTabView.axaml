@@ -8,9 +8,12 @@
    <Grid RowDefinitions="Auto, *">
       
       <!-- Top Action Bar -->
-      <Grid Grid.Row="0" Margin="24,20,24,15" ColumnDefinitions="Auto, *, Auto">
-         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
-            <StackPanel>
+      <Grid Grid.Row="0" Margin="24,20,24,15" ColumnDefinitions="*, Auto">
+         
+         <!-- LEFT SIDE: Fluid WrapPanel for dropdown and info badge -->
+         <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Bottom">
+            
+            <StackPanel Margin="0,0,15,10">
                <TextBlock Text="Select Group Assessment" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
                <ComboBox ItemsSource="{Binding AvailableGroupAssessments}" SelectedItem="{Binding SelectedGroupAssessment}" Width="250" Background="{DynamicResource AppBackground}">
                   <ComboBox.ItemTemplate>
@@ -21,8 +24,8 @@
                </ComboBox>
             </StackPanel>
 
-            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,6" VerticalAlignment="Bottom" IsVisible="{Binding SelectedGroupAssessment, Converter={x:Static ObjectConverters.IsNotNull}}">
-               <TextBlock Foreground="{DynamicResource TextMainBrush}" FontSize="12" FontWeight="SemiBold">
+            <Border Margin="0,0,15,10" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="15,8" VerticalAlignment="Bottom" IsVisible="{Binding SelectedGroupAssessment, Converter={x:Static ObjectConverters.IsNotNull}}">
+               <TextBlock Foreground="{DynamicResource TextMainBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center">
                   <Run Text="Max Score: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
                   <Run Text="{Binding SelectedGroupAssessment.MaxScore}" Foreground="{DynamicResource PrimaryBrush}"/>
                   <Run Text="   |   " Foreground="{DynamicResource BorderBrush}" FontWeight="Normal"/>
@@ -30,16 +33,20 @@
                   <Run Text="Group Score + Individual Score" Foreground="{DynamicResource PrimaryBrush}" />
                </TextBlock>
             </Border>
-         </StackPanel>
 
-         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
+         </WrapPanel>
+
+         <!-- RIGHT SIDE: Action Buttons -->
+         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom" Margin="0,0,0,10">
             <Button Command="{Binding OpenCopyGroupsModalCommand}" Content="Copy Groups" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="16,8"/>
             <Button Command="{Binding OpenCreateGroupModalCommand}" Content="+ Create Group" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="16,8"/>
          </StackPanel>
+
       </Grid>
 
       <!-- Main Body -->
-      <Grid Grid.Row="1" Margin="24,0,24,24" ColumnDefinitions="*, 300">
+
+      <Grid Grid.Row="1" Margin="24,0,24,24" ColumnDefinitions="3*, 1*">
 
          <!-- Groups Cards List -->
          <ScrollViewer Grid.Column="0" Margin="0,0,15,0" VerticalScrollBarVisibility="Auto">
@@ -119,7 +126,7 @@
          </ScrollViewer>
 
          <!-- Unassigned / Solo Students Drawer -->
-         <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="15">
+         <Border Grid.Column="1" MinWidth="250" MaxWidth="400" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="15">
             <Grid RowDefinitions="Auto, *">
                <StackPanel Grid.Row="0" Margin="0,0,0,10">
                   <TextBlock Text="Unassigned Students" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextMainBrush}"/>

@@ -47,7 +47,6 @@
                CanUserSortColumns="True" CanUserResizeColumns="True" CanUserReorderColumns="True" IsReadOnly="True" 
                GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" 
                RowHeight="36"
-               MinHeight="250"
                HorizontalAlignment="Stretch" 
                VerticalAlignment="Stretch">
                <DataGrid.Columns>
@@ -64,7 +63,7 @@
                   </DataGridTemplateColumn>
 
                   <!-- Flexible Star Columns -->
-                  <DataGridTemplateColumn Header="Last Name" SortMemberPath="LastName" Width="1.4*" MinWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveLastNameColumn}">
+                  <DataGridTemplateColumn Header="Last Name" SortMemberPath="LastName" Width="1.4*" MinWidth="130" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveLastNameColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="8,0">
@@ -75,7 +74,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
                   
-                  <DataGridTemplateColumn Header="First Name" SortMemberPath="FirstName" Width="1.4*" MinWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveFirstNameColumn}">
+                  <DataGridTemplateColumn Header="First Name" SortMemberPath="FirstName" Width="1.4*" MinWidth="130" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveFirstNameColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <Panel Margin="8,0">
