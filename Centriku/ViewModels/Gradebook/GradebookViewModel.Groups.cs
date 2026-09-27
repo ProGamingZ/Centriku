@@ -97,7 +97,7 @@ namespace Centriku.ViewModels
             var groupCards = new List<GroupCardViewModel>();
             foreach (var g in groups)
             {
-                var card = new GroupCardViewModel(g, SelectedGroupAssessment, SaveAndSyncGroupGradeAsync, DeleteGroupAsync);
+                var card = new GroupCardViewModel(g, SelectedGroupAssessment, SaveAndSyncGroupGradeAsync);
                 var members = allMembers.Where(m => m.GroupID == g.GroupID).ToList();
 
                 foreach (var m in members)
@@ -290,15 +290,6 @@ namespace Centriku.ViewModels
 
         [RelayCommand]
         public void CancelCreateGroup() => IsCreatingGroupModalOpen = false;
-
-        public async Task DeleteGroupAsync(GroupCardViewModel groupCard)
-        {
-            var db = new DatabaseService().GetConnection();
-            await db.Table<AssessmentGroupMember>().Where(m => m.GroupID == groupCard.DbModel.GroupID).DeleteAsync();
-            await db.DeleteAsync(groupCard.DbModel);
-            await LoadGroupsForSelectedAssessmentAsync();
-            RecalculateFinalGrades();
-        }
     
         [RelayCommand]
         public void PromptDeleteGroup(GroupCardViewModel groupCard)
@@ -312,17 +303,41 @@ namespace Centriku.ViewModels
         [RelayCommand]
         public async Task ConfirmDeleteGroupAsync()
         {
-            if (_groupToDelete == null) return;
+            if (_groupToDelete == null || SelectedGroupAssessment == null) return;
             IsProcessing = true;
 
             try 
             {
                 var db = new DatabaseService().GetConnection();
+                var groupId = _groupToDelete.DbModel.GroupID;
+                var assessmentId = SelectedGroupAssessment.AssessmentID;
                 
-                // BULK DELETE
+                // 1. Fetch the members safely using the ORM (No raw SQL strings that cause crashes!)
+                var membersToWipe = await db.Table<AssessmentGroupMember>()
+                                            .Where(m => m.GroupID == groupId)
+                                            .ToListAsync();
+                                            
+                var studentIds = membersToWipe.Select(m => m.StudentID).Where(id => id != null).ToList();
+
+                // 2. Fetch their associated scores so we don't leave ghost grades in the gradebook
+                var scoresToDelete = new System.Collections.Generic.List<Score>();
+                if (studentIds.Any())
+                {
+                    scoresToDelete = await db.Table<Score>()
+                        .Where(s => s.AssessmentID == assessmentId && s.StudentID != null && studentIds.Contains(s.StudentID))
+                        .ToListAsync();
+                }
+
+                // 3. Safe ORM Transaction
                 await db.RunInTransactionAsync(tran => 
                 {
-                    tran.Execute($"DELETE FROM AssessmentGroupMember WHERE GroupID = {_groupToDelete.DbModel.GroupID}");
+                    // Wipe scores
+                    foreach (var s in scoresToDelete) tran.Delete(s);
+                    
+                    // Wipe members
+                    foreach (var m in membersToWipe) tran.Delete(m);
+                    
+                    // Wipe the group itself
                     tran.Delete(_groupToDelete.DbModel);
                 });
                 
@@ -333,7 +348,15 @@ namespace Centriku.ViewModels
                 RecalculateFinalGrades();
                 ShowToastMessage?.Invoke("Group deleted successfully.");
             }
-            finally { IsProcessing = false; }
+            catch (Exception ex)
+            {
+                // CRASH PROTECTION: If anything fails, show a toast instead of crashing the app
+                ShowToastMessage?.Invoke($"Error deleting group: {ex.Message}");
+            }
+            finally 
+            { 
+                IsProcessing = false; 
+            }
         }
 
         [RelayCommand]
@@ -662,7 +685,7 @@ namespace Centriku.ViewModels
 
         [ObservableProperty] public partial ObservableCollection<GroupMemberRowViewModel> Members { get; set; } = new();
 
-        public GroupCardViewModel(AssessmentGroup group, Assessment assessment, Func<GroupCardViewModel, Task> onSave, Func<GroupCardViewModel, Task> onDelete)
+        public GroupCardViewModel(AssessmentGroup group, Assessment assessment, Func<GroupCardViewModel, Task> onSave)
         {
             DbModel = group;
             _assessment = assessment;
