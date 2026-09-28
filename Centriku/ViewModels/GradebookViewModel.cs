@@ -303,6 +303,20 @@ namespace Centriku.ViewModels
             private async Task LoadGradebookData()
             {
                 var db = new DatabaseService().GetConnection();
+
+                var appSettings = await db.Table<AppSettings>().FirstOrDefaultAsync();
+                if (appSettings != null && !string.IsNullOrWhiteSpace(appSettings.DefaultExportFolderPath))
+                {
+                    ExportFolderPath = appSettings.DefaultExportFolderPath;
+                    ExportFolderDisplay = appSettings.DefaultExportFolderPath;
+                }
+                else
+                {
+                    // Fallback to the OS Downloads folder if the user hasn't set one
+                    ExportFolderPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "Downloads");
+                    ExportFolderDisplay = "Default Downloads Folder";
+                }
+
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 if (currentClass != null)
                 {
