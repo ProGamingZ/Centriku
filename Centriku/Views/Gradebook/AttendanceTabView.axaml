@@ -50,7 +50,7 @@
             <!-- DATAGRID (Fills remaining space cleanly, enabling UI Virtualization) -->
             <DataGrid x:Name="AttendanceGrid" Grid.Column="0" 
                ItemsSource="{Binding AttendanceGridRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
-               GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="5">
+               GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="6">
                <DataGrid.Columns>
                   <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="*"/>
                   <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="*"/>

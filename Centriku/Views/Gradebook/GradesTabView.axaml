@@ -97,7 +97,7 @@
          <DataGrid x:Name="RosterGrid" Grid.Row="1" Margin="24,0,24,24" 
             ItemsSource="{Binding GradebookRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
             GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
-            CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="3">
+            CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="4">
             <DataGrid.Columns>
                <DataGridTemplateColumn Width="80" CanUserSort="False">
                   <DataGridTemplateColumn.Header>
@@ -260,27 +260,96 @@
                <TextBlock Text="Transfer Student" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
                <TextBlock Text="{Binding TransferModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,20"/>
                <TextBlock Text="Select Destination Class:" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
-               <ComboBox ItemsSource="{Binding AvailableTransferClasses}" SelectedItem="{Binding SelectedTransferClass}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}" Margin="0,0,0,30">
+               <ComboBox ItemsSource="{Binding AvailableTransferClasses}"
+                        SelectedItem="{Binding SelectedTransferClass}"
+                        HorizontalAlignment="Stretch"
+                        Background="{DynamicResource AppBackground}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        CornerRadius="8"
+                        MinHeight="44"
+                        Padding="12,8"
+                        Margin="0,0,0,30">
+
+                  <!-- DROPDOWN LIST: two lines per item -->
                   <ComboBox.ItemTemplate>
                      <DataTemplate>
-                        <WrapPanel Orientation="Horizontal">
-                           <!-- Primary: The Subject Name -->
-                           <TextBlock Text="{Binding SubjectName}" FontWeight="SemiBold" Margin="0,0,8,0"/>
-                           
-                           <!-- Secondary: Program and Section (e.g., BSIT 3A) -->
-                           <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="4" Padding="4,0" Margin="0,0,8,0">
-                              <StackPanel Orientation="Horizontal">
-                                 <TextBlock Text="{Binding Program}" FontSize="12" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center" Margin="0,0,3,0"/>
-                                 <TextBlock Text="{Binding SectionLabel}" FontSize="12" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
-                              </StackPanel>
-                           </Border>
+                        <StackPanel Spacing="5">
+                           <!-- Line 1: Subject -->
+                           <TextBlock Text="{Binding SubjectName}"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextMainBrush}"
+                                    TextTrimming="CharacterEllipsis"/>
 
-                           <!-- Tertiary: Term and Year (e.g., 1st Sem, 2025-2026) -->
-                           <TextBlock Text="{Binding Term}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,3,0"/>
-                           <TextBlock Text="{Binding AcademicYear, StringFormat='({0})'}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                        </WrapPanel>
+                           <!-- Line 2: Section badge + term -->
+                           <StackPanel Orientation="Horizontal" Spacing="10">
+                              <Border Background="{DynamicResource SurfaceVariantBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="8,2">
+                                 <TextBlock FontSize="12" FontWeight="Medium"
+                                          Foreground="{DynamicResource TextMainBrush}">
+                                    <TextBlock.Text>
+                                       <MultiBinding StringFormat="{}{0} {1}">
+                                          <Binding Path="Program"/>
+                                          <Binding Path="SectionLabel"/>
+                                       </MultiBinding>
+                                    </TextBlock.Text>
+                                 </TextBlock>
+                              </Border>
+
+                              <TextBlock FontSize="12"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextMutedBrush}">
+                                 <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} · {1}">
+                                       <Binding Path="Term"/>
+                                       <Binding Path="AcademicYear"/>
+                                    </MultiBinding>
+                                 </TextBlock.Text>
+                              </TextBlock>
+                           </StackPanel>
+                        </StackPanel>
                      </DataTemplate>
                   </ComboBox.ItemTemplate>
+
+                  <!-- CLOSED BOX: one compact line so the name isn't cut off -->
+                  <ComboBox.SelectionBoxItemTemplate>
+                     <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto">
+                           <TextBlock Grid.Column="0"
+                                    Text="{Binding SubjectName}"
+                                    FontWeight="SemiBold"
+                                    VerticalAlignment="Center"
+                                    TextTrimming="CharacterEllipsis"
+                                    Margin="0,0,10,0"/>
+                           <Border Grid.Column="1"
+                                 Background="{DynamicResource SurfaceVariantBrush}"
+                                 CornerRadius="6"
+                                 Padding="8,2"
+                                 VerticalAlignment="Center">
+                              <TextBlock FontSize="12" Foreground="{DynamicResource TextMainBrush}">
+                                 <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                       <Binding Path="Program"/>
+                                       <Binding Path="SectionLabel"/>
+                                    </MultiBinding>
+                                 </TextBlock.Text>
+                              </TextBlock>
+                           </Border>
+                        </Grid>
+                     </DataTemplate>
+                  </ComboBox.SelectionBoxItemTemplate>
+
+                  <!-- Roomier, rounded dropdown items -->
+                  <ComboBox.Styles>
+                     <Style Selector="ComboBoxItem">
+                        <Setter Property="Padding" Value="12,8"/>
+                        <Setter Property="Margin" Value="4,2"/>
+                        <Setter Property="CornerRadius" Value="6"/>
+                     </Style>
+                  </ComboBox.Styles>
                </ComboBox>
                <Grid ColumnDefinitions="*, Auto, Auto">
                   <Button Grid.Column="1" Command="{Binding CancelTransferStudentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
