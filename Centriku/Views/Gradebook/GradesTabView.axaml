@@ -38,7 +38,7 @@
                                  <TextBlock Text="Export Location:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
                                  <TextBlock Text="{Binding ExportFolderDisplay}" FontSize="11" TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
                                  <Button Content="Change Folder..." Click="OnChangeExportFolderClicked" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
-                                 <Button Command="{Binding ExportCsvCommand}" Content="💾 Confirm Export" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,15,0,0"/>
+                                 <Button Command="{Binding ExportCsvCommand}" Content="Confirm Export"  Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,15,0,0"/>
                            </StackPanel>
                         </Flyout>
                      </Button.Flyout>
