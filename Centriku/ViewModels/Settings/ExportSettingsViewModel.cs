@@ -12,8 +12,23 @@ namespace Centriku.ViewModels.Settings
     {
         // === 1. User Properties & Auto-Refresh Hooks ===
         [ObservableProperty] public partial string DefaultExportFolderPath { get; set; } = string.Empty;
-        [ObservableProperty] public partial string FileNamingFormat { get; set; } = "[Class]_[Term]_[Date]";
-        
+        [ObservableProperty] public partial string FileNamingFormat { get; set; } = "[Class]_[Section]_[Type]_[Date]";
+        partial void OnFileNamingFormatChanged(string value) => UpdateExampleFileName();
+        [ObservableProperty] public partial string ExampleFileName { get; set; } = string.Empty;
+        private void UpdateExampleFileName()
+        {
+            string format = FileNamingFormat ?? "[Class]_[Section]_[Type]_[Date]";
+            
+            // Inject dummy data to show what a real file would look like
+            string example = format
+                .Replace("[Class]", "MobileProg")
+                .Replace("[Section]", "BSIT-3A")
+                .Replace("[Term]", "1stSem") 
+                .Replace("[Type]", "Grades")
+                .Replace("[Date]", DateTime.Now.ToString("yyyyMMdd"));
+            
+            ExampleFileName = $"Example: {example}.xlsx";
+        }
         [ObservableProperty] public partial bool ExportIncludeStudentId { get; set; } = true;
         partial void OnExportIncludeStudentIdChanged(bool value) => RefreshPreviews();
 
@@ -41,7 +56,11 @@ namespace Centriku.ViewModels.Settings
         [ObservableProperty] public partial ObservableCollection<AttendancePreviewRow> AttendancePreviewRows { get; set; } = new();
 
         // === 3. Dropdown Menu Options ===
-        public ObservableCollection<string> NamingFormats { get; } = ["[Class]_[Term]_[Date]", "[Date]_[Class]_[Term]"];
+        public ObservableCollection<string> NamingFormats { get; } = [
+            "[Class]_[Section]_[Type]_[Date]", 
+            "[Date]_[Class]_[Section]_[Type]",
+            "[Section]_[Class]_[Type]"
+        ];
         public ObservableCollection<string> MissingScoreRules { get; } = ["Zero", "Blank", "Dash"];
         public ObservableCollection<string> DecimalPrecisions { get; } = ["Exact", "Rounded"];
         public ObservableCollection<string> AttendanceDetails { get; } = ["Detailed", "SummaryOnly"];
@@ -67,7 +86,7 @@ namespace Centriku.ViewModels.Settings
             if (settings != null)
             {
                 DefaultExportFolderPath = settings.DefaultExportFolderPath ?? string.Empty;
-                FileNamingFormat = settings.FileNamingFormat ?? "[Class]_[Term]_[Date]";
+                FileNamingFormat = settings.FileNamingFormat ?? "[Class]_[Section]_[Type]_[Date]";
                 ExportIncludeStudentId = settings.ExportIncludeStudentId;
                 ExportIncludeArchived = settings.ExportIncludeArchived;
                 ExportMissingScoreRule = settings.ExportMissingScoreRule ?? "Zero";
@@ -77,6 +96,7 @@ namespace Centriku.ViewModels.Settings
             
             // Set initial UI state
             IsAttendanceDetailed = ExportAttendanceDetail == "Detailed";
+            UpdateExampleFileName();
             RefreshPreviews();
         }
 
@@ -106,7 +126,7 @@ namespace Centriku.ViewModels.Settings
         private void ResetDefaults()
         {
             DefaultExportFolderPath = string.Empty;
-            FileNamingFormat = "[Class]_[Term]_[Date]";
+            FileNamingFormat = "[Class]_[Section]_[Type]_[Date]";
             ExportIncludeStudentId = true;
             ExportIncludeArchived = false;
             ExportMissingScoreRule = "Zero";

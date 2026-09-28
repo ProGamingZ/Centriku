@@ -148,11 +148,13 @@ namespace Centriku.ViewModels
         #endregion
 
         #region Setup& Data Loading
+            
             [ObservableProperty] public partial bool ExportClassRecord { get; set; } = true;
             [ObservableProperty] public partial bool ExportClassAttendance { get; set; } = true;
             
             [ObservableProperty] public partial string ExportFolderPath { get; set; } = string.Empty;
             [ObservableProperty] public partial string ExportFolderDisplay { get; set; } = "Default Downloads Folder";
+            [ObservableProperty] public partial string FileNamingFormat { get; set; } = "[Class]_[Section]_[Type]_[Date]";
             public IRelayCommand ExportCsvCommand { get; }
             
             private async void ExportToCsv()
@@ -181,7 +183,7 @@ namespace Centriku.ViewModels
                     var categoriesList = AvailableCategories.ToList();
 
                     var resultRecord = await ExcelExportService.ExportToNwSSUTemplateAsync(
-                        currentClass, activeRows, assessmentsList, categoriesList, ExportFolderPath);
+                        currentClass, activeRows, assessmentsList, categoriesList, ExportFolderPath, FileNamingFormat);
                     ShowToastMessage?.Invoke(resultRecord.Message); 
                 }
 
@@ -189,7 +191,7 @@ namespace Centriku.ViewModels
                 if (ExportClassAttendance)
                 {
                     var resultAtt = await ExcelExportService.ExportAttendanceTemplateAsync(
-                        currentClass, activeAttRows, AttendanceDates.ToList(), ExportFolderPath);
+                        currentClass, activeAttRows, AttendanceDates.ToList(), ExportFolderPath, FileNamingFormat);
                     ShowToastMessage?.Invoke(resultAtt.Message);
                 }
             }
@@ -309,12 +311,14 @@ namespace Centriku.ViewModels
                 {
                     ExportFolderPath = appSettings.DefaultExportFolderPath;
                     ExportFolderDisplay = appSettings.DefaultExportFolderPath;
+                    FileNamingFormat = appSettings.FileNamingFormat ?? "[Class]_[Section]_[Type]_[Date]";
                 }
                 else
                 {
                     // Fallback to the OS Downloads folder if the user hasn't set one
                     ExportFolderPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "Downloads");
                     ExportFolderDisplay = "Default Downloads Folder";
+                    FileNamingFormat = "[Class]_[Section]_[Type]_[Date]";
                 }
 
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();

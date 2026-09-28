@@ -16,7 +16,8 @@ namespace Centriku.Services
          List<StudentGradeRow> gradebookRows,
          List<Assessment> classAssessments,
          List<GradingCategory> availableCategories,
-         string exportDestinationFolder)
+         string exportDestinationFolder,
+         string fileNamingFormat)
       {
          return await Task.Run(() =>
          {
@@ -30,11 +31,13 @@ namespace Centriku.Services
                {
                   return (false, $"Template missing! Please ensure 'NwSSU-Class-Record.xlsx' is inside:\n{templateDir}");
                }
+               
 
                // 2. Define the output file name
                string cleanClassName = string.Join("_", (currentClass.SubjectName ?? "Class").Split(Path.GetInvalidFileNameChars()));
                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
-               string outputFilePath = Path.Combine(exportDestinationFolder, $"{cleanClassName}_ClassRecord_{timestamp}.xlsx");
+               string fileName = GenerateDynamicFileName(fileNamingFormat, currentClass, "Grades");
+               string outputFilePath = Path.Combine(exportDestinationFolder, fileName);
 
                using (var workbook = new XLWorkbook(templatePath))
                {
@@ -158,7 +161,8 @@ namespace Centriku.Services
          TeacherClass currentClass,
          List<AttendanceGridRowViewModel> attendanceRows,
          List<DateTime> uniqueDates,
-         string exportDestinationFolder)
+         string exportDestinationFolder,
+         string fileNamingFormat)
       {
          return await Task.Run(() =>
          {
@@ -175,7 +179,8 @@ namespace Centriku.Services
 
                string cleanClassName = string.Join("_", (currentClass.SubjectName ?? "Class").Split(Path.GetInvalidFileNameChars()));
                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
-               string outputFilePath = Path.Combine(exportDestinationFolder, $"{cleanClassName}_Attendance_{timestamp}.xlsx");
+               string fileName = GenerateDynamicFileName(fileNamingFormat, currentClass, "Attendance");
+               string outputFilePath = Path.Combine(exportDestinationFolder, fileName);
 
                using (var workbook = new XLWorkbook(templatePath))
                {
@@ -313,5 +318,29 @@ namespace Centriku.Services
          });
       }
    
+      private static string GenerateDynamicFileName(string format, TeacherClass currentClass, string exportType)
+      {
+         // Trim spaces to keep file names short (e.g. "Mobile Programming" -> "MobileProgramming")
+         string cleanClass = string.Join("_", (currentClass.SubjectName ?? "Class").Split(Path.GetInvalidFileNameChars())).Replace(" ", "");
+         string cleanProgram = string.Join("", (currentClass.Program ?? "").Split(Path.GetInvalidFileNameChars())).Replace(" ", "");
+         string cleanSection = string.Join("", (currentClass.SectionLabel ?? "").Split(Path.GetInvalidFileNameChars())).Replace(" ", "");
+         string cleanTerm = string.Join("", (currentClass.Term ?? "").Split(Path.GetInvalidFileNameChars())).Replace(" ", "");
+         
+         // Combine Program and Section (e.g. "BSIT-3A")
+         string sectionToken = $"{cleanProgram}-{cleanSection}".Trim('-');
+         if (string.IsNullOrEmpty(sectionToken)) sectionToken = "NoSection";
+
+         // Compact date format (YYYYMMDD)
+         string dateToken = DateTime.Now.ToString("yyyyMMdd");
+
+         string finalName = format
+             .Replace("[Class]", cleanClass)
+             .Replace("[Section]", sectionToken)
+             .Replace("[Term]", cleanTerm)
+             .Replace("[Type]", exportType)
+             .Replace("[Date]", dateToken);
+
+         return $"{finalName}.xlsx";
+      }
    }
 }
