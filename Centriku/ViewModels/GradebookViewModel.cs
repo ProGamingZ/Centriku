@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
 using Centriku.Services;
+using System;
 
 namespace Centriku.ViewModels
 {
@@ -37,21 +38,25 @@ namespace Centriku.ViewModels
 
             private async void SaveClassSettings()
             {
-                var db = new DatabaseService().GetConnection();
-                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-                if (currentClass != null)
+                try 
                 {
-                    currentClass.ShowStudentId = ShowStudentId;
-                    currentClass.ShowFirstName = ShowFirstName;
-                    currentClass.ShowLastName = ShowLastName;
-                    currentClass.ShowFinalGrade = ShowFinalGrade;
-                    currentClass.ShowTotalP = ShowTotalP;
-                    currentClass.ShowTotalL = ShowTotalL;
-                    currentClass.ShowTotalA = ShowTotalA;
-                    currentClass.ShowTotalE = ShowTotalE;
+                    var db = new DatabaseService().GetConnection();
+                    var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                    if (currentClass != null)
+                    {
+                        currentClass.ShowStudentId = ShowStudentId;
+                        currentClass.ShowFirstName = ShowFirstName;
+                        currentClass.ShowLastName = ShowLastName;
+                        currentClass.ShowFinalGrade = ShowFinalGrade;
+                        currentClass.ShowTotalP = ShowTotalP;
+                        currentClass.ShowTotalL = ShowTotalL;
+                        currentClass.ShowTotalA = ShowTotalA;
+                        currentClass.ShowTotalE = ShowTotalE;
 
-                    await db.UpdateAsync(currentClass);
+                        await db.UpdateAsync(currentClass);
+                    }
                 }
+                catch { /* Ignore background save locks */ }
             }
      
             [ObservableProperty] public partial ObservableCollection<string> TermViews { get; set; } = new();
@@ -157,7 +162,7 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial string FileNamingFormat { get; set; } = "[Class]_[Section]_[Type]_[Date]";
             public IRelayCommand ExportCsvCommand { get; }
             
-            private async void ExportToCsv()
+            private async Task ExportToCsvAsync()
             {
                 if (!ExportClassRecord && !ExportClassAttendance)
                 {
@@ -269,7 +274,7 @@ namespace Centriku.ViewModels
                     }                
                 });
 
-                SaveAssessmentCommand = new RelayCommand(SaveAssessment);
+                SaveAssessmentCommand = new AsyncRelayCommand(SaveAssessmentAsync);
                 EditAssessmentCommand = new RelayCommand<Assessment>(EditAssessment!);
                 DeleteAssessmentCommand = new RelayCommand<Assessment>(DeleteAssessment!);
 
@@ -281,18 +286,25 @@ namespace Centriku.ViewModels
                 SaveRollCallCommand = new RelayCommand(SaveRollCallDay);
                 EditRollCallCommand = new RelayCommand<System.DateTime?>(EditRollCall);
                 DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
-                ExportCsvCommand = new RelayCommand(ExportToCsv);
+                ExportCsvCommand = new AsyncRelayCommand(ExportToCsvAsync);
             }
             public async void Initialize(int classId, string classTitle, int startingTab = 0)
             {
-                ClassId = classId;
-                ClassTitle = classTitle;
-                SelectedTabIndex = startingTab;
-                await LoadCategories();
-                await LoadGradebookData();
-                await LoadAttendanceData();
-                await LoadRecitationData();
-                await LoadGroupsDataAsync();
+                try 
+                {
+                    ClassId = classId;
+                    ClassTitle = classTitle;
+                    SelectedTabIndex = startingTab;
+                    await LoadCategories();
+                    await LoadGradebookData();
+                    await LoadAttendanceData();
+                    await LoadRecitationData();
+                    await LoadGroupsDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    ShowToastMessage?.Invoke($"Failed to initialize class: {ex.Message}");
+                }
             }
 
             public async Task RefreshRostersAsync()

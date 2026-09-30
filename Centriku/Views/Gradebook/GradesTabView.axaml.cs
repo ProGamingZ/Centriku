@@ -242,23 +242,26 @@ namespace Centriku.Views.Gradebook
    
       public async void OnChangeExportFolderClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
       {
-         var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(this);
-         if (topLevel == null) return;
-
-         var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+         try 
          {
-            Title = "Select Export Destination",
-            AllowMultiple = false
-         });
+             var topLevel = Avalonia.Controls.TopLevel.GetTopLevel(this);
+             if (topLevel == null) return;
 
-         if (folders != null && folders.Count > 0)
-         {
-            if (DataContext is GradebookViewModel vm)
-            {
-               vm.ExportFolderPath = folders[0].Path.LocalPath;
-               vm.ExportFolderDisplay = folders[0].Path.LocalPath;
-            }
+             var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+             {
+                Title = "Select Export Destination", AllowMultiple = false
+             });
+
+             if (folders != null && folders.Count > 0)
+             {
+                if (DataContext is GradebookViewModel vm)
+                {
+                   vm.ExportFolderPath = folders[0].Path.LocalPath;
+                   vm.ExportFolderDisplay = folders[0].Path.LocalPath;
+                }
+             }
          }
+         catch { /* Silently ignore OS dialog cancellations or access errors */ }
       }
    }
 }

@@ -72,58 +72,71 @@ namespace Centriku.ViewModels.Settings
 
         public ExportSettingsViewModel()
         {
-            SaveSettingsCommand = new RelayCommand(SaveSettings);
-            ResetDefaultsCommand = new RelayCommand(ResetDefaults);
+            SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
+            ResetDefaultsCommand = new AsyncRelayCommand(ResetDefaultsAsync);
             LoadSettings();
         }
 
         private async void LoadSettings()
         {
-            await DatabaseService.WaitForDatabaseReadyAsync();
-            var db = new DatabaseService().GetConnection();
-            var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
-
-            if (settings != null)
+            try 
             {
-                DefaultExportFolderPath = settings.DefaultExportFolderPath ?? string.Empty;
-                FileNamingFormat = settings.FileNamingFormat ?? "[Class]_[Section]_[Type]_[Date]";
-                ExportIncludeStudentId = settings.ExportIncludeStudentId;
-                ExportIncludeArchived = settings.ExportIncludeArchived;
-                ExportMissingScoreRule = settings.ExportMissingScoreRule ?? "Zero";
-                ExportDecimalPrecision = settings.ExportDecimalPrecision ?? "Exact";
-                ExportAttendanceDetail = settings.ExportAttendanceDetail ?? "Detailed";
+                await DatabaseService.WaitForDatabaseReadyAsync();
+                var db = new DatabaseService().GetConnection();
+                var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
+
+                if (settings != null)
+                {
+                    DefaultExportFolderPath = settings.DefaultExportFolderPath ?? string.Empty;
+                    FileNamingFormat = settings.FileNamingFormat ?? "[Class]_[Section]_[Type]_[Date]";
+                    ExportIncludeStudentId = settings.ExportIncludeStudentId;
+                    ExportIncludeArchived = settings.ExportIncludeArchived;
+                    ExportMissingScoreRule = settings.ExportMissingScoreRule ?? "Zero";
+                    ExportDecimalPrecision = settings.ExportDecimalPrecision ?? "Exact";
+                    ExportAttendanceDetail = settings.ExportAttendanceDetail ?? "Detailed";
+                }
+                
+                IsAttendanceDetailed = ExportAttendanceDetail == "Detailed";
+                UpdateExampleFileName(); 
+                RefreshPreviews();
             }
-            
-            // Set initial UI state
-            IsAttendanceDetailed = ExportAttendanceDetail == "Detailed";
-            UpdateExampleFileName();
-            RefreshPreviews();
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error loading settings: {ex.Message}");
+            }
         }
 
-        private async void SaveSettings()
+        private async Task SaveSettingsAsync()
         {
-            var db = new DatabaseService().GetConnection();
-            var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
-
-            if (settings == null)
+            try 
             {
-                settings = new AppSettings();
-                await db.InsertAsync(settings);
+                var db = new DatabaseService().GetConnection();
+                var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
+
+                if (settings == null)
+                {
+                    settings = new AppSettings();
+                    await db.InsertAsync(settings);
+                }
+
+                settings.DefaultExportFolderPath = this.DefaultExportFolderPath;
+                settings.FileNamingFormat = this.FileNamingFormat;
+                settings.ExportIncludeStudentId = this.ExportIncludeStudentId;
+                settings.ExportIncludeArchived = this.ExportIncludeArchived;
+                settings.ExportMissingScoreRule = this.ExportMissingScoreRule;
+                settings.ExportDecimalPrecision = this.ExportDecimalPrecision;
+                settings.ExportAttendanceDetail = this.ExportAttendanceDetail;
+
+                await db.UpdateAsync(settings);
+                ShowToastMessage?.Invoke("Export settings saved successfully!");
             }
-
-            settings.DefaultExportFolderPath = this.DefaultExportFolderPath;
-            settings.FileNamingFormat = this.FileNamingFormat;
-            settings.ExportIncludeStudentId = this.ExportIncludeStudentId;
-            settings.ExportIncludeArchived = this.ExportIncludeArchived;
-            settings.ExportMissingScoreRule = this.ExportMissingScoreRule;
-            settings.ExportDecimalPrecision = this.ExportDecimalPrecision;
-            settings.ExportAttendanceDetail = this.ExportAttendanceDetail;
-
-            await db.UpdateAsync(settings);
-            ShowToastMessage?.Invoke("Export settings saved successfully!");
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Failed to save settings: {ex.Message}");
+            }
         }
 
-        private void ResetDefaults()
+        private async Task ResetDefaultsAsync()
         {
             DefaultExportFolderPath = string.Empty;
             FileNamingFormat = "[Class]_[Section]_[Type]_[Date]";
@@ -133,49 +146,49 @@ namespace Centriku.ViewModels.Settings
             ExportDecimalPrecision = "Exact";
             ExportAttendanceDetail = "Detailed";
             
-            SaveSettings();
+            await SaveSettingsAsync();
             RefreshPreviews();
         }
 
         // === 5. THE LIVE PREVIEW ENGINE ===
         private async void RefreshPreviews() 
         {
-
-            await Task.Delay(50);
-            var newSemestral = new ObservableCollection<GradePreviewRow>();
-            var newAttendance = new ObservableCollection<AttendancePreviewRow>();
-
-            // Local Helper: Formats numbers based on the user's active dropdown selections
-            string FormatScore(double? rawScore)
+            try 
             {
-                if (rawScore == null)
+                await Task.Delay(50);
+                var newSemestral = new ObservableCollection<GradePreviewRow>();
+                var newAttendance = new ObservableCollection<AttendancePreviewRow>();
+
+                string FormatScore(double? rawScore)
                 {
-                    return ExportMissingScoreRule switch {
-                        "Blank" => "",
-                        "Dash" => "--",
-                        _ => "0"
-                    };
+                    if (rawScore == null)
+                    {
+                        return ExportMissingScoreRule switch {
+                            "Blank" => "",
+                            "Dash" => "--",
+                            _ => "0"
+                        };
+                    }
+                    if (ExportDecimalPrecision == "Rounded") return Math.Round(rawScore.Value, 0).ToString();
+                    return rawScore.Value.ToString("0.##");
                 }
-                if (ExportDecimalPrecision == "Rounded") return Math.Round(rawScore.Value, 0).ToString();
-                return rawScore.Value.ToString("0.##");
-            }
 
-            // B. Populate Semestral Fake Data
-            newSemestral.Add(new GradePreviewRow { StudentId = "102938475612", LastName = "Dela Cruz", FirstName = "Juan", Score1 = FormatScore(88.8), Score2 = FormatScore(null), Average = FormatScore(44.4) + "%" });
-            if (ExportIncludeArchived)
-            {
-                newSemestral.Add(new GradePreviewRow { StudentId = "987654321098", LastName = "[ARCHIVED] Rizal", FirstName = "Jose", Score1 = FormatScore(90.0), Score2 = FormatScore(85.0), Average = FormatScore(87.5) + "%" });
-            }
+                newSemestral.Add(new GradePreviewRow { StudentId = "102938475612", LastName = "Dela Cruz", FirstName = "Juan", Score1 = FormatScore(88.8), Score2 = FormatScore(null), Average = FormatScore(44.4) + "%" });
+                if (ExportIncludeArchived)
+                {
+                    newSemestral.Add(new GradePreviewRow { StudentId = "987654321098", LastName = "[ARCHIVED] Rizal", FirstName = "Jose", Score1 = FormatScore(90.0), Score2 = FormatScore(85.0), Average = FormatScore(87.5) + "%" });
+                }
 
-            // C. Populate Attendance Fake Data
-            newAttendance.Add(new AttendancePreviewRow { LastName = "Dela Cruz", FirstName = "Juan", TotalP = 15, TotalL = 2, TotalA = 1, TotalE = 0, Day1 = "P", Day2 = "A" });
-            if (ExportIncludeArchived)
-            {
-                newAttendance.Add(new AttendancePreviewRow { LastName = "[ARCHIVED] Rizal", FirstName = "Jose", TotalP = 18, TotalL = 0, TotalA = 0, TotalE = 0, Day1 = "P", Day2 = "P" });
-            }
+                newAttendance.Add(new AttendancePreviewRow { LastName = "Dela Cruz", FirstName = "Juan", TotalP = 15, TotalL = 2, TotalA = 1, TotalE = 0, Day1 = "P", Day2 = "A" });
+                if (ExportIncludeArchived)
+                {
+                    newAttendance.Add(new AttendancePreviewRow { LastName = "[ARCHIVED] Rizal", FirstName = "Jose", TotalP = 18, TotalL = 0, TotalA = 0, TotalE = 0, Day1 = "P", Day2 = "P" });
+                }
 
-            SemestralPreviewRows = newSemestral;
-            AttendancePreviewRows = newAttendance;
+                SemestralPreviewRows = newSemestral;
+                AttendancePreviewRows = newAttendance;
+            }
+            catch { /* Silently ignore preview generation errors */ }
         }
     }
 

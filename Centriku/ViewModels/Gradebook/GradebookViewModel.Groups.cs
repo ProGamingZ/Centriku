@@ -67,53 +67,58 @@ namespace Centriku.ViewModels
 
         public async Task LoadGroupsForSelectedAssessmentAsync()
         {
-            if (SelectedGroupAssessment == null)
+            try 
             {
-                CurrentAssessmentGroups.Clear();
-                UnassignedStudents.Clear();
-                return;
-            }
+                if (SelectedGroupAssessment == null)
+                {
+                    CurrentAssessmentGroups.Clear();
+                    UnassignedStudents.Clear();
+                    return;
+                }
 
-            var db = new DatabaseService().GetConnection();
-            var groups = await db.Table<AssessmentGroup>()
-                                 .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID)
-                                 .ToListAsync();
-
-            var allMembers = await db.Table<AssessmentGroupMember>()
-                                     .Where(m => m.AssessmentID == SelectedGroupAssessment.AssessmentID)
+                var db = new DatabaseService().GetConnection();
+                var groups = await db.Table<AssessmentGroup>()
+                                     .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID)
                                      .ToListAsync();
 
-            var enrolledStudents = GradebookRows.Select(r => r.StudentInfo).Where(s => s.StudentID != null).ToList();
-            var assignedStudentIds = allMembers.Select(m => m.StudentID).Where(id => id != null).ToHashSet();
-            
+                var allMembers = await db.Table<AssessmentGroupMember>()
+                                         .Where(m => m.AssessmentID == SelectedGroupAssessment.AssessmentID)
+                                         .ToListAsync();
 
-            var unassignedList = enrolledStudents
-                .Where(s => !assignedStudentIds.Contains(s.StudentID!)) // The compiler is now happy
-                .Select(s => new GroupCandidateStudentViewModel(s))
-                .ToList();
-            UnassignedStudents = new ObservableCollection<GroupCandidateStudentViewModel>(unassignedList);
+                var enrolledStudents = GradebookRows.Select(r => r.StudentInfo).Where(s => s.StudentID != null).ToList();
+                var assignedStudentIds = allMembers.Select(m => m.StudentID).Where(id => id != null).ToHashSet();
+                
+                var unassignedList = enrolledStudents
+                    .Where(s => !assignedStudentIds.Contains(s.StudentID!)) 
+                    .Select(s => new GroupCandidateStudentViewModel(s))
+                    .ToList();
+                UnassignedStudents = [with(unassignedList)];
 
-            // 2. Build group view models
-            var groupCards = new List<GroupCardViewModel>();
-            foreach (var g in groups)
-            {
-                var card = new GroupCardViewModel(g, SelectedGroupAssessment, SaveAndSyncGroupGradeAsync);
-                var members = allMembers.Where(m => m.GroupID == g.GroupID).ToList();
-
-                foreach (var m in members)
+                var groupCards = new System.Collections.Generic.List<GroupCardViewModel>();
+                foreach (var g in groups)
                 {
-                    var student = enrolledStudents.FirstOrDefault(s => s.StudentID == m.StudentID);
-                    if (student != null)
-                    {
-                        card.Members.Add(new GroupMemberRowViewModel(m, student, SelectedGroupAssessment, card, () => _ = SaveAndSyncGroupGradeAsync(card)));
-                    }
-                }
-                card.SortMembers();
-                card.UpdateAllMemberTotals();
-                groupCards.Add(card);
-            }
+                    var card = new GroupCardViewModel(g, SelectedGroupAssessment, SaveAndSyncGroupGradeAsync);
+                    var members = allMembers.Where(m => m.GroupID == g.GroupID).ToList();
 
-            CurrentAssessmentGroups = new ObservableCollection<GroupCardViewModel>(groupCards);
+                    foreach (var m in members)
+                    {
+                        var student = enrolledStudents.FirstOrDefault(s => s.StudentID == m.StudentID);
+                        if (student != null)
+                        {
+                            card.Members.Add(new GroupMemberRowViewModel(m, student, SelectedGroupAssessment, card, () => _ = SaveAndSyncGroupGradeAsync(card)));
+                        }
+                    }
+                    card.SortMembers();
+                    card.UpdateAllMemberTotals();
+                    groupCards.Add(card);
+                }
+
+                CurrentAssessmentGroups = new ObservableCollection<GroupCardViewModel>(groupCards);
+            }
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error loading groups: {ex.Message}");
+            }
         }
 
         public async Task SaveAndSyncGroupGradeAsync(GroupCardViewModel groupCard)

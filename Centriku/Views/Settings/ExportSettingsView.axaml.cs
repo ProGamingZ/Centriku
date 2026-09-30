@@ -39,22 +39,25 @@ namespace Centriku.Views.Settings
 
       public async void OnBrowseFolderClicked(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
       {
-         var topLevel = TopLevel.GetTopLevel(this);
-         if (topLevel == null) return;
-
-         var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+         try
          {
-            Title = "Select Default Export Folder",
-            AllowMultiple = false
-         });
+             var topLevel = TopLevel.GetTopLevel(this);
+             if (topLevel == null) return;
 
-         if (folders != null && folders.Count > 0)
-         {
-            if (DataContext is ExportSettingsViewModel vm)
-            {
-               vm.DefaultExportFolderPath = folders[0].Path.LocalPath;
-            }
+             var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+             {
+                Title = "Select Default Export Folder", AllowMultiple = false
+             });
+
+             if (folders != null && folders.Count > 0)
+             {
+                if (DataContext is ExportSettingsViewModel vm)
+                {
+                   vm.DefaultExportFolderPath = folders[0].Path.LocalPath;
+                }
+             }
          }
+         catch { /* Silently ignore OS dialog cancellations or access errors */ }
       }
    }
 }
