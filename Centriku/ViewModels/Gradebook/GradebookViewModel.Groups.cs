@@ -87,12 +87,12 @@ namespace Centriku.ViewModels
 
                 var enrolledStudents = GradebookRows.Select(r => r.StudentInfo).Where(s => s.StudentID != null).ToList();
                 var assignedStudentIds = allMembers.Select(m => m.StudentID).Where(id => id != null).ToHashSet();
-                
+
                 var unassignedList = enrolledStudents
                     .Where(s => !assignedStudentIds.Contains(s.StudentID!)) 
                     .Select(s => new GroupCandidateStudentViewModel(s))
                     .ToList();
-                UnassignedStudents = [with(unassignedList)];
+                UnassignedStudents = new System.Collections.ObjectModel.ObservableCollection<GroupCandidateStudentViewModel>(unassignedList);
 
                 var groupCards = new System.Collections.Generic.List<GroupCardViewModel>();
                 foreach (var g in groups)
