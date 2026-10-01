@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
 using Centriku.Services;
+using Centriku.ViewModels.Modals;
 
 namespace Centriku.ViewModels
 {
@@ -164,157 +165,47 @@ namespace Centriku.ViewModels
             finally { IsProcessing = false; }
         }
 
-        // --- Modal Control Methods ---
+        // --- 1. NEW: Object References for the Extracted Modals ---
+        [ObservableProperty] public partial RemoveStudentModalViewModel? RemoveStudentModal { get; set; }
+        [ObservableProperty] public partial TransferStudentModalViewModel? TransferStudentModal { get; set; }
 
+        // --- 3. Instantiator Commands ---
         [RelayCommand]
         public void BulkRemoveStudents()
         {
-            _studentsToRemove = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
-            if (!_studentsToRemove.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
+            var studentsToRemove = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
+            if (!studentsToRemove.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
             
-            RemoveModalMessage = $"Are you sure you want to unenroll {_studentsToRemove.Count} selected student(s) from this class?\n\nThey will be removed from the class roster immediately.";
+            // Inject dependencies into the new external ViewModel
+            RemoveStudentModal = new RemoveStudentModalViewModel(
+                ClassId, 
+                studentsToRemove, 
+                RefreshRostersAsync, 
+                () => { IsRemoveStudentModalOpen = false; RemoveStudentModal = null; IsAllRosterSelected = false; }, 
+                ShowToastMessage!);
+                
             IsRemoveStudentModalOpen = true;
         }
-        [RelayCommand]
-        public async Task ConfirmRemoveStudent()
-        {
-            IsProcessing = true;
-            try 
-            {
-                if (!_studentsToRemove.Any()) return;
-                var db = new DatabaseService().GetConnection();
-                
-                var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
-                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-                var studentIds = _studentsToRemove.Select(s => s.StudentID).ToList();
-
-                // 1. Fetch records safely using the ORM (Translates to a safe SQL 'IN' clause automatically)
-                var rostersToDelete = await db.Table<ClassRoster>()
-                    .Where(r => r.ClassID == ClassId && studentIds.Contains(r.StudentID))
-                    .ToListAsync();
-
-                var groupMembersToDelete = new System.Collections.Generic.List<AssessmentGroupMember>();
-                if (assessmentIds.Any())
-                {
-                    groupMembersToDelete = await db.Table<AssessmentGroupMember>()
-                        .Where(m => studentIds.Contains(m.StudentID) && assessmentIds.Contains(m.AssessmentID))
-                        .ToListAsync();
-                }
-
-                // 2. Perform a single Bulk Transaction
-                await db.RunInTransactionAsync(tran => 
-                {
-                    foreach (var r in rostersToDelete) tran.Delete(r);
-                    foreach (var m in groupMembersToDelete) tran.Delete(m);
-                });
-                
-                await RefreshRostersAsync(); 
-                
-                int count = _studentsToRemove.Count;
-                ShowToastMessage?.Invoke(count == 1 
-                    ? $"Successfully unenrolled {_studentsToRemove[0].FirstName} {_studentsToRemove[0].LastName}." 
-                    : $"Successfully unenrolled {count} students.");
-                    
-                CancelRemoveStudent(); 
-            }
-            catch (System.Exception ex)
-            {
-                ShowToastMessage?.Invoke($"Error unenrolling students: {ex.Message}");
-            }
-            finally { IsProcessing = false; }
-        }
-
-        [RelayCommand]
-        public void CancelRemoveStudent()
-        {
-            IsRemoveStudentModalOpen = false;
-            _studentsToRemove.Clear();
-            IsAllRosterSelected = false; // Reset the master checkbox
-        }
-    
-        // --- Transfer Student Logic ---
-
+        
         [RelayCommand]
         public async Task BulkTransferStudents()
         {
-            _studentsToTransfer = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
-            if (!_studentsToTransfer.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
+            var studentsToTransfer = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
+            if (!studentsToTransfer.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
             
-            await PrepareTransferModal($"Move {_studentsToTransfer.Count} selected student(s) from {ClassTitle} to another class?");
-        }
-        private async Task PrepareTransferModal(string message)
-        {
-            TransferModalMessage = message;
-            var db = new DatabaseService().GetConnection();
-            var allClasses = await db.Table<TeacherClass>().ToListAsync();
-            AvailableTransferClasses = new ObservableCollection<TeacherClass>(allClasses.Where(c => c.ClassID != ClassId));
-            SelectedTransferClass = AvailableTransferClasses.FirstOrDefault();
+            // Inject dependencies into the new external ViewModel
+            TransferStudentModal = new TransferStudentModalViewModel(
+                ClassId, 
+                ClassTitle,
+                studentsToTransfer, 
+                RefreshRostersAsync, 
+                () => { IsTransferStudentModalOpen = false; TransferStudentModal = null; IsAllRosterSelected = false; }, 
+                ShowToastMessage!);
+                
+            // Fetch available classes from DB before showing the UI
+            await TransferStudentModal.LoadClassesAsync();
             IsTransferStudentModalOpen = true;
         }
-        [RelayCommand]
-        public async Task ConfirmTransferStudent()
-        {
-            IsProcessing = true;
-            try 
-            {
-                if (!_studentsToTransfer.Any() || SelectedTransferClass == null) return;
-                var db = new DatabaseService().GetConnection();
-                
-                var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == ClassId).ToListAsync();
-                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-                var studentIds = _studentsToTransfer.Select(s => s.StudentID).ToList();
-
-                // 1. Fetch records safely using the ORM
-                var rostersToUpdate = await db.Table<ClassRoster>()
-                    .Where(r => r.ClassID == ClassId && studentIds.Contains(r.StudentID))
-                    .ToListAsync();
-
-                var groupMembersToDelete = new System.Collections.Generic.List<AssessmentGroupMember>();
-                if (assessmentIds.Any())
-                {
-                    groupMembersToDelete = await db.Table<AssessmentGroupMember>()
-                        .Where(m => studentIds.Contains(m.StudentID) && assessmentIds.Contains(m.AssessmentID))
-                        .ToListAsync();
-                }
-
-                // 2. Perform a single Bulk Transaction
-                await db.RunInTransactionAsync(tran => 
-                {
-                    // Update the ClassID for all selected rosters
-                    foreach (var r in rostersToUpdate) 
-                    {
-                        r.ClassID = SelectedTransferClass.ClassID;
-                        tran.Update(r);
-                    }
-                    
-                    // Erase their group memberships from the old class
-                    foreach (var m in groupMembersToDelete) tran.Delete(m);
-                });
-
-                await RefreshRostersAsync(); 
-                
-                int count = _studentsToTransfer.Count;
-                ShowToastMessage?.Invoke(count == 1 
-                    ? $"Successfully transferred {_studentsToTransfer[0].FirstName} {_studentsToTransfer[0].LastName}." 
-                    : $"Successfully transferred {count} students.");
-                    
-                CancelTransferStudent();
-            }
-            catch (System.Exception ex)
-            {
-                ShowToastMessage?.Invoke($"Error transferring students: {ex.Message}");
-            }
-            finally { IsProcessing = false; }
-        }
-
-        [RelayCommand]
-        public void CancelTransferStudent()
-        {
-            IsTransferStudentModalOpen = false;
-            _studentsToTransfer.Clear();
-            IsAllRosterSelected = false; 
-        }
-    
     
     }
 }

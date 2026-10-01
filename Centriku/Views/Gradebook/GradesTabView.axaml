@@ -255,11 +255,13 @@
 
       <!-- 3. ACTION MODALS -->
       <Border IsVisible="{Binding IsTransferStudentModalOpen}" Background="#B3000000" ZIndex="100">
-         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border DataContext="{Binding TransferStudentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel>
                <TextBlock Text="Transfer Student" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
-               <TextBlock Text="{Binding TransferModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,20"/>
+               <!-- CHANGED: Now binds to the local ModalMessage property -->
+               <TextBlock Text="{Binding ModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,20"/>
                <TextBlock Text="Select Destination Class:" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
+               
                <ComboBox ItemsSource="{Binding AvailableTransferClasses}"
                         SelectedItem="{Binding SelectedTransferClass}"
                         HorizontalAlignment="Stretch"
@@ -270,26 +272,13 @@
                         Padding="12,8"
                         Margin="0,0,0,30">
 
-                  <!-- DROPDOWN LIST: two lines per item -->
                   <ComboBox.ItemTemplate>
                      <DataTemplate>
                         <StackPanel Spacing="5">
-                           <!-- Line 1: Subject -->
-                           <TextBlock Text="{Binding SubjectName}"
-                                    FontSize="14"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource TextMainBrush}"
-                                    TextTrimming="CharacterEllipsis"/>
-
-                           <!-- Line 2: Section badge + term -->
+                           <TextBlock Text="{Binding SubjectName}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
                            <StackPanel Orientation="Horizontal" Spacing="10">
-                              <Border Background="{DynamicResource SurfaceVariantBrush}"
-                                    BorderBrush="{DynamicResource BorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="8,2">
-                                 <TextBlock FontSize="12" FontWeight="Medium"
-                                          Foreground="{DynamicResource TextMainBrush}">
+                              <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2">
+                                 <TextBlock FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextMainBrush}">
                                     <TextBlock.Text>
                                        <MultiBinding StringFormat="{}{0} {1}">
                                           <Binding Path="Program"/>
@@ -298,10 +287,7 @@
                                     </TextBlock.Text>
                                  </TextBlock>
                               </Border>
-
-                              <TextBlock FontSize="12"
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource TextMutedBrush}">
+                              <TextBlock FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}">
                                  <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} · {1}">
                                        <Binding Path="Term"/>
@@ -314,21 +300,12 @@
                      </DataTemplate>
                   </ComboBox.ItemTemplate>
 
-                  <!-- CLOSED BOX: one compact line so the name isn't cut off -->
+                  <!-- CLOSED BOX -->
                   <ComboBox.SelectionBoxItemTemplate>
                      <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto">
-                           <TextBlock Grid.Column="0"
-                                    Text="{Binding SubjectName}"
-                                    FontWeight="SemiBold"
-                                    VerticalAlignment="Center"
-                                    TextTrimming="CharacterEllipsis"
-                                    Margin="0,0,10,0"/>
-                           <Border Grid.Column="1"
-                                 Background="{DynamicResource SurfaceVariantBrush}"
-                                 CornerRadius="6"
-                                 Padding="8,2"
-                                 VerticalAlignment="Center">
+                           <TextBlock Grid.Column="0" Text="{Binding SubjectName}" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
+                           <Border Grid.Column="1" Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="8,2" VerticalAlignment="Center">
                               <TextBlock FontSize="12" Foreground="{DynamicResource TextMainBrush}">
                                  <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} {1}">
@@ -341,8 +318,6 @@
                         </Grid>
                      </DataTemplate>
                   </ComboBox.SelectionBoxItemTemplate>
-
-                  <!-- Roomier, rounded dropdown items -->
                   <ComboBox.Styles>
                      <Style Selector="ComboBoxItem">
                         <Setter Property="Padding" Value="12,8"/>
@@ -351,22 +326,24 @@
                      </Style>
                   </ComboBox.Styles>
                </ComboBox>
+               
                <Grid ColumnDefinitions="*, Auto, Auto">
-                  <Button Grid.Column="1" Command="{Binding CancelTransferStudentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                  <Button Grid.Column="2" Command="{Binding ConfirmTransferStudentCommand}" Content="Transfer Student" Background="#3B82F6" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                  <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmTransferCommand}" Content="Transfer Student" Background="#3B82F6" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                </Grid>
             </StackPanel>
          </Border>
       </Border>
 
       <Border IsVisible="{Binding IsRemoveStudentModalOpen}" Background="#B3000000" ZIndex="100">
-         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border DataContext="{Binding RemoveStudentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel>
                <TextBlock Text="Unenroll Student?" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-               <TextBlock Text="{Binding RemoveModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+               <TextBlock Text="{Binding ModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+               
                <Grid ColumnDefinitions="*, Auto, Auto">
-                  <Button Grid.Column="1" Command="{Binding CancelRemoveStudentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                  <Button Grid.Column="2" Command="{Binding ConfirmRemoveStudentCommand}" Content="Remove Student" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                  <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmRemoveCommand}" Content="Remove Student" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                </Grid>
             </StackPanel>
          </Border>
