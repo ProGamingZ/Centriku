@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
 using Centriku.Services;
+using Centriku.ViewModels.Modals;
 
 namespace Centriku.ViewModels
 {
@@ -28,14 +29,11 @@ namespace Centriku.ViewModels
         private List<RecitationQuestion> _availableQuestionsPool = new(); 
 
         // --- 3. MODAL STATE ---
+        [ObservableProperty] public partial RecitationWinnerModalViewModel? WinnerModal { get; set; }
+        [ObservableProperty] public partial ManageQuestionsModalViewModel? ManageQuestionsModal { get; set; }
         
-        [ObservableProperty] public partial bool IsManageQuestionsModalOpen { get; set; } = false;
         [ObservableProperty] public partial bool IsWinnerModalOpen { get; set; } = false;
-        [ObservableProperty] public partial string WinnerModalName { get; set; } = string.Empty;
-        [ObservableProperty] public partial string WinnerModalQuestion { get; set; } = string.Empty;
-        [ObservableProperty] public partial string WinnerModalAnswer { get; set; } = string.Empty;
-        [ObservableProperty] public partial bool HasWinnerAnswer { get; set; } = false;
-        [ObservableProperty] public partial bool IsAnswerRevealed { get; set; } = false;
+        [ObservableProperty] public partial bool IsManageQuestionsModalOpen { get; set; } = false;
 
         // Form Inputs
         [ObservableProperty] public partial string NewQuestionInput { get; set; } = string.Empty;
@@ -104,9 +102,7 @@ namespace Centriku.ViewModels
             }
         }
 
-        // ==========================================
         // THE DRAW ENGINE
-        // ==========================================
         [RelayCommand]
         public void SpinRecitation()
         {
@@ -176,92 +172,31 @@ namespace Centriku.ViewModels
             }
 
             // 3. Populate & Open Modal
-            WinnerModalName = winner.FullName;
-            IsAnswerRevealed = false;
+            string questionText = pickedQuestion != null ? pickedQuestion.QuestionText : "No questions available! You have run out of active questions.";
+            string answerText = pickedQuestion != null ? pickedQuestion.AnswerText : string.Empty;
 
-            if (pickedQuestion != null)
-            {
-                WinnerModalQuestion = pickedQuestion.QuestionText;
-                WinnerModalAnswer = pickedQuestion.AnswerText;
-                HasWinnerAnswer = !string.IsNullOrWhiteSpace(pickedQuestion.AnswerText);
-            }
-            else
-            {
-                WinnerModalQuestion = "No questions available! You have run out of active questions.";
-                WinnerModalAnswer = string.Empty;
-                HasWinnerAnswer = false;
-            }
+            WinnerModal = new RecitationWinnerModalViewModel(
+                winner.FullName, 
+                questionText, 
+                answerText, 
+                () => { IsWinnerModalOpen = false; WinnerModal = null; }
+            );
 
             IsWinnerModalOpen = true;
         }
-
-        [RelayCommand]
-        public void CloseWinnerModal() => IsWinnerModalOpen = false;
-
-        [RelayCommand]
-        public void ToggleAnswerVisibility() => IsAnswerRevealed = !IsAnswerRevealed;
-
+        
         
         // QUESTION MANAGER & RESET ACTIONS
         [RelayCommand]
-        public async Task EditOrSaveQuestionAsync(QuestionRowViewModel qRow)
+        public void OpenManageQuestionsModal()
         {
-            if (qRow == null) return;
-            
-            if (!qRow.IsEditing)
-            {
-                qRow.IsEditing = true; // Flips the UI to show TextBoxes
-            }
-            else
-            {
-                var db = new DatabaseService().GetConnection();
-                await db.UpdateAsync(qRow.DbModel);
-                
-                qRow.IsEditing = false; // Flips UI back to TextBlocks
-                BuildAvailableQuestionsPool(); // Update the deck with the new text
-            }
-        }
-        [RelayCommand]
-        public void OpenManageQuestionsModal() => IsManageQuestionsModalOpen = true;
-
-        [RelayCommand]
-        public void CloseManageQuestionsModal() => IsManageQuestionsModalOpen = false;
-
-        [RelayCommand]
-        public async Task SaveNewQuestionAsync()
-        {
-            if (string.IsNullOrWhiteSpace(NewQuestionInput)) return;
-
-            var db = new DatabaseService().GetConnection();
-            var newQuestion = new RecitationQuestion
-            {
-                ClassID = ClassId,
-                QuestionText = NewQuestionInput.Trim(),
-                AnswerText = NewAnswerInput?.Trim() ?? string.Empty,
-                IsIncluded = true
-            };
-            
-            await db.InsertAsync(newQuestion);
-            
-            QuestionBank.Add(new QuestionRowViewModel(newQuestion));
-            TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
-            
-            NewQuestionInput = string.Empty;
-            NewAnswerInput = string.Empty;
-            
-            BuildAvailableQuestionsPool(); 
-        }
-
-        [RelayCommand]
-        public async Task DeleteQuestionAsync(QuestionRowViewModel qRow)
-        {
-            if (qRow == null) return;
-            var db = new DatabaseService().GetConnection();
-            await db.DeleteAsync(qRow.DbModel);
-            
-            QuestionBank.Remove(qRow);
-            TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
-            BuildAvailableQuestionsPool();
+            ManageQuestionsModal = new ManageQuestionsModalViewModel(
+                ClassId, 
+                QuestionBank, 
+                BuildAvailableQuestionsPool, 
+                () => { IsManageQuestionsModalOpen = false; ManageQuestionsModal = null; }
+            );
+            IsManageQuestionsModalOpen = true;
         }
 
         // Call this directly from the XAML CheckBox Command to instantly save the IsIncluded state
@@ -329,17 +264,5 @@ namespace Centriku.ViewModels
             }
         }
 
-        public partial class QuestionRowViewModel : ObservableObject
-        {
-            public RecitationQuestion DbModel { get; }
-            
-            [ObservableProperty] public partial bool IsEditing { get; set; } = false;
-            
-            public string QuestionText { get => DbModel.QuestionText; set { DbModel.QuestionText = value; OnPropertyChanged(); } }
-            public string AnswerText { get => DbModel.AnswerText; set { DbModel.AnswerText = value; OnPropertyChanged(); } }
-            public bool IsIncluded { get => DbModel.IsIncluded; set { DbModel.IsIncluded = value; OnPropertyChanged(); } }
-
-            public QuestionRowViewModel(RecitationQuestion model) { DbModel = model; }
-        }
     }
 }
