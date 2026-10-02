@@ -350,13 +350,13 @@
       </Border>
 
       <Border IsVisible="{Binding IsDeleteAssessmentModalOpen}" Background="#B3000000" ZIndex="100">
-         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border DataContext="{Binding DeleteAssessmentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel>
-               <TextBlock Text="Delete Assessment Column?" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-               <TextBlock Text="{Binding DeleteAssessmentMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+               <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+               <TextBlock Text="{Binding Message}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
                <Grid ColumnDefinitions="*, Auto, Auto">
-                  <Button Grid.Column="1" Command="{Binding CancelDeleteAssessmentCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                  <Button Grid.Column="2" Command="{Binding ConfirmDeleteAssessmentCommand}" Content="Delete Column" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                  <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmCommand}" Content="Delete Column" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                </Grid>
             </StackPanel>
          </Border>

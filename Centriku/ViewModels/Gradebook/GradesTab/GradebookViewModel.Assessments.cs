@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
+using Centriku.ViewModels.Modals;
 using Centriku.Services;
 using System;
 
@@ -96,64 +97,40 @@ namespace Centriku.ViewModels
          }
       }
       [ObservableProperty] public partial bool IsDeleteAssessmentModalOpen { get; set; } = false;
-      [ObservableProperty] public partial string DeleteAssessmentMessage { get; set; } = string.Empty;
-      private Assessment? _assessmentToDelete;
+      [ObservableProperty] public partial ConfirmDeleteModalViewModel? DeleteAssessmentModal { get; set; }
 
       // 1. Opens the confirmation modal
-      private void DeleteAssessment(Assessment assessment)
+      private void DeleteAssessment(Assessment? assessmentToDel)
       {
-         if (assessment == null) return;
-         _assessmentToDelete = assessment;
-         DeleteAssessmentMessage = $"Are you sure you want to delete '{assessment.Title}'?\n\nThis will permanently erase all student scores and group data tied to this column.";
-         IsDeleteAssessmentModalOpen = true;
-      }
-
-      // 2. The Bulk Deletion Engine
-      [RelayCommand]
-      public async Task ConfirmDeleteAssessment()
-      {
-         if (_assessmentToDelete == null) return;
-         IsProcessing = true; // Turn on the loading spinner!
-         
-         try
-         {
+         if (assessmentToDel == null) return;
+         DeleteAssessmentModal = new ConfirmDeleteModalViewModel(
+            "Delete Assessment Column?",
+            $"Are you sure you want to delete '{assessmentToDel.Title}'?\n\nThis will permanently erase all student scores and group configurations attached to this column.",
+            async () =>
+            {
                var db = new DatabaseService().GetConnection();
-               int id = _assessmentToDelete.AssessmentID;
-
-               // 1. Safely fetch all related records using the ORM (No raw SQL strings!)
-               var scoresToDelete = await db.Table<Score>().Where(s => s.AssessmentID == id).ToListAsync();
-               var membersToDelete = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == id).ToListAsync();
-               var groupsToDelete = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == id).ToListAsync();
-
-               // 2. Perform a single Bulk Transaction. This locks the database once, deletes all 50+ items instantly, and unlocks.
-               await db.RunInTransactionAsync(tran => 
+               
+               // 1. Delete associated scores & group data
+               var scores = await db.Table<Score>().Where(s => s.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
+               var groups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
+               var members = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
+               
+               await db.RunInTransactionAsync(tran =>
                {
-                   foreach (var s in scoresToDelete) tran.Delete(s);
-                   foreach (var m in membersToDelete) tran.Delete(m);
-                   foreach (var g in groupsToDelete) tran.Delete(g);
-                   
-                   // Finally, delete the Assessment column itself
-                   tran.Delete(_assessmentToDelete); 
+                  foreach (var s in scores) tran.Delete(s);
+                  foreach (var g in groups) tran.Delete(g);
+                  foreach (var m in members) tran.Delete(m);
+                  tran.Delete(assessmentToDel); // Finally, delete the column itself
                });
 
                await LoadGradebookData();
-               ShowToastMessage?.Invoke($"Deleted assessment: '{_assessmentToDelete.Title}'.");
-               CancelDeleteAssessment();
-         }
-         catch (Exception ex)
-         {
-               // If anything fails, gently show a toast instead of crashing the app!
-               ShowToastMessage?.Invoke($"Error deleting assessment: {ex.Message}");
-         }
-         finally { IsProcessing = false; }
+               ShowToastMessage?.Invoke($"Successfully deleted '{assessmentToDel.Title}'.");
+            },
+            () => { IsDeleteAssessmentModalOpen = false; DeleteAssessmentModal = null; }
+         );
+         IsDeleteAssessmentModalOpen = true;
       }
 
-      [RelayCommand]
-      public void CancelDeleteAssessment()
-      {
-         IsDeleteAssessmentModalOpen = false;
-         _assessmentToDelete = null;
-      }
       private void ResetAssessmentForm()
       {
          _editingAssessmentId = null; // Clears the "Edit Mode" tracking ID

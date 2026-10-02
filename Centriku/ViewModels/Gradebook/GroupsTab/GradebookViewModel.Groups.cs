@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
+using Centriku.ViewModels.Modals;
 using Centriku.Services;
 
 namespace Centriku.ViewModels
@@ -24,8 +25,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<GroupCandidateStudentViewModel> CandidateMembers { get; set; } = new();
 
         [ObservableProperty] public partial bool IsDeleteGroupModalOpen { get; set; } = false;
-        [ObservableProperty] public partial string DeleteGroupModalMessage { get; set; } = string.Empty;
-        private GroupCardViewModel? _groupToDelete;
+        [ObservableProperty] public partial ConfirmDeleteModalViewModel? DeleteGroupModal { get; set; }
         [ObservableProperty] public partial bool IsEditingGroupModalOpen { get; set; } = false;
         [ObservableProperty] public partial string EditGroupNameInput { get; set; } = string.Empty;
         [ObservableProperty] public partial ObservableCollection<GroupCandidateStudentViewModel> EditCandidateMembers { get; set; } = new();
@@ -295,80 +295,53 @@ namespace Centriku.ViewModels
 
         [RelayCommand]
         public void CancelCreateGroup() => IsCreatingGroupModalOpen = false;
-    
+
         [RelayCommand]
         public void PromptDeleteGroup(GroupCardViewModel groupCard)
         {
-            if (groupCard == null) return;
-            _groupToDelete = groupCard;
-            DeleteGroupModalMessage = $"Are you sure you want to delete '{groupCard.GroupName}'?\n\nThis will remove the group and permanently erase all scores for its members in this assessment.";
+            if (groupCard == null || SelectedGroupAssessment == null) return;
+            var targetGroup = groupCard.DbModel;
+            var assessmentId = SelectedGroupAssessment.AssessmentID;
+
+            DeleteGroupModal = new ConfirmDeleteModalViewModel(
+                "Delete Group?",
+                $"Are you sure you want to delete '{targetGroup.GroupName}'?\n\nThis will remove the group and permanently erase all scores for its members in this assessment.",
+                async () =>
+                {
+                    var db = new DatabaseService().GetConnection();
+                    
+                    // 1. Fetch the members safely using the ORM
+                    var membersToWipe = await db.Table<AssessmentGroupMember>()
+                                                .Where(m => m.GroupID == targetGroup.GroupID)
+                                                .ToListAsync();
+                                                
+                    var studentIds = membersToWipe.Select(m => m.StudentID).Where(id => id != null).ToList();
+
+                    // 2. Fetch their associated scores
+                    var scoresToDelete = new System.Collections.Generic.List<Score>();
+                    if (studentIds.Any())
+                    {
+                        scoresToDelete = await db.Table<Score>()
+                            .Where(s => s.AssessmentID == assessmentId && s.StudentID != null && studentIds.Contains(s.StudentID))
+                            .ToListAsync();
+                    }
+
+                    // 3. Safe ORM Transaction
+                    await db.RunInTransactionAsync(tran => 
+                    {
+                        foreach (var s in scoresToDelete) tran.Delete(s);
+                        foreach (var m in membersToWipe) tran.Delete(m);
+                        tran.Delete(targetGroup);
+                    });
+                    
+                    await LoadGroupsForSelectedAssessmentAsync();
+                    RecalculateFinalGrades();
+                    ShowToastMessage?.Invoke($"Deleted '{targetGroup.GroupName}'.");
+                },
+                () => { IsDeleteGroupModalOpen = false; DeleteGroupModal = null; }
+            );
+
             IsDeleteGroupModalOpen = true;
-        }
-
-        [RelayCommand]
-        public async Task ConfirmDeleteGroupAsync()
-        {
-            if (_groupToDelete == null || SelectedGroupAssessment == null) return;
-            IsProcessing = true;
-
-            try 
-            {
-                var db = new DatabaseService().GetConnection();
-                var groupId = _groupToDelete.DbModel.GroupID;
-                var assessmentId = SelectedGroupAssessment.AssessmentID;
-                
-                // 1. Fetch the members safely using the ORM (No raw SQL strings that cause crashes!)
-                var membersToWipe = await db.Table<AssessmentGroupMember>()
-                                            .Where(m => m.GroupID == groupId)
-                                            .ToListAsync();
-                                            
-                var studentIds = membersToWipe.Select(m => m.StudentID).Where(id => id != null).ToList();
-
-                // 2. Fetch their associated scores so we don't leave ghost grades in the gradebook
-                var scoresToDelete = new System.Collections.Generic.List<Score>();
-                if (studentIds.Any())
-                {
-                    scoresToDelete = await db.Table<Score>()
-                        .Where(s => s.AssessmentID == assessmentId && s.StudentID != null && studentIds.Contains(s.StudentID))
-                        .ToListAsync();
-                }
-
-                // 3. Safe ORM Transaction
-                await db.RunInTransactionAsync(tran => 
-                {
-                    // Wipe scores
-                    foreach (var s in scoresToDelete) tran.Delete(s);
-                    
-                    // Wipe members
-                    foreach (var m in membersToWipe) tran.Delete(m);
-                    
-                    // Wipe the group itself
-                    tran.Delete(_groupToDelete.DbModel);
-                });
-                
-                IsDeleteGroupModalOpen = false;
-                _groupToDelete = null;
-                
-                await LoadGroupsForSelectedAssessmentAsync();
-                RecalculateFinalGrades();
-                ShowToastMessage?.Invoke("Group deleted successfully.");
-            }
-            catch (Exception ex)
-            {
-                // CRASH PROTECTION: If anything fails, show a toast instead of crashing the app
-                ShowToastMessage?.Invoke($"Error deleting group: {ex.Message}");
-            }
-            finally 
-            { 
-                IsProcessing = false; 
-            }
-        }
-
-        [RelayCommand]
-        public void CancelDeleteGroup()
-        {
-            IsDeleteGroupModalOpen = false;
-            _groupToDelete = null;
         }
 
         [RelayCommand]

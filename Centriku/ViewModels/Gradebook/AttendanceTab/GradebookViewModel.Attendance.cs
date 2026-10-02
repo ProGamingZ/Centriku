@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Centriku.Models;
 using Centriku.Services;
 using System;
+using Centriku.ViewModels.Modals;
 
 namespace Centriku.ViewModels
 {
@@ -99,64 +100,45 @@ namespace Centriku.ViewModels
          }
          [ObservableProperty] public partial bool IsDeleteRollCallModalOpen { get; set; } = false;
          [ObservableProperty] public partial string DeleteRollCallMessage { get; set; } = string.Empty;
-         private System.DateTime? _rollCallToDelete = null;
+         [ObservableProperty] public partial ConfirmDeleteModalViewModel? DeleteRollCallModal { get; set; }
 
-         // 1. Opens the confirmation modal instead of deleting immediately
          private void DeleteRollCall(System.DateTime? dateParam)
          {
             if (!dateParam.HasValue) return;
-            _rollCallToDelete = dateParam.Value.Date;
-            DeleteRollCallMessage = $"Are you sure you want to delete the attendance column for {_rollCallToDelete.Value:MMM dd, yyyy}?\n\nThis will permanently erase the attendance records of all students for this date.";
+            var targetDate = dateParam.Value.Date;
+            
+            // Inject the specific logic directly into the universal modal
+            DeleteRollCallModal = new ConfirmDeleteModalViewModel(
+                "Delete Attendance Column?",
+                $"Are you sure you want to delete the attendance column for {targetDate:MMM dd, yyyy}?\n\nThis will permanently erase the attendance records of all students for this date.",
+                async () => 
+                {
+                    var db = new DatabaseService().GetConnection();
+                    var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
+                    
+                    if (recordsToDelete.Any())
+                    {
+                        await db.RunInTransactionAsync(tran => 
+                        {
+                            foreach (var r in recordsToDelete) tran.Delete(r);
+                        });
+                    }
+                    
+                    await LoadAttendanceData(); 
+                    ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
+                },
+                () => { IsDeleteRollCallModalOpen = false; DeleteRollCallModal = null; }
+            );
+
             IsDeleteRollCallModalOpen = true;
          }
 
-         // 2. The Bulk Deletion Engine
-         [RelayCommand]
-         private async Task ConfirmDeleteRollCall()
-         {
-            if (!_rollCallToDelete.HasValue) return;
-            IsProcessing = true; // Turn on the loading spinner!
-            
-            try
-            {
-               var targetDate = _rollCallToDelete.Value.Date;
-               var db = new DatabaseService().GetConnection();
-               
-               // 1. Safely fetch all related records using the ORM
-               var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
-               
-               // 2. Perform a single Bulk Transaction
-               if (recordsToDelete.Any())
-               {
-                   await db.RunInTransactionAsync(tran => 
-                   {
-                       foreach (var r in recordsToDelete) tran.Delete(r);
-                   });
-               }
-               
-               await LoadAttendanceData(); 
-               ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
-               CancelDeleteRollCall();
-            }
-            catch (Exception ex)
-            {
-                ShowToastMessage?.Invoke($"Error deleting roll call: {ex.Message}");
-            }
-            finally { IsProcessing = false; }
-         }
-
-         [RelayCommand]
-         private void CancelDeleteRollCall()
-         {
-            IsDeleteRollCallModalOpen = false;
-            _rollCallToDelete = null;
-         }
          private void ResetRollCallForm()
-      {
-         _editingRollCallDate = null;
-         NewRollCallDate = System.DateTime.Today;
-         IsAddingRollCall = false;
-      }
+         {
+            _editingRollCallDate = null;
+            NewRollCallDate = System.DateTime.Today;
+            IsAddingRollCall = false;
+         }
       #endregion
 
       
