@@ -30,7 +30,7 @@ namespace Centriku.ViewModels
 
             public async Task LoadImportSettingsPreviewAsync()
             {
-                var db = new Centriku.Services.DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
 
                 string[] headers = new string[10];
@@ -129,9 +129,9 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewStudentSectionName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentEnrollmentStatus { get; set; } = "Regular";
 
-        public async void LoadStudents()
+        public async Task LoadStudentsAsync()
         {
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.CreateTableAsync<Centriku.Models.Student>();
             var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
             _allStudents = rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
@@ -161,10 +161,10 @@ namespace Centriku.ViewModels
             UpdateDisplayedArchivedStudents();
         }
 
-        private async void SaveStudent()
+        private async Task SaveStudentAsync()
         {
             if (string.IsNullOrWhiteSpace(NewStudentId) || string.IsNullOrWhiteSpace(NewStudentLastName)) return;
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var newStudent = new Centriku.Models.Student
             {
                 StudentID = NewStudentId, FirstName = NewStudentFirstName, MiddleName = NewStudentMiddleName, LastName = NewStudentLastName,
@@ -178,10 +178,10 @@ namespace Centriku.ViewModels
             NewStudentProgram = string.Empty; NewStudentSectionName = string.Empty; NewStudentEnrollmentStatus = "Regular";
             
             IsAddingStudent = false;
-            LoadStudents();
+            await LoadStudentsAsync();
         }
 
-        private async void EditOrSaveStudent(StudentRowViewModel row)
+        private async Task EditOrSaveStudentAsync(StudentRowViewModel row)
         {
             if (row == null) return;
             
@@ -191,34 +191,32 @@ namespace Centriku.ViewModels
             }
             else 
             { 
-                var db = new Centriku.Services.DatabaseService().GetConnection(); 
-                // Uses InsertOrReplace to guarantee the save executes even if the ID was altered
+                var db = _dbService.GetConnection(); 
                 await db.InsertOrReplaceAsync(row.DbModel); 
-                
                 row.IsEditing = false; 
-                LoadStudents(); 
+                await LoadStudentsAsync(); 
             }
         }
 
-        private async void ArchiveStudent(StudentRowViewModel row)
+        private async Task ArchiveStudentAsync(StudentRowViewModel row)
         {
             if (row == null) return;
-            var db = new Centriku.Services.DatabaseService().GetConnection();
-            row.DbModel.IsArchived = true; await db.UpdateAsync(row.DbModel); LoadStudents(); OnStudentRosterChanged?.Invoke();
+            var db = _dbService.GetConnection();
+            row.DbModel.IsArchived = true; await db.UpdateAsync(row.DbModel); await LoadStudentsAsync(); OnStudentRosterChanged?.Invoke();
         }
 
-        private async void RestoreStudent(StudentRowViewModel row)
+        private async Task RestoreStudentAsync(StudentRowViewModel row)
         {
             if (row == null) return;
-            var db = new Centriku.Services.DatabaseService().GetConnection();
-            row.DbModel.IsArchived = false; await db.UpdateAsync(row.DbModel); LoadStudents(); OnStudentRosterChanged?.Invoke();
+            var db = _dbService.GetConnection();
+            row.DbModel.IsArchived = false; await db.UpdateAsync(row.DbModel); await LoadStudentsAsync(); OnStudentRosterChanged?.Invoke();
         }
 
-        private async void DeleteStudent(StudentRowViewModel row)
+        private async Task DeleteStudentAsync(StudentRowViewModel row)
         {
             if (row == null) return;
-            var db = new Centriku.Services.DatabaseService().GetConnection();
-            await db.DeleteAsync(row.DbModel); LoadStudents(); 
+            var db = _dbService.GetConnection();
+            await db.DeleteAsync(row.DbModel); await LoadStudentsAsync(); 
         }
 
         [ObservableProperty] public partial ObservableCollection<StagedStudent> StagedStudents { get; set; } = new();
@@ -235,7 +233,7 @@ namespace Centriku.ViewModels
             try
             {
                 StagedStudents.Clear(); HasImportError = false; HasStagedStudents = false; IsLoading = true; ImportSummaryMessage = string.Empty;
-                var db = new Centriku.Services.DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
                 var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
                 var existingIds = existingStudents.Select(s => s.StudentID).ToHashSet();
@@ -343,7 +341,7 @@ namespace Centriku.ViewModels
         {
             if (!StagedStudents.Any()) return;
             IsLoading = true; ImportSummaryMessage = "Re-evaluating data...";
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
             var existingStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
             var existingIds = existingStudents.Select(s => s.StudentID).ToHashSet();
@@ -413,7 +411,7 @@ namespace Centriku.ViewModels
         public async Task ConfirmBulkImportAsync()
         {
             if (!StagedStudents.Any()) return;
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
             var toInsert = new List<Centriku.Models.Student>(); var toUpdate = new List<Centriku.Models.Student>();
 
@@ -423,9 +421,10 @@ namespace Centriku.ViewModels
                 if (staged.IsDuplicate) { if (settings.DuplicateHandlingRule == "Update") toUpdate.Add(staged.DbModel); }
                 else toInsert.Add(staged.DbModel);
             }
-            if (toInsert.Any()) await db.InsertAllAsync(toInsert, runInTransaction: true);
-            if (toUpdate.Any()) await db.UpdateAllAsync(toUpdate, runInTransaction: true);
-            CancelBulkImport(); LoadStudents();     
+            if (toInsert.Count != 0) await db.InsertAllAsync(toInsert, runInTransaction: true);
+            if (toUpdate.Count != 0) await db.UpdateAllAsync(toUpdate, runInTransaction: true);
+            CancelBulkImport();
+            await LoadStudentsAsync();
         }
         
         [RelayCommand]

@@ -47,7 +47,7 @@ namespace Centriku.ViewModels
             _dashboardViewModel = new DashboardViewModel(dbService, Navigate);
             _myClassesViewModel = new MyClassesViewModel(dbService, Navigate);
             _policiesViewModel = new PoliciesViewModel();
-            _directoryViewModel = new DirectoryViewModel();
+            _directoryViewModel = new DirectoryViewModel(dbService);
             _settingsViewModel = new SettingsViewModel(dbService);
 
             ToggleSidebarCommand = new RelayCommand(() => IsSidebarOpen = !IsSidebarOpen);
@@ -139,10 +139,10 @@ namespace Centriku.ViewModels
             Navigate(_policiesViewModel);
         }
         
-        private void OnNavigateToDirectory()
+        private async void OnNavigateToDirectory()
         {
             SetActiveTab("Directory");
-            _directoryViewModel.LoadStudents(); 
+            await _directoryViewModel.LoadStudentsAsync();
             Navigate(_directoryViewModel);
         }
     }

@@ -15,7 +15,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool HasEnrolledClasses { get; set; } = false;
         [ObservableProperty] public partial StudentClassPerformanceViewModel? SelectedStudentClassPerformance { get; set; }
 
-        private async void ViewProfile(StudentRowViewModel row)
+        private async Task ViewProfileAsync(StudentRowViewModel row)
         {
             if (row == null) return;
             SelectedProfile = row;
@@ -25,7 +25,7 @@ namespace Centriku.ViewModels
 
         private async Task LoadStudentPerformanceAsync(string studentId)
         {
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var performanceList = new List<StudentClassPerformanceViewModel>();
 
             var rosters = await db.Table<Centriku.Models.ClassRoster>().Where(r => r.StudentID == studentId).ToListAsync();
