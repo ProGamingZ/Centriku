@@ -20,12 +20,9 @@
                     <!-- Header: Term Badge, Toggle, & Actions -->
                     <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                            <!-- Styled Term Badge -->
                             <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Term}" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold"/>
                             </Border>
-                            
-                            <!-- NEW: Active/Inactive Toggle Switch -->
                             <ToggleSwitch IsChecked="{Binding IsActive, Mode=OneWay}" 
                                           Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).ToggleClassStateCommand}" 
                                           CommandParameter="{Binding}"
@@ -35,6 +32,10 @@
                         </StackPanel>
                         
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5">
+                            <!-- NEW: Fluent Icon applied here -->
+                            <Button Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).DuplicateClassCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Duplicate Class">
+                                <TextBlock Classes="Icon" Text="{DynamicResource IconDuplicate}" Foreground="{DynamicResource TextMutedBrush}" FontSize="18"/>
+                            </Button>
                             <Button Command="{Binding #RootControl.((vm:MyClassesViewModel)DataContext).EditClassCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Edit Class">
                                 <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMutedBrush}" FontSize="18"/>
                             </Button>
@@ -47,20 +48,30 @@
                     <!-- Body: Title & Program Info -->
                     <StackPanel Grid.Row="1" Margin="0,0,0,20">
                         <TextBlock Text="{Binding SubjectName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap" LineHeight="24" MaxLines="2" TextTrimming="CharacterEllipsis"/>
-                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
-                            <TextBlock Text="{Binding ProgramSectionDisplay}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
-                            <TextBlock Text="•" Foreground="{DynamicResource BorderBrush}" FontSize="13"/>
-                            <TextBlock Text="{Binding AcademicYear}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
-                        </StackPanel>
+                        
+                        <!-- Using a Grid enforces strict boundaries so text truncates instead of bleeding out -->
+                        <Grid ColumnDefinitions="*, Auto, Auto" Margin="0,8,0,0">
+                            <TextBlock Grid.Column="0" Text="{Binding ProgramSectionDisplay}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="1" Text=" • " Foreground="{DynamicResource BorderBrush}" FontSize="13" Margin="6,0"/>
+                            <TextBlock Grid.Column="2" Text="{Binding AcademicYear}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
+                        </Grid>
                     </StackPanel>
 
                     <!-- Footer: Grading Policy Pill -->
-                    <Border Grid.Row="2" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,20">
-                        <Grid ColumnDefinitions="Auto, *">
-                            <TextBlock Grid.Column="0" Text="Policy:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding TemplateName}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
+                    <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,0,0,20">
+                        <!-- Policy Pill -->
+                        <Border Grid.Column="0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,10,0">
+                            <Grid ColumnDefinitions="Auto, *">
+                                <TextBlock Grid.Column="0" Text="Policy:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding TemplateName}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Student Count Badge (Balanced on the right) -->
+                        <Border Grid.Column="1" Background="#1A8B5CF6" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                            <TextBlock Text="{Binding StudentCountDisplay}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
 
                     <!-- Primary Action -->
                     <Button Grid.Row="3" 
@@ -177,7 +188,7 @@
                 <StackPanel Grid.Row="3" Margin="40,0,40,40" Spacing="20">
                     
                     <!-- BOX 1: ACTIVE CLASSES -->
-                    <TextBlock Text="Active Classes" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <TextBlock Text="{Binding ActiveClassesHeader}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                     <ItemsControl ItemsSource="{Binding ActiveClasses}" ItemTemplate="{StaticResource ClassCardTemplate}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -187,7 +198,7 @@
                     </ItemsControl>
 
                     <!-- BOX 2: ARCHIVED CLASSES (EXPANDER) -->
-                    <Expander Header="Archived Classes (Inactive)" 
+                    <Expander Header="{Binding InactiveClassesHeader}" 
                               IsExpanded="False" 
                               Background="Transparent" 
                               BorderBrush="{DynamicResource BorderBrush}" 
@@ -219,6 +230,20 @@
                     <Grid ColumnDefinitions="*, Auto, Auto">
                         <Button Grid.Column="1" Command="{Binding CancelDeleteCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
                         <Button Grid.Column="2" Command="{Binding ConfirmDeleteCommand}" Content="Delete Class" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- DUPLICATE CONFIRMATION MODAL -->
+        <Border IsVisible="{Binding IsDuplicateModalOpen}" Background="#B3000000" ZIndex="100">
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel>
+                    <TextBlock Text="Duplicate Class?" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <TextBlock Text="{Binding DuplicateConfirmationMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+                    <Grid ColumnDefinitions="*, Auto, Auto">
+                        <Button Grid.Column="1" Command="{Binding CancelDuplicateCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                        <Button Grid.Column="2" Command="{Binding ConfirmDuplicateCommand}" Content="Duplicate Class" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                     </Grid>
                 </StackPanel>
             </Border>

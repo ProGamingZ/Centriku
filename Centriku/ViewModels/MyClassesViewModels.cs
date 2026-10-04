@@ -18,8 +18,14 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsDeleteModalOpen { get; set; } = false;
         [ObservableProperty] public partial string DeleteConfirmationMessage { get; set; } = string.Empty;
         private ClassCardViewModel? _classToDelete;
+        [ObservableProperty] public partial bool IsDuplicateModalOpen { get; set; } = false;
+        [ObservableProperty] public partial string DuplicateConfirmationMessage { get; set; } = string.Empty;
+        private ClassCardViewModel? _classToDuplicate;
         [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> ActiveClasses { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> InactiveClasses { get; set; } = new();
+        [ObservableProperty] public partial string ActiveClassesHeader { get; set; } = "Active Classes (0)";
+        [ObservableProperty] public partial string InactiveClassesHeader { get; set; } = "Archived Classes (0)";
+        private System.Collections.Generic.List<ClassRoster> _allRosters = new();
         [ObservableProperty] public partial ObservableCollection<GradingTemplate> AvailableTemplates { get; set; } = new();
         [ObservableProperty] public partial bool IsAddingClass { get; set; } = false;
 
@@ -54,7 +60,9 @@ namespace Centriku.ViewModels
         public IRelayCommand CancelDeleteCommand { get; }
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
         public IAsyncRelayCommand<ClassCardViewModel> ToggleClassStateCommand { get; }
-
+        public IRelayCommand<ClassCardViewModel> DuplicateClassCommand { get; } 
+        public IAsyncRelayCommand ConfirmDuplicateCommand { get; }
+        public IRelayCommand CancelDuplicateCommand { get; }
 
 
         public MyClassesViewModel(IDatabaseService dbService,Action<ViewModelBase> navigateAction)
@@ -75,6 +83,9 @@ namespace Centriku.ViewModels
             CancelDeleteCommand = new RelayCommand(CancelDelete);
             OpenClassCommand = new RelayCommand<ClassCardViewModel>(OpenClass!);
             ToggleClassStateCommand = new AsyncRelayCommand<ClassCardViewModel>(ToggleClassStateAsync!);
+            DuplicateClassCommand = new RelayCommand<ClassCardViewModel>(PromptDuplicateClass!);
+            ConfirmDuplicateCommand = new AsyncRelayCommand(ConfirmDuplicateAsync);
+            CancelDuplicateCommand = new RelayCommand(CancelDuplicate);
 
             DirectoryViewModel.OnStudentRosterChanged += () =>
             {
@@ -106,6 +117,7 @@ namespace Centriku.ViewModels
             var db = _dbService.GetConnection();
             await db.CreateTableAsync<TeacherClass>();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
+            _allRosters = await db.Table<ClassRoster>().ToListAsync();
             
             // Populate Dynamic Filter Dropdowns
             var years = _allClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
@@ -143,13 +155,18 @@ namespace Centriku.ViewModels
             foreach (var c in filtered)
             {
                 var templateName = AvailableTemplates.FirstOrDefault(t => t.TemplateID == c.GradingTemplateID)?.TemplateName ?? "Unknown Template";
-                var newCard = new ClassCardViewModel(c, templateName);
                 
-                if (c.IsActive)
-                    ActiveClasses.Add(newCard);
-                else
-                    InactiveClasses.Add(newCard);
+                // NEW: Count the students dynamically
+                int studentCount = _allRosters.Count(r => r.ClassID == c.ClassID);
+                var newCard = new ClassCardViewModel(c, templateName, studentCount);
+                
+                if (c.IsActive) ActiveClasses.Add(newCard);
+                else InactiveClasses.Add(newCard);
             }
+
+            // Update the UI Headers dynamically based on the current lists
+            ActiveClassesHeader = $"Active Classes ({ActiveClasses.Count})";
+            InactiveClassesHeader = $"Archived Classes ({InactiveClasses.Count})";
         }
 
         private void EditClass(ClassCardViewModel classCard)
@@ -371,6 +388,69 @@ namespace Centriku.ViewModels
                 IsProcessing = false;
             }
         }
+        private void PromptDuplicateClass(ClassCardViewModel classCard)
+        {
+            if (classCard == null) return;
+            _classToDuplicate = classCard;
+            DuplicateConfirmationMessage = $"Are you sure you want to duplicate '{classCard.SubjectName} - {classCard.SectionLabel}'?\n\nThis will create a new class and copy all enrolled students. Assessments, scores, and attendance will NOT be included.";
+            IsDuplicateModalOpen = true;
+        }
+
+        private void CancelDuplicate()
+        {
+            IsDuplicateModalOpen = false;
+            _classToDuplicate = null;
+        }
+
+        private async Task ConfirmDuplicateAsync()
+        {
+            if (_classToDuplicate == null) return;
+            IsProcessing = true;
+            
+            try
+            {
+                var db = _dbService.GetConnection();
+                var original = _classToDuplicate.DbModel;
+                
+                // 1. Clone the TeacherClass
+                var newClass = new TeacherClass
+                {
+                    SubjectName = original.SubjectName + " (Copy)",
+                    SectionLabel = original.SectionLabel,
+                    Program = original.Program,
+                    ProfessorName = original.ProfessorName,
+                    AcademicYear = original.AcademicYear,
+                    Term = original.Term,
+                    GradingTemplateID = original.GradingTemplateID,
+                    IsActive = true
+                };
+                
+                await db.InsertAsync(newClass);
+                
+                // 2. Clone the Enrolled Students (ClassRoster) ONLY
+                var oldRosters = await db.Table<ClassRoster>().Where(r => r.ClassID == original.ClassID).ToListAsync();
+                var newRosters = oldRosters.Select(r => new ClassRoster 
+                { 
+                    ClassID = newClass.ClassID, 
+                    StudentID = r.StudentID,
+                    HasRecited = false // Reset recitation state for the new class
+                }).ToList();
+                
+                if (newRosters.Any()) await db.InsertAllAsync(newRosters);
+                
+                ShowToastMessage?.Invoke($"Successfully duplicated '{original.SubjectName}'.");
+                await LoadClasses();
+            }
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error duplicating class: {ex.Message}");
+            }
+            finally
+            {
+                IsProcessing = false;
+                CancelDuplicate();
+            }
+        }
         
         public async Task RefreshDataAsync()
         {
@@ -379,10 +459,11 @@ namespace Centriku.ViewModels
         }
     }
 
-    public partial class ClassCardViewModel(TeacherClass teacherClass, string templateName) : ObservableObject
+    public partial class ClassCardViewModel(TeacherClass teacherClass, string templateName, int studentCount) : ObservableObject
     {
         public TeacherClass DbModel { get; } = teacherClass;
         public string TemplateName { get; } = templateName;
+        public string StudentCountDisplay { get; } = $"{studentCount} Student{(studentCount == 1 ? "" : "s")}";
 
         public string SubjectName => DbModel.SubjectName ?? string.Empty;
         public string SectionLabel => DbModel.SectionLabel ?? string.Empty;
