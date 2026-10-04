@@ -1,12 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Centriku.Models;
+using Centriku.Services;
 
 namespace Centriku.ViewModels
 {
-    public partial class AssessmentFilterViewModel : ObservableObject
+    public partial class AssessmentFilterViewModel(IDatabaseService dbService, Assessment assessment, System.Action onVisibilityChanged) : ObservableObject
     {
-        public Assessment DbModel { get; }
-        private readonly System.Action _onVisibilityChanged;
+        private readonly IDatabaseService _dbService = dbService;
+
+        public Assessment DbModel { get; } = assessment;
+        private readonly System.Action _onVisibilityChanged = onVisibilityChanged;
 
         public string Title => DbModel.Title ?? "Unknown";
 
@@ -25,15 +28,9 @@ namespace Centriku.ViewModels
             }
         }
 
-        public AssessmentFilterViewModel(Assessment assessment, System.Action onVisibilityChanged)
-        {
-            DbModel = assessment;
-            _onVisibilityChanged = onVisibilityChanged;
-        }
-
         private async void SaveToDb()
         {
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.UpdateAsync(DbModel);
         }
     }

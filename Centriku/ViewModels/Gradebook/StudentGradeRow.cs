@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Centriku.Models;
+using Centriku.Services;
 using System.Linq;
 
 namespace Centriku.ViewModels
@@ -7,18 +8,25 @@ namespace Centriku.ViewModels
     // 1. SAFE DICTIONARY FOR SCORES
     public class SafeScoreDictionary : System.Collections.Generic.Dictionary<int, ScoreCellViewModel>
     {
+        private readonly IDatabaseService _dbService;
+        
+        public SafeScoreDictionary(IDatabaseService dbService)
+        {
+            _dbService = dbService;
+        }
+
         public new ScoreCellViewModel this[int key]
         {
             get
             {
-                if (!ContainsKey(key)) Add(key, new ScoreCellViewModel(new Score(), 100, null!));
+                if (!ContainsKey(key)) Add(key, new ScoreCellViewModel(_dbService, new Score(), 100, null!));
                 return base[key];
             }
             set => base[key] = value;
         }
     }
 
-    // 2. SAFE SEMANTIC DICTIONARY FOR CATEGORIES (Uses String Keys to prevent XAML binding failures)
+    // 2. SAFE SEMANTIC DICTIONARY FOR CATEGORIES
     public class SafeCategoryDictionary : System.Collections.Generic.Dictionary<string, CategoryGradeViewModel>
     {
         public new CategoryGradeViewModel this[string key]
@@ -33,13 +41,11 @@ namespace Centriku.ViewModels
         }
     }
 
-    // 2. THE MAIN STUDENT ROW
-    public partial class StudentGradeRow(Student student) : ObservableObject
+    // 3. THE MAIN STUDENT ROW (Primary Constructor Syntax Removed)
+    public partial class StudentGradeRow : ObservableObject
     {
-        public Student StudentInfo { get; } = student;
-        public SafeScoreDictionary Scores { get; set; } = new();
-        
-        // NEW: Binds via strict text names (e.g. "majorexam") instead of fragile numbers
+        public Student StudentInfo { get; }
+        public SafeScoreDictionary Scores { get; set; } 
         public SafeCategoryDictionary CategoryGrades { get; set; } = new();
 
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
@@ -57,9 +63,16 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string MidtermComputationTooltip { get; set; } = string.Empty;
         [ObservableProperty] public partial string FinalComputationTooltip { get; set; } = string.Empty;
         [ObservableProperty] public partial string FinalGradeTooltip { get; set; } = string.Empty;
+
+        // Traditional Constructor properly initializes non-nullable properties
+        public StudentGradeRow(IDatabaseService dbService, Student student)
+        {
+            StudentInfo = student;
+            Scores = new SafeScoreDictionary(dbService);
+        }
     }
 
-    // 3. THE TS / WS DATA MODEL
+    // 4. THE TS / WS DATA MODEL
     public partial class CategoryGradeViewModel : ObservableObject
     {
         [ObservableProperty] public partial string TsDisplay { get; set; } = "--";

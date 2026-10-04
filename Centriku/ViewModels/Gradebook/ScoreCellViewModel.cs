@@ -1,13 +1,15 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Centriku.Models;
+using Centriku.Services;
 
 namespace Centriku.ViewModels
 {
-    public partial class ScoreCellViewModel : ObservableObject
+    public partial class ScoreCellViewModel(IDatabaseService dbService, Score score, double maxScore, System.Action onScoreChanged) : ObservableObject
     {
-        public Score DbModel { get; }
-        public double MaxScore { get; }
-        private readonly System.Action _onScoreChanged; 
+        private readonly IDatabaseService _dbService = dbService;
+        public Score DbModel { get; } = score;
+        public double MaxScore { get; } = maxScore;
+        private readonly System.Action _onScoreChanged = onScoreChanged; 
 
         public double PointsEarned
         {
@@ -49,16 +51,10 @@ namespace Centriku.ViewModels
             }
         }
 
-        public ScoreCellViewModel(Score score, double maxScore, System.Action onScoreChanged)
-        {
-            DbModel = score;
-            MaxScore = maxScore;
-            _onScoreChanged = onScoreChanged;
-        }
-
         private async void SaveScoreToDatabase()
         {
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            // Use the injected service instead of instantiating a new one
+            var db = _dbService.GetConnection();
             if (DbModel.ScoreID == 0) await db.InsertAsync(DbModel);
             else await db.UpdateAsync(DbModel);
         }

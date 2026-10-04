@@ -144,7 +144,7 @@ namespace Centriku.ViewModels
 
                 // Filter the assessments so the flyout ONLY shows quizzes for the currently viewed term!
                 var relevantAssessments = ClassAssessments.Where(a => MatchesGradingPeriod(a.GradingPeriod, SelectedTermView)).ToList();
-                var allFilters = relevantAssessments.Select(a => new AssessmentFilterViewModel(a, TriggerGridRedraw)).ToList();
+                var allFilters = relevantAssessments.Select(a => new AssessmentFilterViewModel(_dbService, a, TriggerGridRedraw)).ToList();
                 var grouped = allFilters.GroupBy(f => NormalizeCategoryName(f.DbModel.Category) ?? "Uncategorized");
 
                 foreach (var group in grouped)
@@ -224,16 +224,16 @@ namespace Centriku.ViewModels
                 {
                     student.LastName = $"[ARCHIVED] {student.LastName}";
 
-                    var gradeRow = new StudentGradeRow(student);
+                    var gradeRow = new StudentGradeRow(_dbService, student);
                     var studentScores = scores.Where(s => s.StudentID == student.StudentID).ToList();
                     
                     foreach (var assessment in ClassAssessments)
                     {
                         var existingScore = studentScores.FirstOrDefault(s => s.AssessmentID == assessment.AssessmentID);
                         if (existingScore != null) 
-                            gradeRow.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore, () => {});
+                            gradeRow.Scores[assessment.AssessmentID] = new ScoreCellViewModel(_dbService, existingScore, assessment.MaxScore, () => {});
                         else 
-                            gradeRow.Scores[assessment.AssessmentID] = new ScoreCellViewModel(new Score { AssessmentID = assessment.AssessmentID, StudentID = student.StudentID, PointsEarned = 0 }, assessment.MaxScore, () => {});
+                            gradeRow.Scores[assessment.AssessmentID] = new ScoreCellViewModel(_dbService, new Score { AssessmentID = assessment.AssessmentID, StudentID = student.StudentID, PointsEarned = 0 }, assessment.MaxScore, () => {});
                     }
                     archivedGrades.Add(gradeRow);
 
@@ -244,7 +244,7 @@ namespace Centriku.ViewModels
                     {
                         var existingAtt = studentAtt.FirstOrDefault(a => a.Date.Date == date);
                         if (existingAtt == null) existingAtt = new AttendanceRecord { Status = "" };
-                        attRow.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(existingAtt, () => {}, msg => {});
+                        attRow.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(_dbService, existingAtt, () => {}, msg => {});
                     }
                     archivedAtt.Add(attRow);
                 }
@@ -370,7 +370,7 @@ namespace Centriku.ViewModels
                 _allGradebookRows.Clear();
                 foreach (var student in enrolled)
                 {
-                    var row = new StudentGradeRow(student);
+                    var row = new StudentGradeRow(_dbService, student);
                     var studentScores = scores.Where(s => s.StudentID == student.StudentID).ToList();
 
                     foreach (var assessment in ClassAssessments)
@@ -381,7 +381,7 @@ namespace Centriku.ViewModels
                         
                         if (existingScore != null)
                         {
-                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(existingScore, assessment.MaxScore, RecalculateFinalGrades);
+                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(_dbService, existingScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                         else
                         {
@@ -391,7 +391,7 @@ namespace Centriku.ViewModels
                                 StudentID = student.StudentID, 
                                 PointsEarned = 0 
                             };
-                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(blankScore, assessment.MaxScore, RecalculateFinalGrades);
+                            row.Scores[assessment.AssessmentID] = new ScoreCellViewModel(_dbService, blankScore, assessment.MaxScore, RecalculateFinalGrades);
                         }
                     }
                     _allGradebookRows.Add(row);
@@ -441,6 +441,7 @@ namespace Centriku.ViewModels
                         if (existingRecord == null) existingRecord = new AttendanceRecord { ClassID = ClassId, StudentID = student.StudentID, Date = date, Status = "" };
                         
                         row.Cells[date.ToString("yyyy-MM-dd")] = new AttendanceCellViewModel(
+                            _dbService,
                             existingRecord, 
                             () => { row.RefreshTotals(); RecalculateFinalGrades(); }, 
                             msg => ShowToastMessage?.Invoke(msg)
