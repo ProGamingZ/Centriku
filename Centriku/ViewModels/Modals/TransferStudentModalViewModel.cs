@@ -61,11 +61,13 @@ namespace Centriku.ViewModels.Modals
                     .ToListAsync();
 
                 var groupMembersToDelete = new List<AssessmentGroupMember>();
-                if (assessmentIds.Any())
+                if (assessmentIds.Count != 0)
                 {
-                    groupMembersToDelete = await db.Table<AssessmentGroupMember>()
-                        .Where(m => studentIds.Contains(m.StudentID) && assessmentIds.Contains(m.AssessmentID))
+                    var membersInAssessments = await db.Table<AssessmentGroupMember>()
+                        .Where(m => assessmentIds.Contains(m.AssessmentID))
                         .ToListAsync();
+                        
+                    groupMembersToDelete = [.. membersInAssessments.Where(m => studentIds.Contains(m.StudentID))];
                 }
 
                 await db.RunInTransactionAsync(tran => 
