@@ -233,7 +233,7 @@ namespace Centriku.ViewModels
             if (selectedClass != null)
             {
                 var gradebookVM = new GradebookViewModel(new DatabaseService());
-                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 1); // 1 = Attendance Tab
+                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 2); // 2 = Attendance Tab
                 _navigateAction(gradebookVM);
             }
         }
