@@ -8,11 +8,11 @@ namespace Centriku.Services
     {
         // Path logic assumes standard LocalApplicationData deployment. Adjust if your DatabaseService saves it elsewhere.
         private readonly string _dbPath;
-        private readonly DatabaseService _baseDb;
+        private readonly IDatabaseService _baseDb;
 
         public DatabaseManagementService(IDatabaseService dbService)
         {
-            _baseDb = (DatabaseService)dbService;
+            _baseDb = dbService;
 
             // Dynamically gets the exact folder where your app is running (e.g., your Desktop folder)
             string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
