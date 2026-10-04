@@ -11,6 +11,7 @@ namespace Centriku.ViewModels
 {
     public partial class MyClassesViewModel : ViewModelBase
     {
+        private readonly IDatabaseService _dbService;
         private readonly Action<ViewModelBase> _navigateAction;
         public System.Action<string>? ShowToastMessage { get; set; }
         [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
@@ -53,8 +54,9 @@ namespace Centriku.ViewModels
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
 
 
-        public MyClassesViewModel(Action<ViewModelBase> navigateAction)
+        public MyClassesViewModel(IDatabaseService dbService,Action<ViewModelBase> navigateAction)
         {
+            _dbService = dbService;
             _navigateAction = navigateAction;
 
             ToggleAddClassFormCommand = new RelayCommand(() => 
@@ -89,7 +91,7 @@ namespace Centriku.ViewModels
 
         private async Task LoadTemplates()
         {
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.CreateTableAsync<GradingTemplate>();
             var templates = await db.Table<GradingTemplate>().ToListAsync();
             AvailableTemplates = new ObservableCollection<GradingTemplate>(templates);
@@ -97,7 +99,7 @@ namespace Centriku.ViewModels
 
         private async Task LoadClasses()
         {
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.CreateTableAsync<TeacherClass>();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
             
@@ -162,13 +164,22 @@ namespace Centriku.ViewModels
             
             try
             {
-                var db = new DatabaseService().GetConnection();
-                bool isUpdate = _editingClassId.HasValue;
+                var db = _dbService.GetConnection();
 
-                if (isUpdate)
+                if (_editingClassId is int editingClassId)
                 {
                     // UPDATE
-                    var classToUpdate = await db.Table<TeacherClass>().Where(c => c.ClassID == _editingClassId.Value).FirstOrDefaultAsync();
+
+                    var classToUpdate = await db.Table<TeacherClass>()
+                        .Where(c => c.ClassID == editingClassId)
+                        .FirstOrDefaultAsync();
+
+                    if (classToUpdate is null)
+                    {
+                        ShowToastMessage?.Invoke("Class not found. Refresh the class list and try again.");
+                        return;
+                    }
+
                     classToUpdate.SubjectName = NewSubjectName;
                     classToUpdate.SectionLabel = NewSectionLabel;
                     classToUpdate.Program = NewProgram;
@@ -230,7 +241,7 @@ namespace Centriku.ViewModels
             
             try
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 
                 // Optional: You may want to add raw SQL here to cascade delete Assessment columns and Scores tied to this ClassID
                 
@@ -268,7 +279,7 @@ namespace Centriku.ViewModels
 
                 if (!_gradebookCache.TryGetValue(classId, out GradebookViewModel? value))
                 {
-                    var newGradebook = new GradebookViewModel();
+                    var newGradebook = new GradebookViewModel(_dbService);
                     newGradebook.Initialize(classId, selectedClass.SubjectName);
                     _gradebookCache[classId] = newGradebook;
                 }

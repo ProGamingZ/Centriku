@@ -10,6 +10,7 @@ namespace Centriku.ViewModels.Settings
 {
     public partial class ExportSettingsViewModel : ViewModelBase
     {
+        private readonly IDatabaseService _dbService;
         // === 1. User Properties & Auto-Refresh Hooks ===
         [ObservableProperty] public partial string DefaultExportFolderPath { get; set; } = string.Empty;
         [ObservableProperty] public partial string FileNamingFormat { get; set; } = "[Class]_[Section]_[Type]_[Date]";
@@ -70,8 +71,9 @@ namespace Centriku.ViewModels.Settings
         public IRelayCommand ResetDefaultsCommand { get; }
         public Action<string>? ShowToastMessage { get; set; }
 
-        public ExportSettingsViewModel()
+        public ExportSettingsViewModel(IDatabaseService dbService)
         {
+            _dbService = dbService;
             SaveSettingsCommand = new AsyncRelayCommand(SaveSettingsAsync);
             ResetDefaultsCommand = new AsyncRelayCommand(ResetDefaultsAsync);
             LoadSettings();
@@ -82,7 +84,7 @@ namespace Centriku.ViewModels.Settings
             try 
             {
                 await DatabaseService.WaitForDatabaseReadyAsync();
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
 
                 if (settings != null)
@@ -110,7 +112,7 @@ namespace Centriku.ViewModels.Settings
         {
             try 
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
 
                 if (settings == null)

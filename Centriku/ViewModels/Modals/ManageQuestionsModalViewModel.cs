@@ -10,6 +10,7 @@ namespace Centriku.ViewModels.Modals
 {
     public partial class ManageQuestionsModalViewModel : ObservableObject
     {
+        private readonly IDatabaseService _dbService;
         private readonly int _classId;
         private readonly Action _onQuestionsUpdated;
         private readonly Action _onClose;
@@ -20,8 +21,9 @@ namespace Centriku.ViewModels.Modals
         [ObservableProperty] public partial string NewQuestionInput { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewAnswerInput { get; set; } = string.Empty;
 
-        public ManageQuestionsModalViewModel(int classId, ObservableCollection<QuestionRowViewModel> questionBank, Action onQuestionsUpdated, Action onClose)
+        public ManageQuestionsModalViewModel(IDatabaseService dbService, int classId, ObservableCollection<QuestionRowViewModel> questionBank, Action onQuestionsUpdated, Action onClose)
         {
+            _dbService = dbService;
             _classId = classId;
             QuestionBank = questionBank;
             _onQuestionsUpdated = onQuestionsUpdated;
@@ -36,7 +38,7 @@ namespace Centriku.ViewModels.Modals
         {
             if (string.IsNullOrWhiteSpace(NewQuestionInput)) return;
 
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var newQuestion = new RecitationQuestion
             {
                 ClassID = _classId,
@@ -59,7 +61,7 @@ namespace Centriku.ViewModels.Modals
         private async Task DeleteQuestionAsync(QuestionRowViewModel qRow)
         {
             if (qRow == null) return;
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.DeleteAsync(qRow.DbModel);
             
             QuestionBank.Remove(qRow);
@@ -78,7 +80,7 @@ namespace Centriku.ViewModels.Modals
             }
             else
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 await db.UpdateAsync(qRow.DbModel);
                 qRow.IsEditing = false; 
                 _onQuestionsUpdated(); 
@@ -89,7 +91,7 @@ namespace Centriku.ViewModels.Modals
         private async Task ToggleQuestionIncludedAsync(QuestionRowViewModel qRow)
         {
             if (qRow == null) return;
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.UpdateAsync(qRow.DbModel);
             _onQuestionsUpdated(); 
         }

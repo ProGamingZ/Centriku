@@ -42,7 +42,7 @@ namespace Centriku.ViewModels
 
         public async Task LoadGroupsDataAsync()
         {
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.CreateTableAsync<AssessmentGroup>();
             await db.CreateTableAsync<AssessmentGroupMember>();
 
@@ -76,7 +76,7 @@ namespace Centriku.ViewModels
                     return;
                 }
 
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var groups = await db.Table<AssessmentGroup>()
                                      .Where(g => g.AssessmentID == SelectedGroupAssessment.AssessmentID)
                                      .ToListAsync();
@@ -105,7 +105,8 @@ namespace Centriku.ViewModels
                         var student = enrolledStudents.FirstOrDefault(s => s.StudentID == m.StudentID);
                         if (student != null)
                         {
-                            card.Members.Add(new GroupMemberRowViewModel(m, student, SelectedGroupAssessment, card, () => _ = SaveAndSyncGroupGradeAsync(card)));
+                            card.Members.Add(new GroupMemberRowViewModel(_dbService,m, student, SelectedGroupAssessment, card, () => _ = SaveAndSyncGroupGradeAsync(card)));
+                            
                         }
                     }
                     card.SortMembers();
@@ -124,7 +125,7 @@ namespace Centriku.ViewModels
         public async Task SaveAndSyncGroupGradeAsync(GroupCardViewModel groupCard)
         {
             if (SelectedGroupAssessment == null) return;
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
 
             // 1. Persist group score
             await db.UpdateAsync(groupCard.DbModel);
@@ -212,7 +213,7 @@ namespace Centriku.ViewModels
         public async Task AddSoloGroupAsync(GroupCandidateStudentViewModel candidate)
         {
             if (SelectedGroupAssessment == null || candidate == null) return;
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
 
             // NEW: Ensure unique group name for solo students with the same last name
             string baseName = $"Solo: {candidate.Student.LastName}";
@@ -254,7 +255,7 @@ namespace Centriku.ViewModels
             
             try
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 string trimmedName = NewGroupNameInput.Trim();
 
                 var existingGroup = await db.Table<AssessmentGroup>()
@@ -308,7 +309,7 @@ namespace Centriku.ViewModels
                 $"Are you sure you want to delete '{targetGroup.GroupName}'?\n\nThis will remove the group and permanently erase all scores for its members in this assessment.",
                 async () =>
                 {
-                    var db = new DatabaseService().GetConnection();
+                    var db = _dbService.GetConnection();
                     
                     // 1. Fetch the members safely using the ORM
                     var membersToWipe = await db.Table<AssessmentGroupMember>()
@@ -379,7 +380,7 @@ namespace Centriku.ViewModels
 
             try 
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 string trimmedName = EditGroupNameInput.Trim();
 
                 var existingGroup = await db.Table<AssessmentGroup>()
@@ -476,7 +477,7 @@ namespace Centriku.ViewModels
 
             try 
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 
                 var sourceGroups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == SelectedCopyFromAssessment.AssessmentID).ToListAsync();
                 var sourceMembers = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == SelectedCopyFromAssessment.AssessmentID).ToListAsync();
@@ -553,6 +554,7 @@ namespace Centriku.ViewModels
         private readonly Assessment _assessment;
         private readonly GroupCardViewModel _parentCard;
         private readonly System.Action _onScoreChanged;
+        private readonly IDatabaseService _dbService;
 
         public string StudentID => StudentInfo.StudentID ?? "";
         public string FullName => $"{StudentInfo.LastName}, {StudentInfo.FirstName}";
@@ -581,8 +583,9 @@ namespace Centriku.ViewModels
 
         [ObservableProperty] public partial double TotalComputedGrade { get; set; }
 
-        public GroupMemberRowViewModel(AssessmentGroupMember member, Student student, Assessment assessment, GroupCardViewModel parentCard, System.Action onScoreChanged)
+        public GroupMemberRowViewModel(IDatabaseService dbService,AssessmentGroupMember member, Student student, Assessment assessment, GroupCardViewModel parentCard, System.Action onScoreChanged)
         {
+            _dbService = dbService;
             DbModel = member;
             StudentInfo = student;
             _assessment = assessment;
@@ -600,7 +603,7 @@ namespace Centriku.ViewModels
             OnPropertyChanged(nameof(DbModel));
 
             // 2. Save instantly to the Database
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.UpdateAsync(DbModel);
 
             // 3. Tell the parent card to re-sort the list instantly

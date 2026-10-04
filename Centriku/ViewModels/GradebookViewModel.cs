@@ -40,7 +40,7 @@ namespace Centriku.ViewModels
             {
                 try 
                 {
-                    var db = new DatabaseService().GetConnection();
+                    var db = _dbService.GetConnection();
                     var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                     if (currentClass != null)
                     {
@@ -171,7 +171,7 @@ namespace Centriku.ViewModels
 
                 ShowToastMessage?.Invoke("Generating Official Excel Files...");
 
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 
                 // 1. Fetch the TeacherClass info
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
@@ -203,7 +203,7 @@ namespace Centriku.ViewModels
 
             private async Task<(System.Collections.Generic.List<StudentGradeRow> Grades, System.Collections.Generic.List<AttendanceGridRowViewModel> Attendance)> FetchArchivedExportDataAsync()
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                 var studentIds = roster.Select(r => r.StudentID).ToList();
 
@@ -255,8 +255,10 @@ namespace Centriku.ViewModels
                 return (archivedGrades, archivedAtt);
             }
 
-            public GradebookViewModel()
+            private readonly IDatabaseService _dbService;
+            public GradebookViewModel(IDatabaseService dbService)
             {
+                _dbService = dbService;
                 ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
                 SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
                 
@@ -316,7 +318,7 @@ namespace Centriku.ViewModels
             }
             private async Task LoadGradebookData()
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
 
                 var appSettings = await db.Table<AppSettings>().FirstOrDefaultAsync();
                 if (appSettings != null && !string.IsNullOrWhiteSpace(appSettings.DefaultExportFolderPath))
@@ -400,7 +402,7 @@ namespace Centriku.ViewModels
             }
             private async Task LoadAttendanceData()
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 await db.CreateTableAsync<AttendanceRecord>(); 
                 
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
@@ -451,7 +453,7 @@ namespace Centriku.ViewModels
             }
             private async Task LoadCategories()
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
                 
                 if (currentClass != null)

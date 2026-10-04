@@ -12,6 +12,7 @@ namespace Centriku.ViewModels
 {
     public partial class DashboardViewModel : ViewModelBase
     {
+        private readonly IDatabaseService _dbService;
         private readonly System.Action<ViewModelBase> _navigateAction;
         [ObservableProperty] public partial ObservableCollection<AttentionAlertViewModel> AttentionAlerts { get; set; } = new();
         private List<Student> _allStudents = [];
@@ -45,8 +46,9 @@ namespace Centriku.ViewModels
         public IRelayCommand<DashboardClassCardViewModel> OpenGradebookCommand { get; }
         public IRelayCommand<DashboardClassCardViewModel> OpenAttendanceCommand { get; }
 
-        public DashboardViewModel(System.Action<ViewModelBase> navigateAction)
+        public DashboardViewModel(IDatabaseService dbService,System.Action<ViewModelBase> navigateAction)
         {
+            _dbService = dbService;
             _navigateAction = navigateAction;
             OpenGradebookCommand = new RelayCommand<DashboardClassCardViewModel>(OpenGradebook!);
             OpenAttendanceCommand = new RelayCommand<DashboardClassCardViewModel>(OpenAttendance!);
@@ -55,7 +57,7 @@ namespace Centriku.ViewModels
         public async Task LoadDashboardDataAsync()
         {
             // 1. Fetch ALL data exactly ONCE when the dashboard loads
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
             _allStudents = await db.Table<Student>().ToListAsync();
             _allRosters = await db.Table<ClassRoster>().ToListAsync();
@@ -220,7 +222,7 @@ namespace Centriku.ViewModels
         {
             if (selectedClass != null)
             {
-                var gradebookVM = new GradebookViewModel();
+                var gradebookVM = new GradebookViewModel(new DatabaseService());
                 gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 0); // 0 = Grades Tab
                 _navigateAction(gradebookVM);
             }
@@ -230,7 +232,7 @@ namespace Centriku.ViewModels
         {
             if (selectedClass != null)
             {
-                var gradebookVM = new GradebookViewModel();
+                var gradebookVM = new GradebookViewModel(new DatabaseService());
                 gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 1); // 1 = Attendance Tab
                 _navigateAction(gradebookVM);
             }

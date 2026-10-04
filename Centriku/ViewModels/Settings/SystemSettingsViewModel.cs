@@ -19,9 +19,9 @@ namespace Centriku.ViewModels.Settings
         [ObservableProperty] public partial string AbsoluteFilePath { get; set; } = string.Empty;
         [ObservableProperty] public partial string DiagnosticOutput { get; set; } = "Awaiting command...\n";
 
-        public SystemSettingsViewModel()
+        public SystemSettingsViewModel(IDatabaseService dbService)
         {
-            _dbService = new DatabaseManagementService();
+            _dbService = new DatabaseManagementService(dbService);
             LoadSystemDiagnostics();
         }
 

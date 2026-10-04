@@ -59,7 +59,7 @@ namespace Centriku.ViewModels
                 return;
              }
 
-             var db = new DatabaseService().GetConnection();
+             var db = _dbService.GetConnection();
              await db.CreateTableAsync<Assessment>();
              if (_editingAssessmentId.HasValue)
              {
@@ -108,7 +108,7 @@ namespace Centriku.ViewModels
             $"Are you sure you want to delete '{assessmentToDel.Title}'?\n\nThis will permanently erase all student scores and group configurations attached to this column.",
             async () =>
             {
-               var db = new DatabaseService().GetConnection();
+               var db = _dbService.GetConnection();
                
                // 1. Delete associated scores & group data
                var scores = await db.Table<Score>().Where(s => s.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();

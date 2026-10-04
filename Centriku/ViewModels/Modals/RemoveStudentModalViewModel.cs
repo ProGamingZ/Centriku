@@ -11,6 +11,7 @@ namespace Centriku.ViewModels.Modals
 {
     public partial class RemoveStudentModalViewModel : ObservableObject
     {
+        private readonly IDatabaseService _dbService;
         private readonly int _classId;
         private readonly List<Student> _studentsToRemove;
         private readonly Func<Task> _onSuccess;
@@ -20,8 +21,9 @@ namespace Centriku.ViewModels.Modals
         [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
         [ObservableProperty] public partial string ModalMessage { get; set; } = string.Empty;
 
-        public RemoveStudentModalViewModel(int classId, List<Student> students, Func<Task> onSuccess, Action onClose, Action<string> showToast)
+        public RemoveStudentModalViewModel(IDatabaseService dbService, int classId, List<Student> students, Func<Task> onSuccess, Action onClose, Action<string> showToast)
         {
+            _dbService = dbService;
             _classId = classId;
             _studentsToRemove = students;
             _onSuccess = onSuccess;
@@ -37,7 +39,7 @@ namespace Centriku.ViewModels.Modals
             IsProcessing = true;
             try 
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == _classId).ToListAsync();
                 var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
                 var studentIds = _studentsToRemove.Select(s => s.StudentID).ToList();

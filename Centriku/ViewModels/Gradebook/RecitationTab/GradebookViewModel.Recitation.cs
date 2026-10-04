@@ -50,7 +50,7 @@ namespace Centriku.ViewModels
         // ==========================================
         private async Task LoadRecitationData()
         {
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.CreateTableAsync<ClassRoster>(); 
             await db.CreateTableAsync<RecitationQuestion>(); 
 
@@ -142,7 +142,7 @@ namespace Centriku.ViewModels
             ChosenStudents.Add(winner);
             UpdateCounters();
 
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == winner.StudentID).FirstOrDefaultAsync();
             if (rosterEntry != null)
             {
@@ -191,6 +191,7 @@ namespace Centriku.ViewModels
         public void OpenManageQuestionsModal()
         {
             ManageQuestionsModal = new ManageQuestionsModalViewModel(
+                _dbService,
                 ClassId, 
                 QuestionBank, 
                 BuildAvailableQuestionsPool, 
@@ -204,7 +205,7 @@ namespace Centriku.ViewModels
         public async Task ToggleQuestionIncludedAsync(QuestionRowViewModel qRow)
         {
             if (qRow == null) return;
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.UpdateAsync(qRow.DbModel);
             BuildAvailableQuestionsPool(); 
         }
@@ -221,7 +222,7 @@ namespace Centriku.ViewModels
             
             try 
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
 
                 foreach (var r in roster)
@@ -255,7 +256,7 @@ namespace Centriku.ViewModels
             foreach (var s in sorted) RemainingStudents.Add(s);
             UpdateCounters();
 
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var rosterEntry = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId && r.StudentID == student.StudentID).FirstOrDefaultAsync();
             if (rosterEntry != null)
             {

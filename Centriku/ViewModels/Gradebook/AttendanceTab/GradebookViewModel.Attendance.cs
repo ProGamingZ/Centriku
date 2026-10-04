@@ -40,7 +40,7 @@ namespace Centriku.ViewModels
             try 
             {
                var targetDate = NewRollCallDate.Value.Date;
-               var db = new DatabaseService().GetConnection();
+               var db = _dbService.GetConnection();
 
                if (_editingRollCallDate.HasValue)
                {
@@ -113,7 +113,7 @@ namespace Centriku.ViewModels
                 $"Are you sure you want to delete the attendance column for {targetDate:MMM dd, yyyy}?\n\nThis will permanently erase the attendance records of all students for this date.",
                 async () => 
                 {
-                    var db = new DatabaseService().GetConnection();
+                    var db = _dbService.GetConnection();
                     var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
                     
                     if (recordsToDelete.Any())

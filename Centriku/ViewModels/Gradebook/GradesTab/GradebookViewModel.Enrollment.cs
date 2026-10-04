@@ -79,7 +79,7 @@ namespace Centriku.ViewModels
                 // Give the Avalonia UI thread a microsecond to draw the spinner before we lock the CPU
                 await Task.Delay(50); 
 
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var allStudents = await db.Table<Student>().ToListAsync();
                 
                 // O(1) HASHSET: Instant memory lookup instead of a slow loop
@@ -139,7 +139,7 @@ namespace Centriku.ViewModels
             IsProcessing = true;
             try 
             {
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var selectedStudents = _allAvailableStudents.Where(s => s.IsSelected).ToList();
 
                 // 1. Create a list in memory
@@ -178,6 +178,7 @@ namespace Centriku.ViewModels
             
             // Inject dependencies into the new external ViewModel
             RemoveStudentModal = new RemoveStudentModalViewModel(
+                _dbService,
                 ClassId, 
                 studentsToRemove, 
                 RefreshRostersAsync, 
@@ -195,6 +196,7 @@ namespace Centriku.ViewModels
             
             // Inject dependencies into the new external ViewModel
             TransferStudentModal = new TransferStudentModalViewModel(
+                _dbService,
                 ClassId, 
                 ClassTitle,
                 studentsToTransfer, 

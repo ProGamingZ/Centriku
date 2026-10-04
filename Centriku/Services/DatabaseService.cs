@@ -7,7 +7,7 @@ using Centriku.Models;
 
 namespace Centriku.Services
 {
-    public class DatabaseService
+    public class DatabaseService : IDatabaseService
     {
         private static SQLiteAsyncConnection? _database;
         

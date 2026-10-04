@@ -43,11 +43,12 @@ namespace Centriku.ViewModels
         public MainWindowViewModel()
         {
             // 2. INITIALIZE THEM EXACTLY ONCE
-            _dashboardViewModel = new DashboardViewModel(Navigate);
-            _myClassesViewModel = new MyClassesViewModel(Navigate);
+            var dbService = new DatabaseService();
+            _dashboardViewModel = new DashboardViewModel(dbService, Navigate);
+            _myClassesViewModel = new MyClassesViewModel(dbService, Navigate);
             _policiesViewModel = new PoliciesViewModel();
             _directoryViewModel = new DirectoryViewModel();
-            _settingsViewModel = new SettingsViewModel();
+            _settingsViewModel = new SettingsViewModel(dbService);
 
             ToggleSidebarCommand = new RelayCommand(() => IsSidebarOpen = !IsSidebarOpen);
             ToggleThemeCommand = new RelayCommand(() => 

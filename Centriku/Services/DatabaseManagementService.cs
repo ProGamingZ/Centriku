@@ -10,10 +10,10 @@ namespace Centriku.Services
         private readonly string _dbPath;
         private readonly DatabaseService _baseDb;
 
-        public DatabaseManagementService()
+        public DatabaseManagementService(IDatabaseService dbService)
         {
-            _baseDb = new DatabaseService();
-            
+            _baseDb = (DatabaseService)dbService;
+
             // Dynamically gets the exact folder where your app is running (e.g., your Desktop folder)
             string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
             

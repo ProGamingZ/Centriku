@@ -12,6 +12,7 @@ namespace Centriku.ViewModels.Modals
 {
     public partial class TransferStudentModalViewModel : ObservableObject
     {
+        private readonly IDatabaseService _dbService;
         private readonly int _classId;
         private readonly List<Student> _studentsToTransfer;
         private readonly Func<Task> _onSuccess;
@@ -23,8 +24,9 @@ namespace Centriku.ViewModels.Modals
         [ObservableProperty] public partial ObservableCollection<TeacherClass> AvailableTransferClasses { get; set; } = new();
         [ObservableProperty] public partial TeacherClass? SelectedTransferClass { get; set; }
 
-        public TransferStudentModalViewModel(int classId, string classTitle, List<Student> students, Func<Task> onSuccess, Action onClose, Action<string> showToast)
+        public TransferStudentModalViewModel(IDatabaseService dbService, int classId, string classTitle, List<Student> students, Func<Task> onSuccess, Action onClose, Action<string> showToast)
         {
+            _dbService = dbService;
             _classId = classId;
             _studentsToTransfer = students;
             _onSuccess = onSuccess;
@@ -36,7 +38,7 @@ namespace Centriku.ViewModels.Modals
         
         public async Task LoadClassesAsync()
         {
-            var db = new DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var allClasses = await db.Table<TeacherClass>().ToListAsync();
             AvailableTransferClasses = new ObservableCollection<TeacherClass>(allClasses.Where(c => c.ClassID != _classId));
             SelectedTransferClass = AvailableTransferClasses.FirstOrDefault();
@@ -49,7 +51,7 @@ namespace Centriku.ViewModels.Modals
             try 
             {
                 if (SelectedTransferClass == null) return;
-                var db = new DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == _classId).ToListAsync();
                 var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
                 var studentIds = _studentsToTransfer.Select(s => s.StudentID).ToList();
