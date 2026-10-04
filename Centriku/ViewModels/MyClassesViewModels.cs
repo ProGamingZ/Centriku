@@ -19,6 +19,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string DeleteConfirmationMessage { get; set; } = string.Empty;
         private ClassCardViewModel? _classToDelete;
         [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> ActiveClasses { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<ClassCardViewModel> InactiveClasses { get; set; } = new();
         [ObservableProperty] public partial ObservableCollection<GradingTemplate> AvailableTemplates { get; set; } = new();
         [ObservableProperty] public partial bool IsAddingClass { get; set; } = false;
 
@@ -52,6 +53,8 @@ namespace Centriku.ViewModels
         public IAsyncRelayCommand ConfirmDeleteCommand { get; }
         public IRelayCommand CancelDeleteCommand { get; }
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
+        public IAsyncRelayCommand<ClassCardViewModel> ToggleClassStateCommand { get; }
+
 
 
         public MyClassesViewModel(IDatabaseService dbService,Action<ViewModelBase> navigateAction)
@@ -71,6 +74,7 @@ namespace Centriku.ViewModels
             ConfirmDeleteCommand = new AsyncRelayCommand(ConfirmDeleteAsync);
             CancelDeleteCommand = new RelayCommand(CancelDelete);
             OpenClassCommand = new RelayCommand<ClassCardViewModel>(OpenClass!);
+            ToggleClassStateCommand = new AsyncRelayCommand<ClassCardViewModel>(ToggleClassStateAsync);
 
             DirectoryViewModel.OnStudentRosterChanged += () =>
             {
@@ -134,10 +138,17 @@ namespace Centriku.ViewModels
             if (SelectedTermFilter != "All Terms") filtered = filtered.Where(c => c.Term == SelectedTermFilter);
 
             ActiveClasses.Clear();
+            InactiveClasses.Clear();
+            
             foreach (var c in filtered)
             {
                 var templateName = AvailableTemplates.FirstOrDefault(t => t.TemplateID == c.GradingTemplateID)?.TemplateName ?? "Unknown Template";
-                ActiveClasses.Add(new ClassCardViewModel(c, templateName));
+                var newCard = new ClassCardViewModel(c, templateName);
+                
+                if (c.IsActive)
+                    ActiveClasses.Add(newCard);
+                else
+                    InactiveClasses.Add(newCard);
             }
         }
 
@@ -335,6 +346,31 @@ namespace Centriku.ViewModels
                 _navigateAction(_gradebookCache[classId]);
             }
         }
+        private async Task ToggleClassStateAsync(ClassCardViewModel classCard)
+        {
+            if (classCard == null) return;
+            IsProcessing = true; 
+            
+            try
+            {
+                var db = _dbService.GetConnection();
+                classCard.DbModel.IsActive = !classCard.DbModel.IsActive; // Flip the state
+                await db.UpdateAsync(classCard.DbModel);
+                
+                string toastMsg = classCard.DbModel.IsActive ? $"Restored '{classCard.SubjectName}' to Active Status." : $"Archived '{classCard.SubjectName}'.";
+                ShowToastMessage?.Invoke(toastMsg);
+                
+                await LoadClasses(); // Refresh UI
+            }
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error toggling class state: {ex.Message}");
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
         
         public async Task RefreshDataAsync()
         {
@@ -343,10 +379,10 @@ namespace Centriku.ViewModels
         }
     }
 
-    public partial class ClassCardViewModel : ObservableObject
+    public partial class ClassCardViewModel(TeacherClass teacherClass, string templateName) : ObservableObject
     {
-        public TeacherClass DbModel { get; }
-        public string TemplateName { get; }
+        public TeacherClass DbModel { get; } = teacherClass;
+        public string TemplateName { get; } = templateName;
 
         public string SubjectName => DbModel.SubjectName ?? string.Empty;
         public string SectionLabel => DbModel.SectionLabel ?? string.Empty;
@@ -355,10 +391,6 @@ namespace Centriku.ViewModels
         public string ProfessorName => DbModel.ProfessorName ?? string.Empty;
         public string AcademicYear => DbModel.AcademicYear ?? string.Empty;
         public string Term => DbModel.Term ?? string.Empty;
-        public ClassCardViewModel(TeacherClass teacherClass, string templateName)
-        {
-            DbModel = teacherClass;
-            TemplateName = templateName;
-        }
+        public bool IsActive => DbModel.IsActive;
     }
 }

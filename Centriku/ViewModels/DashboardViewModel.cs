@@ -68,13 +68,15 @@ namespace Centriku.ViewModels
             _allCategories = await db.Table<GradingCategory>().ToListAsync();
 
             // 2. Dynamically extract the unique Years and Terms from the teacher's classes
-            var years = _allClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
+            var activeDbClasses = _allClasses.Where(c => c.IsActive).ToList();
+            
+            var years = activeDbClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
             AvailableYears.Clear(); 
             AvailableYears.Add("All Years");
             foreach (var y in years) AvailableYears.Add(y!);
             if (!AvailableYears.Contains(SelectedYear)) SelectedYear = "All Years";
 
-            var terms = _allClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
+            var terms = activeDbClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
             AvailableTerms.Clear(); 
             AvailableTerms.Add("All Terms");
             foreach (var t in terms) AvailableTerms.Add(t!);
@@ -90,7 +92,7 @@ namespace Centriku.ViewModels
             await Task.Delay(20);
 
             // 1. FILTER THE CLASSES BASED ON DROPDOWNS!
-            var filteredClasses = _allClasses.AsEnumerable();
+            var filteredClasses = _allClasses.Where(c => c.IsActive).AsEnumerable();
             
             if (SelectedYear != "All Years") 
                 filteredClasses = filteredClasses.Where(c => c.AcademicYear == SelectedYear);

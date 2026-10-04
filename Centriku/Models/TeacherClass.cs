@@ -26,5 +26,6 @@ namespace Centriku.Models
         public bool ShowTotalL { get; set; } = true;
         public bool ShowTotalA { get; set; } = true;
         public bool ShowTotalE { get; set; } = true; 
+        public bool IsActive { get; set; } = true;
     }
 }
