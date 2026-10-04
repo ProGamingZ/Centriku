@@ -46,7 +46,7 @@ namespace Centriku.ViewModels
             var dbService = new DatabaseService();
             _dashboardViewModel = new DashboardViewModel(dbService, Navigate);
             _myClassesViewModel = new MyClassesViewModel(dbService, Navigate);
-            _policiesViewModel = new PoliciesViewModel();
+            _policiesViewModel = new PoliciesViewModel(dbService);
             _directoryViewModel = new DirectoryViewModel(dbService);
             _settingsViewModel = new SettingsViewModel(dbService);
 

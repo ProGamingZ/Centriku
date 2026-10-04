@@ -4,11 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Centriku.Services;
 
 namespace Centriku.ViewModels
 {
     public partial class PoliciesViewModel : ViewModelBase
     {
+        private readonly IDatabaseService _dbService;
         public System.Action<string>? ShowToastMessage { get; set; }
         [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
         // --- 1. UI STATE TRACKERS ---
@@ -43,8 +45,9 @@ namespace Centriku.ViewModels
         public IAsyncRelayCommand ConfirmDeleteCommand { get; }
         public IRelayCommand CancelDeleteCommand { get; }
 
-        public PoliciesViewModel()
+        public PoliciesViewModel(IDatabaseService dbService)
         {
+            _dbService = dbService;
             AddCategoryCommand = new RelayCommand(() => AddCategory("New Category", 0m));
             RemoveCategoryCommand = new RelayCommand<PolicyCategoryItem>(RemoveCategory!);
             SavePolicyCommand = new AsyncRelayCommand(SavePolicyAsync, () => IsValidPolicy);
@@ -71,7 +74,7 @@ namespace Centriku.ViewModels
             PassingGrade = (decimal)template.PassingGrade;
             NrfgBaseValue = template.NrfgBaseValue;
             
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var savedCategories = await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == template.TemplateID).ToListAsync();
             
             foreach (var cat in Categories) { cat.PropertyChanged -= Category_PropertyChanged; }
@@ -87,7 +90,7 @@ namespace Centriku.ViewModels
 
             try
             {
-                var db = new Centriku.Services.DatabaseService().GetConnection();
+                var db = _dbService.GetConnection();
                 
                 // DEFENSIVE: Sanitize the template name
                 string safeTemplateName = string.IsNullOrWhiteSpace(TemplateName) ? "Unnamed Policy" : TemplateName.Trim();
@@ -185,7 +188,7 @@ namespace Centriku.ViewModels
             if (template == null) return;
             _templateToDelete = template;
 
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             var affectedClasses = await db.Table<Centriku.Models.TeacherClass>().Where(c => c.GradingTemplateID == template.TemplateID).ToListAsync();
 
             if (affectedClasses.Any())
@@ -211,7 +214,7 @@ namespace Centriku.ViewModels
                 IsProcessing = true;
                 try
                 {
-                    var db = new Centriku.Services.DatabaseService().GetConnection();
+                    var db = _dbService.GetConnection();
                     
                     // Transaction ensures both the template and its categories die together
                     await db.RunInTransactionAsync(tran => 
@@ -244,7 +247,7 @@ namespace Centriku.ViewModels
 
         public async Task LoadSavedTemplatesAsync()
         {
-            var db = new Centriku.Services.DatabaseService().GetConnection();
+            var db = _dbService.GetConnection();
             await db.CreateTableAsync<Centriku.Models.GradingTemplate>();
             await db.CreateTableAsync<Centriku.Models.GradingCategory>();
             var templates = await db.Table<Centriku.Models.GradingTemplate>().ToListAsync();
