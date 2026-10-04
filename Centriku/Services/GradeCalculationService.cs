@@ -14,6 +14,13 @@ namespace Centriku.Services
 
    public static class GradeCalculationService
    {
+      // --- SINGLE SOURCE OF TRUTH FOR GRADE MATH ---
+      public static double CalculateTransmutedScore(double earned, double max, double baseVal)
+      {
+          if (max <= 0) return 0;
+          return Math.Round((earned / max) * (100.0 - baseVal) + baseVal, 2, MidpointRounding.AwayFromZero);
+      }
+
       public static GradeResult EvaluateFinalGrade(
          IEnumerable<GradingCategory> categories,
          IEnumerable<Assessment> termAssessments,
@@ -56,8 +63,8 @@ namespace Centriku.Services
 
             if (max > 0)
             {
-               // Evaluate TS and WS per category (Matches Gradebook MathEngine)
-               double ts = Math.Round((earned / max) * (100.0 - baseVal) + baseVal, 2, MidpointRounding.AwayFromZero);
+               // REFACTORED: Now calls the Single Source of Truth
+               double ts = CalculateTransmutedScore(earned, max, baseVal);
                double ws = Math.Round(ts * weightDec, 2, MidpointRounding.AwayFromZero);
                totalExcelWS += ws;
             }

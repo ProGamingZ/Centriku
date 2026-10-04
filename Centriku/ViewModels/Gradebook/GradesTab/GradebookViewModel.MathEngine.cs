@@ -92,7 +92,7 @@ namespace Centriku.ViewModels
 
             if (max > 0)
             {
-               double ts = Math.Round((earned / max) * (100.0 - this.NrfgBaseValue) + this.NrfgBaseValue, 2, MidpointRounding.AwayFromZero);
+               double ts = Centriku.Services.GradeCalculationService.CalculateTransmutedScore(earned, max, this.NrfgBaseValue);
                double ws = Math.Round(ts * weightDec, 2, MidpointRounding.AwayFromZero);
                totalExcelWS += ws;
 
