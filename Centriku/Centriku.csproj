@@ -12,6 +12,7 @@
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+    <Compile Remove="Centriku.Tests\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>

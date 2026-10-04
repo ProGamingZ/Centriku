@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Centriku.csproj" />
+  <Project Path="Centriku.Tests\Centriku.Tests.csproj" />
 </Solution>
