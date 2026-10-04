@@ -49,7 +49,7 @@ namespace Centriku.ViewModels
         public IRelayCommand SaveClassCommand { get; }
         public IRelayCommand<ClassCardViewModel> EditClassCommand { get; } 
         public IRelayCommand<ClassCardViewModel> DeleteClassCommand { get; }
-        public IRelayCommand ConfirmDeleteCommand { get; }
+        public IAsyncRelayCommand ConfirmDeleteCommand { get; }
         public IRelayCommand CancelDeleteCommand { get; }
         public IRelayCommand<ClassCardViewModel> OpenClassCommand { get; }
 
@@ -237,15 +237,58 @@ namespace Centriku.ViewModels
         {
             if (_classToDelete == null) return;
             
-            IsProcessing = true; // Show spinner
+            IsProcessing = true; 
             
             try
             {
                 var db = _dbService.GetConnection();
+                int classId = _classToDelete.DbModel.ClassID;
                 
-                // Optional: You may want to add raw SQL here to cascade delete Assessment columns and Scores tied to this ClassID
+                // 1. Fetch direct child records
+                var assessments = await db.Table<Assessment>().Where(a => a.ClassID == classId).ToListAsync();
+                var rosters = await db.Table<ClassRoster>().Where(r => r.ClassID == classId).ToListAsync();
+                var attendance = await db.Table<AttendanceRecord>().Where(r => r.ClassID == classId).ToListAsync();
+                var recitations = await db.Table<RecitationQuestion>().Where(r => r.ClassID == classId).ToListAsync();
+
+                // 2. Fetch grandchild records (Scores and Groups tied to the Assessments)
+                var assessmentIds = assessments.Select(a => a.AssessmentID).ToList();
                 
-                await db.DeleteAsync(_classToDelete.DbModel);
+                var scoresToDelete = new System.Collections.Generic.List<Score>();
+                var groupsToDelete = new System.Collections.Generic.List<AssessmentGroup>();
+                var membersToDelete = new System.Collections.Generic.List<AssessmentGroupMember>();
+
+                if (assessmentIds.Any())
+                {
+                    // Fetch all and filter in memory to bypass SQLite's .Contains() query limitations
+                    var allScores = await db.Table<Score>().ToListAsync();
+                    scoresToDelete = allScores.Where(s => assessmentIds.Contains(s.AssessmentID)).ToList();
+                    
+                    var allGroups = await db.Table<AssessmentGroup>().ToListAsync();
+                    groupsToDelete = allGroups.Where(g => assessmentIds.Contains(g.AssessmentID)).ToList();
+                    
+                    var allMembers = await db.Table<AssessmentGroupMember>().ToListAsync();
+                    membersToDelete = allMembers.Where(m => assessmentIds.Contains(m.AssessmentID)).ToList();
+                }
+
+                // 3. SECURE TRANSACTION: Delete everything using the ORM safely
+                await db.RunInTransactionAsync(tran => 
+                {
+                    foreach (var s in scoresToDelete) tran.Delete(s);
+                    foreach (var g in groupsToDelete) tran.Delete(g);
+                    foreach (var m in membersToDelete) tran.Delete(m);
+                    
+                    foreach (var a in assessments) tran.Delete(a);
+                    foreach (var r in rosters) tran.Delete(r);
+                    foreach (var att in attendance) tran.Delete(att);
+                    foreach (var req in recitations) tran.Delete(req);
+                    
+                    // Finally, delete the class itself
+                    tran.Delete(_classToDelete.DbModel);
+                });
+
+                // Evict the deleted class from the RAM cache
+                _gradebookCache.Remove(classId);
+
                 ShowToastMessage?.Invoke($"Deleted class: '{_classToDelete.SubjectName}'");
                 await LoadClasses();
             }
@@ -255,8 +298,8 @@ namespace Centriku.ViewModels
             }
             finally
             {
-                IsProcessing = false; // Hide spinner
-                CancelDelete();       // Close modal
+                IsProcessing = false; 
+                CancelDelete();       
             }
         }
 
