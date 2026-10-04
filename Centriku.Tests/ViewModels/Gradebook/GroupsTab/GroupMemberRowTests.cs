@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Centriku.Models;
 using Centriku.ViewModels;
 using Centriku.Services;
+using Centriku.Tests.Factories;
 
 namespace Centriku.Tests.ViewModels
 {
@@ -43,14 +44,14 @@ namespace Centriku.Tests.ViewModels
         [Fact]
         public void CalculateTotal_ShouldNotExceedMaxScore_WhenCombinedScoresAreTooHigh()
         {
-            // 1. ARRANGE
+            // 1. ARRANGE (Using the Factory!)
             var mockDb = new Mock<IDatabaseService>();
-            var fakeAssessment = new Assessment { MaxScore = 50.0 };
             
-            // Set up a scenario where the student got 20 individually, and the group got 40.
-            // 40 + 20 = 60, which breaks the 50 point max limit!
+            // Instantly summon perfect fake data without cluttering the test
+            var fakeAssessment = TestDataFactory.CreateFakeAssessment(maxScore: 50.0);
+            var fakeStudent = TestDataFactory.CreateFakeStudent();
+            
             var fakeMember = new AssessmentGroupMember { IndividualScore = 20.0 };
-            var fakeStudent = new Student();
             var fakeGroup = new AssessmentGroup { GroupScore = 40.0 };
             var fakeCard = new GroupCardViewModel(fakeGroup, fakeAssessment, async (card) => await Task.CompletedTask);
 
@@ -59,7 +60,7 @@ namespace Centriku.Tests.ViewModels
             // 2. ACT
             rowViewModel.CalculateTotal(fakeCard.GroupScore);
 
-            // 3. ASSERT (The math engine MUST clamp it back down to 50.0)
+            // 3. ASSERT (40 + 20 = 60, but it MUST clamp down to 50.0)
             Assert.Equal(50.0, rowViewModel.TotalComputedGrade);
         }
     }
