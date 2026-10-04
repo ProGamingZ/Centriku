@@ -67,5 +67,83 @@ namespace Centriku.Tests.ViewModels
             Assert.Empty(assessments);
             Assert.Empty(scores);
         }
+    
+        [Fact]
+        public async Task ToggleClassState_ShouldMoveClass_BetweenActiveAndInactiveLists()
+        {
+            // 1. ARRANGE
+            var fakeDb = new FakeDatabaseService();
+            await PrepareClassTablesAsync(fakeDb);
+            var db = fakeDb.GetConnection();
+
+            // Insert an active class
+            await db.InsertAsync(new TeacherClass { ClassID = 1, SubjectName = "Toggle Test", IsActive = true });
+            
+            var vm = new MyClassesViewModel(fakeDb, _ => { });
+            await vm.RefreshDataAsync();
+
+            // Grab the card from the active list
+            var targetCard = vm.ActiveClasses[0];
+
+            // 2. ACT
+            await vm.ToggleClassStateCommand.ExecuteAsync(targetCard);
+
+            // 3. ASSERT
+            // Prove the UI lists updated instantly
+            Assert.Empty(vm.ActiveClasses);
+            Assert.Single(vm.InactiveClasses);
+            Assert.Equal("Toggle Test", vm.InactiveClasses[0].SubjectName);
+
+            // Prove the Database updated securely
+            var dbClass = await db.Table<TeacherClass>().FirstAsync();
+            Assert.False(dbClass.IsActive);
+        }
+
+        [Fact]
+        public async Task ConfirmDuplicate_ShouldCloneClassAndRoster_ButNotAssessments()
+        {
+            // 1. ARRANGE
+            var fakeDb = new FakeDatabaseService();
+            await PrepareClassTablesAsync(fakeDb);
+            var db = fakeDb.GetConnection();
+
+            // Setup Original Class with mixed data
+            await db.InsertAsync(new TeacherClass { ClassID = 1, SubjectName = "Original Class" });
+            
+            // This SHOULD be copied
+            await db.InsertAsync(new ClassRoster { ClassID = 1, StudentID = "101" });
+            
+            // This MUST NOT be copied
+            await db.InsertAsync(new Assessment { ClassID = 1, Title = "Midterm" }); 
+
+            var vm = new MyClassesViewModel(fakeDb, _ => { });
+            await vm.RefreshDataAsync();
+
+            var targetCard = vm.ActiveClasses[0];
+            
+            // Trigger the UI modal
+            vm.DuplicateClassCommand.Execute(targetCard);
+
+            // 2. ACT
+            await vm.ConfirmDuplicateCommand.ExecuteAsync(null);
+
+            // 3. ASSERT
+            var classes = await db.Table<TeacherClass>().ToListAsync();
+            var rosters = await db.Table<ClassRoster>().ToListAsync();
+            var assessments = await db.Table<Assessment>().ToListAsync();
+
+            // Prove the class was duplicated with the correct "(Copy)" suffix
+            Assert.Equal(2, classes.Count);
+            Assert.Contains(classes, c => c.SubjectName == "Original Class (Copy)");
+
+            // Prove the student roster was safely cloned to the new class (ClassID 2)
+            Assert.Equal(2, rosters.Count);
+            Assert.Contains(rosters, r => r.ClassID == 2 && r.StudentID == "101");
+
+            // Prove the Assessment was strictly ignored (still only 1 original assessment in the DB)
+            Assert.Single(assessments);
+            Assert.Equal(1, assessments[0].ClassID);
+        }
+
     }
 }
