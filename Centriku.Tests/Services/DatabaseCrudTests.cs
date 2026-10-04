@@ -1,5 +1,7 @@
 using Xunit;
 using SQLite;
+using System;
+using System.IO;
 using System.Threading.Tasks;
 using Centriku.Models;
 
@@ -10,11 +12,10 @@ namespace Centriku.Tests.Services
         [Fact]
         public async Task Database_ShouldCorrectlyInsertAndDelete_AssessmentGroups()
         {
-            // 1. ARRANGE: Create an IN-MEMORY SQLite database 
-            // Passing ":memory:" tells SQLite not to create a physical file.
-            var db = new SQLiteAsyncConnection(":memory:");
+            // 1. ARRANGE: Create an isolated temporary database
+            string dbPath = Path.Combine(Path.GetTempPath(), $"CrudTest_{Guid.NewGuid()}.db");
+            var db = new SQLiteAsyncConnection(dbPath);
             
-            // Generate the table structure in RAM
             await db.CreateTableAsync<AssessmentGroup>();
 
             var testGroup = new AssessmentGroup 
@@ -25,25 +26,19 @@ namespace Centriku.Tests.Services
                 GroupScore = 85.5 
             };
 
-            // ==========================================
             // 2. ACT & ASSERT: CREATE / READ
-            // ==========================================
             await db.InsertAsync(testGroup);
-            
             var savedGroup = await db.Table<AssessmentGroup>().FirstOrDefaultAsync();
             
-            Assert.NotNull(savedGroup); // Proves the database saved something
-            Assert.Equal("Integration Test Group", savedGroup.GroupName); // Proves data wasn't corrupted
-            Assert.True(savedGroup.GroupID > 0); // Proves Auto-Increment Primary Keys work
+            Assert.NotNull(savedGroup);
+            Assert.Equal("Integration Test Group", savedGroup.GroupName); 
+            Assert.True(savedGroup.GroupID > 0); 
 
-            // ==========================================
             // 3. ACT & ASSERT: DELETE
-            // ==========================================
             await db.DeleteAsync(savedGroup);
-
             var remainingGroups = await db.Table<AssessmentGroup>().ToListAsync();
             
-            Assert.Empty(remainingGroups); // Proves the database successfully wiped the record
+            Assert.Empty(remainingGroups); 
         }
     }
 }

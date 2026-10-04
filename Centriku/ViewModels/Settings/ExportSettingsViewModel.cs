@@ -68,7 +68,7 @@ namespace Centriku.ViewModels.Settings
 
         // === 4. Commands & Actions ===
         public IRelayCommand SaveSettingsCommand { get; }
-        public IRelayCommand ResetDefaultsCommand { get; }
+        public IAsyncRelayCommand ResetDefaultsCommand { get; }
         public Action<string>? ShowToastMessage { get; set; }
 
         public ExportSettingsViewModel(IDatabaseService dbService)

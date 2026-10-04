@@ -126,12 +126,25 @@ namespace Centriku.Services
         {
             try 
             { 
-                await db.ExecuteAsync("ALTER TABLE AssessmentGroupMember ADD COLUMN IsLeader INTEGER DEFAULT 0;"); 
+                // Attempt the plural table name first, as your database uses plural names 
+                // (e.g., 'Students', 'Assessments', 'Scores') based on your C# [Table] attributes.
+                await db.ExecuteAsync("ALTER TABLE AssessmentGroupMembers ADD COLUMN IsLeader INTEGER DEFAULT 0;"); 
             } 
+            catch (SQLiteException ex) when (ex.Message.Contains("no such table"))
+            {
+                try 
+                {
+                    // Fallback to singular just in case the [Table] attribute isn't pluralized
+                    await db.ExecuteAsync("ALTER TABLE AssessmentGroupMember ADD COLUMN IsLeader INTEGER DEFAULT 0;"); 
+                }
+                catch (SQLiteException innerEx) when (innerEx.Message.Contains("duplicate column name")) 
+                { 
+                    // SAFE CATCH: Column already exists
+                }
+            }
             catch (SQLiteException ex) when (ex.Message.Contains("duplicate column name"))
             {
                 // SAFE CATCH: If the column already exists (e.g., from a partial previous run), this is harmless.
-                // By filtering for "duplicate column name", any other error (like a corrupted DB) will still crash and log.
             }
         }
     }
