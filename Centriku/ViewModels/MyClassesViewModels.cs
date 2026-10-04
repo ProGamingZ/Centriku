@@ -74,7 +74,7 @@ namespace Centriku.ViewModels
             ConfirmDeleteCommand = new AsyncRelayCommand(ConfirmDeleteAsync);
             CancelDeleteCommand = new RelayCommand(CancelDelete);
             OpenClassCommand = new RelayCommand<ClassCardViewModel>(OpenClass!);
-            ToggleClassStateCommand = new AsyncRelayCommand<ClassCardViewModel>(ToggleClassStateAsync);
+            ToggleClassStateCommand = new AsyncRelayCommand<ClassCardViewModel>(ToggleClassStateAsync!);
 
             DirectoryViewModel.OnStudentRosterChanged += () =>
             {
