@@ -19,8 +19,12 @@ namespace Centriku.ViewModels
 
         // KPI PROPERTIES 
         [ObservableProperty] public partial int TotalStudents { get; set; } = 0;
+        [ObservableProperty] public partial int TotalSystemStudents { get; set; } = 0;
         [ObservableProperty] public partial int ActiveClasses { get; set; } = 0;
+        [ObservableProperty] public partial int InactiveClasses { get; set; } = 0;
         [ObservableProperty] public partial int NeedsAttention { get; set; } = 0;
+        [ObservableProperty] public partial ObservableCollection<AttentionAlertViewModel> CriticalAlerts { get; set; } = new();
+        public bool HasNoCriticalAlerts { get; set; } = true;
         partial void OnNeedsAttentionChanged(int value) => OnPropertyChanged(nameof(HasNoAlerts));
         public bool HasNoAlerts => NeedsAttention == 0;
         [ObservableProperty] public partial ObservableCollection<DashboardClassCardViewModel> ClassCards { get; set; } = new();
@@ -120,13 +124,27 @@ namespace Centriku.ViewModels
 
             // 2. CALCULATE METRICS
             ActiveClasses = activeClassList.Count;
+            
+            // Calculate inactive classes (respecting the current Year/Term filters)
+            var inactiveList = _allClasses.Where(c => !c.IsActive).AsEnumerable();
+            if (SelectedYear != "All Years") inactiveList = inactiveList.Where(c => c.AcademicYear == SelectedYear);
+            if (SelectedTerm != "All Terms") inactiveList = inactiveList.Where(c => c.Term == SelectedTerm);
+            if (SelectedProgram != "All Programs") inactiveList = inactiveList.Where(c => c.Program == SelectedProgram);
+            InactiveClasses = inactiveList.Count();
+
+            // Total Enrolled (Unique students currently taking active classes)
             var activeRosters = _allRosters.Where(r => activeClassIds.Contains(r.ClassID)).ToList();
             TotalStudents = activeRosters.Select(r => r.StudentID).Distinct().Count();
+            
+            // Total System Students (Everyone in the database directory)
+            TotalSystemStudents = _allStudents.Count;
 
-            // 3. COMBINED ENGINE: Calculate Alerts & Build Cards Simultaneously
+            // 3. COMBINED ENGINE: Calculate Alerts & Build Cards
             var newCards = new ObservableCollection<DashboardClassCardViewModel>();
             var newAlerts = new List<AttentionAlertViewModel>();
+            var newCriticalAlerts = new List<AttentionAlertViewModel>(); // NEW: Separate bucket for failures
             int riskCounter = 0;
+            int failedCounter = 0;
             
             foreach (var teacherClass in activeClassList)
             {
@@ -136,109 +154,134 @@ namespace Centriku.ViewModels
                 var allClassAssessments = _allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 var allClassAssessmentIds = allClassAssessments.Select(a => a.AssessmentID).ToList();
                 var classScores = _allScores.Where(s => allClassAssessmentIds.Contains(s.AssessmentID)).ToList();
-                
-                // NEW: Pre-filter the attendance for this specific class
                 var classAttendance = _allAttendance.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 
                 var classStudents = activeRosters.Where(r => r.ClassID == teacherClass.ClassID).Select(r => r.StudentID).ToList();
 
-                int failingInThisClassCount = 0; 
+                int totalCount = classStudents.Count;
+                int passedCount = 0;
+                int atRiskCount = 0; 
+                int failedCount = 0;
 
                 foreach (var studentId in classStudents)
                 {
                     if (string.IsNullOrEmpty(studentId)) continue;
-
                     var studentScores = classScores.Where(s => s.StudentID == studentId).ToList();
-                    
-                    // Isolate the student's attendance
                     var studentAtt = classAttendance.Where(a => a.StudentID == studentId).ToList();
 
-                    var termGradesList = new List<TermGradeItem>();
-                    bool triggersWarning = false;
-                    bool isFdaCritical = false; // Tracks if we need the red badge!
+                    bool isFdaCritical = false; 
+                    bool isFdaAtRisk = false; 
 
-                    var termsToEvaluate = new List<string> { "Midterm", "Final" };
-                    double sumOfRawTerms = 0;
-                    int completedTermsCount = 0;
-
-                    foreach (var term in termsToEvaluate)
+                    // --- 1. FDA CHECK (40% Proximity Rule) ---
+                    if (teacherClass.IsFdaEnabled)
                     {
-                        var termAssessments = allClassAssessments.Where(a => a.GradingPeriod == term).ToList();
-                        if (termAssessments.Count == 0)
-                        {
-                            termGradesList.Add(new TermGradeItem { TermLabel = term, GradeDisplay = "--" });
-                            continue;
-                        }
-
-                        bool isTerm100Percent = classCategories.All(c => termAssessments.Any(a => a.Category == c.Name && a.MaxScore > 0));
+                        double totalA = studentAtt.Where(a => a.Status == "A").Sum(a => a.SessionHours);
+                        double totalL = studentAtt.Where(a => a.Status == "L").Sum(a => a.SessionHours);
                         
-                        // Pass the class and the raw attendance records
-                        var termResult = GradeCalculationService.EvaluateFinalGrade(
-                            classCategories, termAssessments, studentScores, template ?? new GradingTemplate(), teacherClass, studentAtt);
+                        double equivalentAbsences = teacherClass.FdaRuleType == "Equivalent" 
+                            ? totalA + (totalL * teacherClass.FdaLatePenaltyRatio) 
+                            : Math.Max(totalA, totalL * (teacherClass.FdaMaxAbsenceHours / Math.Max(1, teacherClass.FdaMaxLateHours))); 
 
-                        bool isFailingTerm = isTerm100Percent && termResult.IsFailing;
-                        
-                        if (isFailingTerm) 
+                        if (equivalentAbsences >= teacherClass.FdaMaxAbsenceHours) isFdaCritical = true; 
+                        else
                         {
-                            triggersWarning = true;
-                            if (termResult.IsFda) isFdaCritical = true; // Flag as an absence failure
-                        }
-
-                        termGradesList.Add(new TermGradeItem { TermLabel = term, GradeDisplay = termResult.FinalOutput, IsFailing = isFailingTerm });
-
-                        if (isTerm100Percent) 
-                        {
-                            sumOfRawTerms += termResult.TermNumericGrade;
-                            completedTermsCount++;
+                            double hoursRemaining = teacherClass.FdaMaxAbsenceHours - equivalentAbsences;
+                            double safeThreshold = teacherClass.FdaMaxAbsenceHours * 0.40;
+                            if (hoursRemaining <= safeThreshold) isFdaAtRisk = true;
                         }
                     }
 
-                    string finalLabel = "Sem. Avg";
-                    TermGradeItem finalGradeItem = new TermGradeItem { TermLabel = finalLabel, GradeDisplay = "--" };
+                    // --- 2. ACADEMIC DATA INTEGRITY CHECK ---
+                    bool isMidtermComplete = false;
+                    bool isFinalComplete = false;
+                    double midtermGrade = 0;
+                    double finalGrade = 0;
 
-                    if (completedTermsCount == termsToEvaluate.Count)
+                    var midAssessments = allClassAssessments.Where(a => a.GradingPeriod == "Midterm").ToList();
+                    var finAssessments = allClassAssessments.Where(a => a.GradingPeriod == "Final").ToList();
+
+                    // Check Midterm: Do all categories exist AND does the student have saved scores for ALL of them?
+                    if (midAssessments.Any() && classCategories.All(c => midAssessments.Any(a => a.Category == c.Name)) && 
+                        midAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID)))
                     {
-                        double finalAcademicAverage = Math.Round(sumOfRawTerms / termsToEvaluate.Count, 0, MidpointRounding.AwayFromZero);
-                        finalGradeItem.GradeDisplay = $"{finalAcademicAverage}%";
-                        if (finalAcademicAverage < (template?.PassingGrade ?? 75.0)) 
+                        isMidtermComplete = true;
+                        midtermGrade = GradeCalculationService.EvaluateFinalGrade(classCategories, midAssessments, studentScores, template ?? new GradingTemplate(), teacherClass, studentAtt).TermNumericGrade;
+                    }
+
+                    // Check Final: Do all categories exist AND does the student have saved scores for ALL of them?
+                    if (finAssessments.Any() && classCategories.All(c => finAssessments.Any(a => a.Category == c.Name)) && 
+                        finAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID)))
+                    {
+                        isFinalComplete = true;
+                        finalGrade = GradeCalculationService.EvaluateFinalGrade(classCategories, finAssessments, studentScores, template ?? new GradingTemplate(), teacherClass, studentAtt).TermNumericGrade;
+                    }
+
+                    // --- 3. BUCKET ASSIGNMENT LOGIC ---
+                    bool isFailed = isFdaCritical;
+                    bool isAtRisk = isFdaAtRisk;
+                    bool isPassed = false;
+                    string failureReason = isFdaCritical ? "Dropped: Exceeded Max Absences (FDA)" : "";
+                    string warningReason = isFdaAtRisk ? "Warning: Approaching Absence Limit" : "";
+
+                    if (isMidtermComplete && isFinalComplete)
+                    {
+                        double semAvg = Math.Round((midtermGrade + finalGrade) / 2.0, 0, MidpointRounding.AwayFromZero);
+                        if (semAvg < (template?.PassingGrade ?? 75.0))
                         {
-                            triggersWarning = true;
-                            finalGradeItem.IsFailing = true;
+                            isFailed = true;
+                            isAtRisk = false; // Upgrade warning to critical
+                            failureReason = "Failed: Semester Average Below Passing";
+                        }
+                        else if (!isFdaCritical)
+                        {
+                            isPassed = true; // Passed successfully!
                         }
                     }
-                    termGradesList.Add(finalGradeItem);
-
-                    if (triggersWarning)
+                    else if (isMidtermComplete && !isFinalComplete)
                     {
+                        if (midtermGrade < (template?.PassingGrade ?? 75.0))
+                        {
+                            isAtRisk = true;
+                            warningReason = "Warning: Failed Midterm Exam";
+                        }
+                    }
+
+                    // --- 4. TALLY & CREATE UI CARDS ---
+                    var student = _allStudents.FirstOrDefault(s => s.StudentID == studentId);
+                    string studentName = student != null ? $"{student.LastName}, {student.FirstName}" : studentId;
+                    string classString = $"{teacherClass.SubjectName} ({teacherClass.Program}_{teacherClass.SectionLabel})";
+
+                    if (isFailed)
+                    {
+                        failedCount++;
+                        failedCounter++;
+                        newCriticalAlerts.Add(new AttentionAlertViewModel { ClassId = teacherClass.ClassID, StudentId = studentId, StudentName = studentName, ClassName = classString, AbsencesText = failureReason, IsCritical = true });
+                    }
+                    else if (isAtRisk)
+                    {
+                        atRiskCount++;
                         riskCounter++;
-                        failingInThisClassCount++; 
-
-                        var student = _allStudents.FirstOrDefault(s => s.StudentID == studentId);
-                        string studentName = student != null ? $"{student.LastName}, {student.FirstName}" : studentId;
-                        
-                        newAlerts.Add(new AttentionAlertViewModel
-                        {
-                            ClassId = teacherClass.ClassID, 
-                            StudentId = studentId, 
-                            StudentName = studentName,
-                            ClassName = $"{teacherClass.SubjectName} ({teacherClass.Program}_{teacherClass.SectionLabel})", 
-                            
-                            // FIX: Inject FDA context directly into the UI!
-                            AbsencesText = isFdaCritical ? "Exceeded Maximum Allowed Absences (FDA)" : "Failing Academic Grade", 
-                            IsCritical = isFdaCritical, 
-                            
-                            TermGrades = new ObservableCollection<TermGradeItem>(termGradesList)
-                        });
+                        newAlerts.Add(new AttentionAlertViewModel { ClassId = teacherClass.ClassID, StudentId = studentId, StudentName = studentName, ClassName = classString, AbsencesText = warningReason, IsCritical = false });
                     }
+                    else if (isPassed)
+                    {
+                        passedCount++; 
+                    }
+                    // NOTE: If they haven't finished midterms yet and have no FDA warnings, they simply remain in 'totalCount' (In Progress).
                 }
 
-                int studentCount = classStudents.Count;
-                newCards.Add(new DashboardClassCardViewModel(teacherClass, studentCount, failingInThisClassCount));
+                newCards.Add(new DashboardClassCardViewModel(teacherClass, totalCount, passedCount, atRiskCount, failedCount));
             }
             
             NeedsAttention = riskCounter;
             ClassCards = newCards; 
             AttentionAlerts = new ObservableCollection<AttentionAlertViewModel>(newAlerts);
+            
+            // Property for Criticals
+            CriticalAlerts = new ObservableCollection<AttentionAlertViewModel>(newCriticalAlerts); 
+            HasNoCriticalAlerts = CriticalAlerts.Count == 0;
+            OnPropertyChanged(nameof(CriticalAlerts));
+            OnPropertyChanged(nameof(HasNoCriticalAlerts));
         }
 
         private void OpenGradebook(DashboardClassCardViewModel selectedClass)
@@ -272,13 +315,19 @@ namespace Centriku.ViewModels
         }
     }
 
-    public partial class DashboardClassCardViewModel(TeacherClass teacherClass, int studentCount, int failingCount) : ObservableObject
+    public partial class DashboardClassCardViewModel(TeacherClass teacherClass, int total, int passed, int atRisk, int failed) : ObservableObject
     {
         public TeacherClass ClassRecord { get; } = teacherClass;
-        public string StudentCountText { get; } = $"{studentCount} Enrolled";
-        public int FailingCount { get; } = failingCount;
-        public bool HasFailingStudents => FailingCount > 0; 
-        public string FailingCountText => $"{FailingCount} At-Risk"; 
+        
+        public int TotalCount { get; } = total;
+        public int PassedCount { get; } = passed;
+        public int AtRiskCount { get; } = atRisk;
+        public int FailedCount { get; } = failed;
+        
+        public bool HasPassed => PassedCount > 0;
+        public bool HasAtRisk => AtRiskCount > 0; 
+        public bool HasFailed => FailedCount > 0; 
+        
         public string FullTitle => ClassRecord.SubjectName ?? "Untitled Subject";
         public string ProgramSectionDisplay => $"{ClassRecord.Program} • {ClassRecord.SectionLabel}";
         public string Subtitle => $"{ClassRecord.Term} | {ClassRecord.AcademicYear}";
@@ -288,13 +337,10 @@ namespace Centriku.ViewModels
     {
         public int ClassId { get; set; } 
         public string StudentId { get; set; } = string.Empty; 
-
         public string StudentName { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
         public string AbsencesText { get; set; } = string.Empty;
         public bool IsCritical { get; set; } = false;
-        
-        public ObservableCollection<TermGradeItem> TermGrades { get; set; } = new();
     }
 
     public partial class TermGradeItem : ObservableObject

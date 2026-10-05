@@ -81,11 +81,16 @@ namespace Centriku.Tests.ViewModels
             await db.InsertAsync(new ClassRoster { ClassID = 1, StudentID = "101" });
             await db.InsertAsync(new ClassRoster { ClassID = 1, StudentID = "102" });
 
-            // Setup Assessment (100 points Max)
+            // Setup Assessments (Midterm & Final to allow Semester Averages)
             await db.InsertAsync(new Assessment { AssessmentID = 1, ClassID = 1, Category = "Exams", GradingPeriod = "Midterm", MaxScore = 100 });
+            await db.InsertAsync(new Assessment { AssessmentID = 2, ClassID = 1, Category = "Exams", GradingPeriod = "Final", MaxScore = 100 });
 
-            // Setup Scores: Student 1 gets 100 (Pass), Student 2 gets 20 (Fail - Transmutes to 60%)
+            // Setup Scores: 
+            // Student 101 completes BOTH terms perfectly (Semester Average = 100% -> Passed Bucket)
             await db.InsertAsync(new Score { AssessmentID = 1, StudentID = "101", PointsEarned = 100 });
+            await db.InsertAsync(new Score { AssessmentID = 2, StudentID = "101", PointsEarned = 100 });
+            
+            // Student 102 only completes Midterm and fails it (Score 20 transmutes to 60% -> At-Risk Bucket)
             await db.InsertAsync(new Score { AssessmentID = 1, StudentID = "102", PointsEarned = 20 });
 
             var vm = new DashboardViewModel(fakeDb, _ => { });
@@ -93,17 +98,26 @@ namespace Centriku.Tests.ViewModels
             // 2. ACT
             await vm.LoadDashboardDataAsync();
 
-            // 3. ASSERT - Quick Access Card Validation
+            // 3. ASSERT - Quick Access Card Validation (The 3 Buckets!)
             Assert.Single(vm.ClassCards);
             var card = vm.ClassCards[0];
-            Assert.Equal(2, int.Parse(card.StudentCountText.Split(' ')[0])); // 2 Students Total
-            Assert.True(card.HasFailingStudents); // The UI warning pill should be visible
-            Assert.Equal("1 At-Risk", card.FailingCountText); // Only 1 student is failing
-
-            // 4. ASSERT - Early Warning Deep-Link Validation
-            Assert.Single(vm.AttentionAlerts);
-            var alert = vm.AttentionAlerts[0];
             
+            // Validate the absolute numbers
+            Assert.Equal(2, card.TotalCount); // 2 Students Total
+            Assert.Equal(1, card.PassedCount); // Student 1 Passed
+            Assert.Equal(1, card.AtRiskCount); // Student 2 is At-Risk (Failed Midterm)
+            Assert.Equal(0, card.FailedCount); // No one has officially failed the Sem Avg yet
+            
+            // Validate the UI triggers
+            Assert.True(card.HasPassed);
+            Assert.True(card.HasAtRisk); 
+            Assert.False(card.HasFailed);
+
+            // 4. ASSERT - Early Warning (At-Risk) Deep-Link Validation
+            Assert.Single(vm.AttentionAlerts);
+            Assert.Empty(vm.CriticalAlerts); // No one is critically failing yet
+            
+            var alert = vm.AttentionAlerts[0];
             Assert.Equal("Failing, Student", alert.StudentName); // Correct student caught
             Assert.Equal("Test Class (BSCS_3A)", alert.ClassName); // Correct UI formatting
             

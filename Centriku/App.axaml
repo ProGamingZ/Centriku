@@ -131,6 +131,16 @@
                     <SolidColorBrush x:Key="DataGridAltRowBrush">#0D1324</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridHoverBrush">#1E2538</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridSelectedBrush">#2B214D</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="SuccessBrush">#10B981</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessBgBrush">#1A10B981</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="WarningBrush">#F59E0B</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningTextBrush">#D97706</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBgBrush">#1AF59E0B</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="DangerBrush">#EF4444</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBgBrush">#1AEF4444</SolidColorBrush>
                 </ResourceDictionary> 
 
                 <ResourceDictionary x:Key="Light">
@@ -145,6 +155,16 @@
                     <SolidColorBrush x:Key="DataGridAltRowBrush">#F8FAFC</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridHoverBrush">#F3F4F6</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridSelectedBrush">#EDE9FE</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="SuccessBrush">#059669</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessBgBrush">#1A10B981</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="WarningBrush">#D97706</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningTextBrush">#B45309</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBgBrush">#1AF59E0B</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="DangerBrush">#DC2626</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBgBrush">#1AEF4444</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries> 
 
