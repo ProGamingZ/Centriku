@@ -7,7 +7,7 @@
     <Grid>
         <Grid RowDefinitions="Auto, *">     
             
-            <StackPanel Grid.Row="0" Margin="40,30,40,20">
+            <StackPanel Grid.Row="0" Margin="24,24,24,20">
                 <TextBlock Text="Grading Policies" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                 <TextBlock Text="Build and manage your custom grading rubrics." 
                         Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
@@ -15,7 +15,7 @@
             </StackPanel>
 
             <!-- Master-Detail Layout -->
-            <Grid Grid.Row="1" ColumnDefinitions="350, *" Margin="40,10,40,30">
+            <Grid Grid.Row="1" ColumnDefinitions="350, *" Margin="24,24,24,20">
                 
                 <!-- LEFT SIDEBAR: Saved Templates -->
                 <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,25,0">

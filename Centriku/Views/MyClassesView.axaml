@@ -96,14 +96,14 @@
             <Grid RowDefinitions="Auto, Auto, Auto, *">
                 
                 <!-- Page Title -->
-                <StackPanel Grid.Row="0" Margin="40,30,40,20">
+                <StackPanel Grid.Row="0" Margin="24,24,24,20">
                     <TextBlock Text="My Classes" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                     <TextBlock Text="Manage your workload and assign grading policies to your subjects." 
                                Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
                 </StackPanel>
 
                 <!-- Filters & Search -->
-                <StackPanel Grid.Row="1" Margin="40,0,40,20">
+                <StackPanel Grid.Row="1" Margin="24,0,24,20">
                     <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,20">
                         <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBox Text="{Binding SearchQuery}" PlaceholderText="Search subjects or sections..." Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Padding="15,10" Width="300" Margin="0,0,15,0"/>
@@ -131,7 +131,7 @@
                 <!-- Add/Edit Form Overlay -->
                 <Border Grid.Row="2" IsVisible="{Binding IsAddingClass}" 
                         Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" 
-                        BorderThickness="1" CornerRadius="8" Padding="20" Margin="40,0,40,30">
+                        BorderThickness="1" CornerRadius="8" Padding="20" Margin="24,0,24,30">
                     <Grid RowDefinitions="Auto, Auto, Auto, Auto">
                         <TextBlock Text="Class Details" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15" Grid.Row="0"/>
                         
@@ -184,8 +184,8 @@
                     </Grid>
                 </Border>
 
-                <!-- NEW: THE 2 BIG BOXES -->
-                <StackPanel Grid.Row="3" Margin="40,0,40,40" Spacing="20">
+                <!-- THE 2 BIG BOXES -->
+                <StackPanel Grid.Row="3" Margin="24,0,24,40" Spacing="20">
                     
                     <!-- BOX 1: ACTIVE CLASSES -->
                     <TextBlock Text="{Binding ActiveClassesHeader}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
