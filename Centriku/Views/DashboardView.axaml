@@ -5,57 +5,104 @@
     x:DataType="vm:DashboardViewModel"
     x:Name="RootControl">
 
+    <!-- UI/UX MICRO-INTERACTIONS -->
+    <UserControl.Styles>
+        <Style Selector="Border.HoverCard">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <ThicknessTransition Property="Margin" Duration="0:0:0.2"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.HoverCard:pointerover">
+            <Setter Property="Margin" Value="10,5,10,15"/>
+            <Setter Property="BoxShadow" Value="0 10 20 0 #20000000"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+
+        <!-- FIX: Strip Avalonia's default Button template to stop red artifacts and clipping -->
+        <Style Selector="Button.AlertBtn">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,15,12"/> <!-- Right margin prevents scrollbar overlap -->
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter Content="{TemplateBinding Content}" Background="Transparent" />
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        
+        <Style Selector="Border.AlertBorder">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        
+        <!-- Hover triggers cleanly on the inner border -->
+        <Style Selector="Button.AlertBtn:pointerover Border.AlertBorder">
+            <Setter Property="BorderBrush" Value="#EF4444"/> 
+            <Setter Property="BoxShadow" Value="0 4 12 0 #20EF4444"/>
+        </Style>
+    </UserControl.Styles>
+
     <Grid RowDefinitions="Auto, *">
         
-        <StackPanel Grid.Row="0" Margin="40,30,40,15">
-            <TextBlock Text="Welcome back, Instructor!" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+        <!-- ROW 0: SPLIT-HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="40,30,40,25">
             
-            <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,15,0,0">
-                <!-- KPI Card 1: Active Classes -->
-                <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,15" MinWidth="160">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,5">
-                            <TextBlock Text="Active Classes" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+            <!-- LEFT HEADER: Welcome & KPIs -->
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Welcome back, Instructor!" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,15,0,0">
+                    <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,15" MinWidth="160">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,5">
+                                <TextBlock Text="Active Classes" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding ActiveClasses}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding ActiveClasses}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
-                    </StackPanel>
-                </Border>
-                <!-- KPI Card 2: Total Students -->
-                <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,15" MinWidth="160">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,5">
-                            <TextBlock Text="Total Enrolled" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                    </Border>
+                    
+                    <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,15" MinWidth="160">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,5">
+                                <TextBlock Text="Total Enrolled" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding TotalStudents}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding TotalStudents}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
-                    </StackPanel>
-                </Border>
+                    </Border>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
 
-        <StackPanel Grid.Row="1" Margin="40,0,40,20">
-            <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,0,0,15">
+            <!-- RIGHT HEADER: Global Filters (Moved here to reclaim space) -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15" VerticalAlignment="Bottom">
                 <StackPanel>
                     <TextBlock Text="School Year" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <ComboBox ItemsSource="{Binding AvailableYears}" SelectedItem="{Binding SelectedYear}" Width="160" Background="{DynamicResource AppBackground}"/>
+                    <ComboBox ItemsSource="{Binding AvailableYears}" SelectedItem="{Binding SelectedYear}" Width="150" Background="{DynamicResource AppBackground}"/>
                 </StackPanel>
-
                 <StackPanel>
                     <TextBlock Text="Term" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                    <ComboBox ItemsSource="{Binding AvailableTerms}" SelectedItem="{Binding SelectedTerm}" Width="160" Background="{DynamicResource AppBackground}"/>
+                    <ComboBox ItemsSource="{Binding AvailableTerms}" SelectedItem="{Binding SelectedTerm}" Width="150" Background="{DynamicResource AppBackground}"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="Program" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding AvailablePrograms}" SelectedItem="{Binding SelectedProgram}" Width="150" Background="{DynamicResource AppBackground}"/>
                 </StackPanel>
             </StackPanel>
-            
-            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
-        </StackPanel>
+        </Grid>
 
+        <!-- ROW 1: MAIN CONTENT -->
         <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="40,0,40,40">
-            
-            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="0,0,20,0"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                    ClipToBounds="True"> 
-                
+            <!-- QUICK ACCESS CARDS -->
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20" Margin="0,0,20,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True"> 
                 <Grid RowDefinitions="Auto, *" VerticalAlignment="Stretch">
-                    
                     <TextBlock Grid.Row="0" Text="Quick Access" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
                     
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -67,31 +114,41 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="15" Margin="10,10,10,10"
-                                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding FullTitle}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
+                                    <Border Classes="HoverCard" Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="12" Padding="15" Margin="10,10,10,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                        <StackPanel MinWidth="220" MaxWidth="300">
                                             
-                                            <TextBlock Text="{Binding ProgramSectionDisplay}" Foreground="{DynamicResource PrimaryBrush}" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,0"/>
+                                            <!-- Badge Header -->
+                                            <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                                                <TextBlock Grid.Column="0" Text="{Binding ProgramSectionDisplay}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="1" Background="{DynamicResource AppBackground}" CornerRadius="4" Padding="6,2">
+                                                    <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource PrimaryBrush}" FontSize="10" FontWeight="Bold"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Cleaned Up Title -->
+                                            <TextBlock Text="{Binding FullTitle}" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Margin="0,0,0,12"/>
                                             
-                                            <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,4,0,5"/>
-                                            <TextBlock Text="{Binding StudentCountText}" Foreground="{DynamicResource PrimaryBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,15"/>
+                                            <!-- Sub-Stats -->
+                                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,15">
+                                                <TextBlock Classes="Icon" Text="{DynamicResource IconPerson}" Foreground="{DynamicResource TextMutedBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding StudentCountText}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                
+                                                <Border IsVisible="{Binding HasFailingStudents}" Background="#1AEF4444" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding FailingCountText}" Foreground="#EF4444" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </StackPanel>
                                             
                                             <Grid ColumnDefinitions="*, *" Margin="0,0,0,0">
                                                 <Button Grid.Column="0" Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenGradebookCommand}" 
                                                         CommandParameter="{Binding}" Background="{DynamicResource PrimaryBrush}" Foreground="White" 
                                                         CornerRadius="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,0,5,0">
-                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                        <TextBlock Text="Grades" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
-                                                    </StackPanel>
+                                                    <TextBlock Text="Grades" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
                                                 </Button>
                                                 
                                                 <Button Grid.Column="1" Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenAttendanceCommand}" 
                                                         CommandParameter="{Binding}" Background="Transparent" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" 
                                                         Foreground="{DynamicResource PrimaryBrush}" CornerRadius="6" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="5,0,0,0">
-                                                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                                        <TextBlock Text="Attendance" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
-                                                    </StackPanel>
+                                                    <TextBlock Text="Attendance" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
                                                 </Button>
                                             </Grid>
 
@@ -105,39 +162,25 @@
             </Border>
 
             <!-- EARLY WARNINGS PANEL -->
-            <Border Grid.Column="1" MinWidth="320" MaxWidth="400" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20"
-                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                
-                <!-- FIX 1: Replaced StackPanel with Grid so it stretches to fill all vertical space -->
+            <Border Grid.Column="1" MinWidth="340" MaxWidth="400" Background="{DynamicResource SurfaceBrush}" CornerRadius="12" Padding="20,20,5,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                 <Grid RowDefinitions="Auto, *">
-                    
-                    <!-- Title -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,15">
                         <TextBlock Classes="Icon" Text="{DynamicResource IconEarlyWarning}" FontSize="20" Foreground="#EF4444"/>
                         <TextBlock Text="{Binding NeedsAttention, StringFormat='Early Warnings ({0})'}" FontSize="18" FontWeight="Bold" Foreground="#EF4444" VerticalAlignment="Center"/>
                     </StackPanel>
                     
-                    <!-- Content Area -->
                     <Grid Grid.Row="1">
-                        <!-- FIX 2: Removed MaxHeight="400" and disabled horizontal scrolling -->
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,15,0">
                             <ItemsControl ItemsSource="{Binding AttentionAlerts}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <!-- NEW: Wrapped the Border in a transparent Button -->
-                                        <Button Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenStudentAlertCommand}" 
-                                                CommandParameter="{Binding}" 
-                                                Background="Transparent" Padding="0" Margin="0,0,0,10" 
-                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                                                BorderThickness="0" CornerRadius="8" Cursor="Hand">
-                                            
-                                            <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="15" 
-                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                        <Button Classes="AlertBtn" 
+                                                Command="{Binding #RootControl.((vm:DashboardViewModel)DataContext).OpenStudentAlertCommand}" 
+                                                CommandParameter="{Binding}">
+                                            <Border Classes="AlertBorder" Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="15" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                                 <StackPanel>
-                                                    
                                                     <Grid ColumnDefinitions="*, Auto">
-                                                        <TextBlock Grid.Column="0" Text="{Binding StudentName}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
-                                                        
+                                                        <TextBlock Grid.Column="0" Text="{Binding StudentName}" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,10,0"/>
                                                         <StackPanel Grid.Column="1">
                                                             <Border IsVisible="{Binding !IsCritical}" Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="4" Padding="6,2">
                                                                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -148,22 +191,20 @@
                                                         </StackPanel>
                                                     </Grid>
 
-                                                    <TextBlock Text="{Binding ClassName}" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding AbsencesText}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,10" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding ClassName}" FontSize="13" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AbsencesText}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,12" TextWrapping="Wrap"/>
 
                                                     <ItemsControl ItemsSource="{Binding TermGrades}" Margin="0,10,0,0">
                                                         <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <UniformGrid Rows="1"/> 
-                                                            </ItemsPanelTemplate>
+                                                            <ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate>
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
                                                                 <StackPanel HorizontalAlignment="Center">
-                                                                    <TextBlock Text="{Binding TermLabel}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                                                    <TextBlock Text="{Binding TermLabel}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                                                     <Grid HorizontalAlignment="Center">
-                                                                        <TextBlock Text="{Binding GradeDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsFailing}"/>
-                                                                        <TextBlock Text="{Binding GradeDisplay}" FontSize="13" FontWeight="Bold" Foreground="#EF4444" IsVisible="{Binding IsFailing}"/>
+                                                                        <TextBlock Text="{Binding GradeDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsFailing}"/>
+                                                                        <TextBlock Text="{Binding GradeDisplay}" FontSize="15" FontWeight="Bold" Foreground="#EF4444" IsVisible="{Binding IsFailing}"/>
                                                                     </Grid>
                                                                 </StackPanel>
                                                             </DataTemplate>
@@ -177,16 +218,13 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <!-- Empty State Wrapper perfectly centered -->
-                        <StackPanel IsVisible="{Binding HasNoAlerts}" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <StackPanel IsVisible="{Binding HasNoAlerts}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,15,0">
                             <TextBlock Classes="Icon" Text="{DynamicResource IconEmptyState}" FontSize="48" Foreground="#10B981" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                             <TextBlock Text="All students are currently passing!" Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" FontSize="14" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
             </Border>
-
         </Grid>
-        
     </Grid>
 </UserControl>

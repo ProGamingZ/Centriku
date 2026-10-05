@@ -34,6 +34,11 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string SelectedTerm { get; set; } = "All Terms";
         partial void OnSelectedTermChanged(string value) => _ = CalculateDashboardMetricsAsync();
 
+        // NEW: PROGRAM FILTER
+        [ObservableProperty] public partial ObservableCollection<string> AvailablePrograms { get; set; } = new();
+        [ObservableProperty] public partial string SelectedProgram { get; set; } = "All Programs";
+        partial void OnSelectedProgramChanged(string value) => _ = CalculateDashboardMetricsAsync();
+
         // IN-MEMORY CACHE (Prevents database lag!) 
         private List<TeacherClass> _allClasses = [];
         private List<ClassRoster> _allRosters = [];
@@ -45,7 +50,7 @@ namespace Centriku.ViewModels
 
         public IRelayCommand<DashboardClassCardViewModel> OpenGradebookCommand { get; }
         public IRelayCommand<DashboardClassCardViewModel> OpenAttendanceCommand { get; }
-        public IRelayCommand<AttentionAlertViewModel> OpenStudentAlertCommand { get; }
+        public IRelayCommand<AttentionAlertViewModel> OpenStudentAlertCommand { get; } 
 
         public DashboardViewModel(IDatabaseService dbService,System.Action<ViewModelBase> navigateAction)
         {
@@ -53,12 +58,11 @@ namespace Centriku.ViewModels
             _navigateAction = navigateAction;
             OpenGradebookCommand = new RelayCommand<DashboardClassCardViewModel>(OpenGradebook!);
             OpenAttendanceCommand = new RelayCommand<DashboardClassCardViewModel>(OpenAttendance!);
-            OpenStudentAlertCommand = new RelayCommand<AttentionAlertViewModel>(OpenStudentAlert!);
+            OpenStudentAlertCommand = new RelayCommand<AttentionAlertViewModel>(OpenStudentAlert!); 
         }
 
         public async Task LoadDashboardDataAsync()
         {
-            // 1. Fetch ALL data exactly ONCE when the dashboard loads
             var db = _dbService.GetConnection();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
             _allStudents = await db.Table<Student>().ToListAsync();
@@ -69,59 +73,58 @@ namespace Centriku.ViewModels
             _allAttendance = await db.Table<AttendanceRecord>().ToListAsync();
             _allCategories = await db.Table<GradingCategory>().ToListAsync();
 
-            // 2. Dynamically extract the unique Years and Terms from the teacher's classes
             var activeDbClasses = _allClasses.Where(c => c.IsActive).ToList();
             
+            // 1. YEAR DROPDOWN
             var years = activeDbClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
+            var prevYear = SelectedYear;
             AvailableYears.Clear(); 
             AvailableYears.Add("All Years");
             foreach (var y in years) AvailableYears.Add(y!);
-            if (!AvailableYears.Contains(SelectedYear)) SelectedYear = "All Years";
+            SelectedYear = string.Empty; // Force UI Detach
+            SelectedYear = AvailableYears.Contains(prevYear) ? prevYear : "All Years"; // Force UI Attach
 
+            // 2. TERM DROPDOWN
             var terms = activeDbClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
+            var prevTerm = SelectedTerm;
             AvailableTerms.Clear(); 
             AvailableTerms.Add("All Terms");
             foreach (var t in terms) AvailableTerms.Add(t!);
-            if (!AvailableTerms.Contains(SelectedTerm)) SelectedTerm = "All Terms";
+            SelectedTerm = string.Empty; 
+            SelectedTerm = AvailableTerms.Contains(prevTerm) ? prevTerm : "All Terms";
 
-            // 3. Run the math engine using our new cache
+            // 3. PROGRAM DROPDOWN
+            var programs = activeDbClasses.Select(c => c.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
+            var prevProgram = SelectedProgram;
+            AvailablePrograms.Clear(); 
+            AvailablePrograms.Add("All Programs");
+            foreach (var p in programs) AvailablePrograms.Add(p!);
+            SelectedProgram = string.Empty;
+            SelectedProgram = AvailablePrograms.Contains(prevProgram) ? prevProgram : "All Programs";
+
             await CalculateDashboardMetricsAsync();
         }
 
         private async Task CalculateDashboardMetricsAsync()
         {
-            // Yield the UI thread briefly so the dropdown animation finishes smoothly
             await Task.Delay(20);
 
-            // 1. FILTER THE CLASSES BASED ON DROPDOWNS!
+            // 1. FILTER CLASSES
             var filteredClasses = _allClasses.Where(c => c.IsActive).AsEnumerable();
-            
-            if (SelectedYear != "All Years") 
-                filteredClasses = filteredClasses.Where(c => c.AcademicYear == SelectedYear);
-            
-            if (SelectedTerm != "All Terms") 
-                filteredClasses = filteredClasses.Where(c => c.Term == SelectedTerm);
+            if (SelectedYear != "All Years") filteredClasses = filteredClasses.Where(c => c.AcademicYear == SelectedYear);
+            if (SelectedTerm != "All Terms") filteredClasses = filteredClasses.Where(c => c.Term == SelectedTerm);
+            if (SelectedProgram != "All Programs") filteredClasses = filteredClasses.Where(c => c.Program == SelectedProgram);
 
             var activeClassList = filteredClasses.ToList();
             var activeClassIds = activeClassList.Select(c => c.ClassID).ToList();
 
-            // 2. Calculate KPI: Active Classes
+            // 2. CALCULATE METRICS
             ActiveClasses = activeClassList.Count;
-
-            // 3. Calculate KPI: Total Students (Only counts students in the filtered classes!)
             var activeRosters = _allRosters.Where(r => activeClassIds.Contains(r.ClassID)).ToList();
             TotalStudents = activeRosters.Select(r => r.StudentID).Distinct().Count();
 
-            // 4. Generate the Quick Access Cards
+            // 3. COMBINED ENGINE: Calculate Alerts & Build Cards Simultaneously
             var newCards = new ObservableCollection<DashboardClassCardViewModel>();
-            foreach (var teacherClass in activeClassList)
-            {
-                int studentCount = activeRosters.Count(r => r.ClassID == teacherClass.ClassID);
-                newCards.Add(new DashboardClassCardViewModel(teacherClass, studentCount));
-            }
-            ClassCards = newCards; // Assigning a fresh list prevents UI glitches!
-
-            // 5. Calculate KPI: Needs Attention (The Math Engine)
             var newAlerts = new List<AttentionAlertViewModel>();
             int riskCounter = 0;
             
@@ -135,6 +138,8 @@ namespace Centriku.ViewModels
                 var classScores = _allScores.Where(s => allClassAssessmentIds.Contains(s.AssessmentID)).ToList();
                 var classStudents = activeRosters.Where(r => r.ClassID == teacherClass.ClassID).Select(r => r.StudentID).ToList();
 
+                int failingInThisClassCount = 0; // NEW: Tracker for the Quick Access Card
+
                 foreach (var studentId in classStudents)
                 {
                     if (string.IsNullOrEmpty(studentId)) continue;
@@ -147,32 +152,22 @@ namespace Centriku.ViewModels
                     double sumOfRawTerms = 0;
                     int completedTermsCount = 0;
 
-                    // Evaluate every individual term
                     foreach (var term in termsToEvaluate)
                     {
                         var termAssessments = allClassAssessments.Where(a => a.GradingPeriod == term).ToList();
-                        
                         if (termAssessments.Count == 0)
                         {
                             termGradesList.Add(new TermGradeItem { TermLabel = term, GradeDisplay = "--" });
                             continue;
                         }
 
-                        // Check if term is fully graded (100% weight)
                         bool isTerm100Percent = classCategories.All(c => termAssessments.Any(a => a.Category == c.Name && a.MaxScore > 0));
-
-                        var termResult = GradeCalculationService.EvaluateFinalGrade(
-                            classCategories, termAssessments, studentScores, template ?? new GradingTemplate());
+                        var termResult = GradeCalculationService.EvaluateFinalGrade(classCategories, termAssessments, studentScores, template ?? new GradingTemplate());
 
                         bool isFailingTerm = isTerm100Percent && termResult.IsFailing;
                         if (isFailingTerm) triggersWarning = true;
 
-                        termGradesList.Add(new TermGradeItem 
-                        { 
-                            TermLabel = term, 
-                            GradeDisplay = termResult.FinalOutput, 
-                            IsFailing = isFailingTerm 
-                        });
+                        termGradesList.Add(new TermGradeItem { TermLabel = term, GradeDisplay = termResult.FinalOutput, IsFailing = isFailingTerm });
 
                         if (isTerm100Percent) 
                         {
@@ -181,46 +176,50 @@ namespace Centriku.ViewModels
                         }
                     }
 
-                    // Calculate Final Average
                     string finalLabel = "Sem. Avg";
                     TermGradeItem finalGradeItem = new TermGradeItem { TermLabel = finalLabel, GradeDisplay = "--" };
 
                     if (completedTermsCount == termsToEvaluate.Count)
                     {
                         double finalAcademicAverage = Math.Round(sumOfRawTerms / termsToEvaluate.Count, 0, MidpointRounding.AwayFromZero);
-                        
                         finalGradeItem.GradeDisplay = $"{finalAcademicAverage}%";
-                        
                         if (finalAcademicAverage < (template?.PassingGrade ?? 75.0)) 
                         {
                             triggersWarning = true;
                             finalGradeItem.IsFailing = true;
                         }
                     }
-
                     termGradesList.Add(finalGradeItem);
 
-                    // Package the warning for the UI!
                     if (triggersWarning)
                     {
                         riskCounter++;
+                        failingInThisClassCount++; // NEW: Increment the class tracker
+
                         var student = _allStudents.FirstOrDefault(s => s.StudentID == studentId);
                         string studentName = student != null ? $"{student.LastName}, {student.FirstName}" : studentId;
                         
                         newAlerts.Add(new AttentionAlertViewModel
                         {
                             ClassId = teacherClass.ClassID, 
-                            StudentId = studentId,
+                            StudentId = studentId, 
                             StudentName = studentName,
-                            ClassName = $"{teacherClass.SubjectName} ({teacherClass.SectionLabel})",
-                            AbsencesText = "Failing Academic Grade", // Replaced attendance text!
-                            IsCritical = false, // We don't have FA anymore, so no critical red badges!
+                            // FORMAT UPDATED: BSCS_3C instead of just 3C
+                            ClassName = $"{teacherClass.SubjectName} ({teacherClass.Program}_{teacherClass.SectionLabel})", 
+                            AbsencesText = "Failing Academic Grade", 
+                            IsCritical = false, 
                             TermGrades = new ObservableCollection<TermGradeItem>(termGradesList)
                         });
                     }
                 }
+
+                // Generate the Class Card WITH the failing count
+                int studentCount = classStudents.Count;
+                newCards.Add(new DashboardClassCardViewModel(teacherClass, studentCount, failingInThisClassCount));
             }
+            
             NeedsAttention = riskCounter;
+            ClassCards = newCards; 
             AttentionAlerts = new ObservableCollection<AttentionAlertViewModel>(newAlerts);
         }
 
@@ -228,8 +227,8 @@ namespace Centriku.ViewModels
         {
             if (selectedClass != null)
             {
-                var gradebookVM = new GradebookViewModel(new DatabaseService());
-                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 0); // 0 = Grades Tab
+                var gradebookVM = new GradebookViewModel(_dbService);
+                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 0); 
                 _navigateAction(gradebookVM);
             }
         }
@@ -238,42 +237,40 @@ namespace Centriku.ViewModels
         {
             if (selectedClass != null)
             {
-                var gradebookVM = new GradebookViewModel(new DatabaseService());
-                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 2); // 2 = Attendance Tab
+                var gradebookVM = new GradebookViewModel(_dbService);
+                gradebookVM.Initialize(selectedClass.ClassRecord.ClassID, selectedClass.ClassRecord.SubjectName ?? string.Empty, 2); 
                 _navigateAction(gradebookVM);
             }
         }
+
         private void OpenStudentAlert(AttentionAlertViewModel alert)
         {
             if (alert != null)
             {
                 var gradebookVM = new GradebookViewModel(_dbService);
-                // We pass '0' for Grades tab, and pass the StudentId to highlight them!
                 gradebookVM.Initialize(alert.ClassId, alert.ClassName, 0, alert.StudentId);
                 _navigateAction(gradebookVM);
             }
         }
     }
 
-    public partial class DashboardClassCardViewModel : ObservableObject
+    public partial class DashboardClassCardViewModel(TeacherClass teacherClass, int studentCount, int failingCount) : ObservableObject
     {
-        public TeacherClass ClassRecord { get; }
-        public string StudentCountText { get; }
-        
-        public string FullTitle => $"{ClassRecord.SubjectName} - {ClassRecord.SectionLabel}";
-        public string ProgramSectionDisplay => $"{ClassRecord.Program}_{ClassRecord.SectionLabel}";
+        public TeacherClass ClassRecord { get; } = teacherClass;
+        public string StudentCountText { get; } = $"{studentCount} Enrolled";
+        public int FailingCount { get; } = failingCount;
+        public bool HasFailingStudents => FailingCount > 0; 
+        public string FailingCountText => $"{FailingCount} At-Risk"; 
+        public string FullTitle => ClassRecord.SubjectName ?? "Untitled Subject";
+        public string ProgramSectionDisplay => $"{ClassRecord.Program} • {ClassRecord.SectionLabel}";
         public string Subtitle => $"{ClassRecord.Term} | {ClassRecord.AcademicYear}";
-
-        public DashboardClassCardViewModel(TeacherClass teacherClass, int studentCount)
-        {
-            ClassRecord = teacherClass;
-            StudentCountText = $"{studentCount} Students Enrolled";
-        }
     }
+
     public partial class AttentionAlertViewModel : ObservableObject
     {
         public int ClassId { get; set; } 
-        public string StudentId { get; set; } = string.Empty;
+        public string StudentId { get; set; } = string.Empty; 
+
         public string StudentName { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
         public string AbsencesText { get; set; } = string.Empty;
@@ -286,6 +283,6 @@ namespace Centriku.ViewModels
     {
         public string TermLabel { get; set; } = string.Empty;
         public string GradeDisplay { get; set; } = "--";
-        public bool IsFailing { get; set; } = false; // Triggers the Red color in UI
+        public bool IsFailing { get; set; } = false; 
     }
 }
