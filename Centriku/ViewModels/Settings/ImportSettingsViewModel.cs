@@ -93,6 +93,12 @@ namespace Centriku.ViewModels.Settings
          if (savedSettings != null) CurrentSettings = savedSettings;
          else { CurrentSettings = new AppSettings(); await db.InsertAsync(CurrentSettings); }
 
+         if (!AvailableGenders.Contains(CurrentSettings.DefaultGender))
+         {
+            CurrentSettings.DefaultGender = "None";
+            await db.UpdateAsync(CurrentSettings);
+         }
+
          _isUpdating = true;
          void SetCol(int dbIndex, string field) {
             if (dbIndex == 0) Col1Selected = field; else if (dbIndex == 1) Col2Selected = field;

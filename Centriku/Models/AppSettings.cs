@@ -29,7 +29,7 @@ namespace Centriku.Models
         public bool SkipIncompleteRows { get; set; } = true;
 
         // 3. Fallback Defaults (What to inject if the column is blank or ignored)
-        public string DefaultGender { get; set; } = "Unspecified";
+        public string DefaultGender { get; set; } = "None";
         public string DefaultGradeLevel { get; set; } = "";
         public string DefaultSection { get; set; } = "";
         public string DefaultEnrollmentStatus { get; set; } = "Regular";
