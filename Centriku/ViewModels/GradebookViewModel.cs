@@ -128,6 +128,8 @@ namespace Centriku.ViewModels
             }
 
             // --- EXISTING COLLECTIONS (Ensuring GradebookRows is only declared ONCE!) ---
+            private string _targetStudentId = string.Empty; // Holds the deep-link ID
+            [ObservableProperty] public partial StudentGradeRow? SelectedGradebookRow { get; set; }
             [ObservableProperty] public partial ObservableCollection<StudentGradeRow> GradebookRows { get; set; } = new();   
             [ObservableProperty] public partial ObservableCollection<Assessment> ClassAssessments { get; set; } = new();
             [ObservableProperty] public partial ObservableCollection<AttendanceGridRowViewModel> AttendanceGridRows { get; set; } = new();
@@ -290,10 +292,11 @@ namespace Centriku.ViewModels
                 DeleteRollCallCommand = new RelayCommand<System.DateTime?>(DeleteRollCall);
                 ExportCsvCommand = new AsyncRelayCommand(ExportToCsvAsync);
             }
-            public async void Initialize(int classId, string classTitle, int startingTab = 0)
+            public async void Initialize(int classId, string classTitle, int startingTab = 0, string targetStudentId = "")
             {
                 try 
                 {
+                    _targetStudentId = targetStudentId;
                     ClassId = classId;
                     ClassTitle = classTitle;
                     SelectedTabIndex = startingTab;
@@ -399,6 +402,11 @@ namespace Centriku.ViewModels
                 OnSearchQueryChanged(SearchQuery); 
                 RecalculateFinalGrades();
                 
+                if (!string.IsNullOrEmpty(_targetStudentId))
+                {
+                    SelectedGradebookRow = GradebookRows.FirstOrDefault(r => r.StudentID == _targetStudentId);
+                    _targetStudentId = string.Empty; // Clear it so it doesn't fire again on a normal search
+                }
             }
             private async Task LoadAttendanceData()
             {

@@ -45,6 +45,7 @@ namespace Centriku.ViewModels
 
         public IRelayCommand<DashboardClassCardViewModel> OpenGradebookCommand { get; }
         public IRelayCommand<DashboardClassCardViewModel> OpenAttendanceCommand { get; }
+        public IRelayCommand<AttentionAlertViewModel> OpenStudentAlertCommand { get; }
 
         public DashboardViewModel(IDatabaseService dbService,System.Action<ViewModelBase> navigateAction)
         {
@@ -52,6 +53,7 @@ namespace Centriku.ViewModels
             _navigateAction = navigateAction;
             OpenGradebookCommand = new RelayCommand<DashboardClassCardViewModel>(OpenGradebook!);
             OpenAttendanceCommand = new RelayCommand<DashboardClassCardViewModel>(OpenAttendance!);
+            OpenStudentAlertCommand = new RelayCommand<AttentionAlertViewModel>(OpenStudentAlert!);
         }
 
         public async Task LoadDashboardDataAsync()
@@ -207,6 +209,8 @@ namespace Centriku.ViewModels
                         
                         newAlerts.Add(new AttentionAlertViewModel
                         {
+                            ClassId = teacherClass.ClassID, 
+                            StudentId = studentId,
                             StudentName = studentName,
                             ClassName = $"{teacherClass.SubjectName} ({teacherClass.SectionLabel})",
                             AbsencesText = "Failing Academic Grade", // Replaced attendance text!
@@ -239,6 +243,16 @@ namespace Centriku.ViewModels
                 _navigateAction(gradebookVM);
             }
         }
+        private void OpenStudentAlert(AttentionAlertViewModel alert)
+        {
+            if (alert != null)
+            {
+                var gradebookVM = new GradebookViewModel(_dbService);
+                // We pass '0' for Grades tab, and pass the StudentId to highlight them!
+                gradebookVM.Initialize(alert.ClassId, alert.ClassName, 0, alert.StudentId);
+                _navigateAction(gradebookVM);
+            }
+        }
     }
 
     public partial class DashboardClassCardViewModel : ObservableObject
@@ -258,6 +272,8 @@ namespace Centriku.ViewModels
     }
     public partial class AttentionAlertViewModel : ObservableObject
     {
+        public int ClassId { get; set; } 
+        public string StudentId { get; set; } = string.Empty;
         public string StudentName { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
         public string AbsencesText { get; set; } = string.Empty;

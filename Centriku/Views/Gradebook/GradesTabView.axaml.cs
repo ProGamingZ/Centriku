@@ -37,6 +37,19 @@ namespace Centriku.Views.Gradebook
          {
             GenerateDynamicColumns(vm);
          }
+         //Auto-scroll logic for Deep-Linking from Dashboard
+         if (e.PropertyName == nameof(GradebookViewModel.SelectedGradebookRow) && sender is GradebookViewModel scrollVm)
+         {
+            if (scrollVm.SelectedGradebookRow != null)
+            {
+               var grid = this.FindControl<DataGrid>("RosterGrid");
+               // Pushes the scroll action to the UI thread to ensure the grid has rendered the row first
+               Avalonia.Threading.Dispatcher.UIThread.Post(() => 
+               {
+                  grid?.ScrollIntoView(scrollVm.SelectedGradebookRow, null);
+               }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
+         }
       }
 
       private void GenerateDynamicColumns(GradebookViewModel vm)

@@ -95,7 +95,9 @@
 
          <!-- DATAGRID (Fills remaining space cleanly, enabling UI Virtualization) -->
          <DataGrid x:Name="RosterGrid" Grid.Row="1" Margin="24,0,24,24" 
-            ItemsSource="{Binding GradebookRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
+            ItemsSource="{Binding GradebookRows}" 
+            SelectedItem="{Binding SelectedGradebookRow, Mode=TwoWay}" 
+            AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
             GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
             CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="4">
             <DataGrid.Columns>
