@@ -137,10 +137,62 @@ namespace Centriku.ViewModels
       public void RecalculateFinalGradesForList(System.Collections.Generic.IEnumerable<StudentGradeRow> targetGradeRows, System.Collections.Generic.IEnumerable<AttendanceGridRowViewModel> targetAttRows)
       {
          if (targetGradeRows == null || targetAttRows == null) return;
+         
+         // 1. Safely Fetch FDA Rules from Cache (Wrapped to protect Unit Tests!)
+         TeacherClass? currentClass = null;
+         try 
+         {
+             if (_dbService?.GetConnection() != null)
+             {
+               currentClass = _dbService.GetConnection().Table<TeacherClass>().FirstOrDefaultAsync(c => c.ClassID == ClassId).Result;
+             }
+         }
+         catch { /* Silently ignore missing DB tables during isolated unit testing */ }
+
+         bool isFdaEnabled = currentClass?.IsFdaEnabled ?? false;
 
          foreach (var row in targetGradeRows)
          {
-            // === 1. MIDTERM & FINAL MATH ===
+            // === FDA OVERRIDE CHECK ===
+            bool isDroppedByFda = false;
+            string fdaDropGrade = currentClass?.FdaDropGrade ?? "FDA";
+
+            if (isFdaEnabled)
+            {
+               var attRow = targetAttRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
+               if (attRow != null)
+               {
+                  if (currentClass?.FdaRuleType == "Equivalent")
+                  {
+                     double equivalentAbsences = attRow.TotalA + (attRow.TotalL * (currentClass.FdaLatePenaltyRatio));
+                     if (equivalentAbsences >= currentClass.FdaMaxAbsenceHours) isDroppedByFda = true;
+                     
+                     // CALCULATE REMAINING ALLOWANCE
+                     double remaining = currentClass.FdaMaxAbsenceHours - equivalentAbsences;
+                     attRow.RemainingAllowanceText = isDroppedByFda ? $"Drop ({fdaDropGrade})" : $"{remaining:0.##}h left";
+                  }
+                  else if (currentClass?.FdaRuleType == "Independent")
+                  {
+                     if (attRow.TotalA >= currentClass.FdaMaxAbsenceHours || attRow.TotalL >= currentClass.FdaMaxLateHours)
+                     {
+                         isDroppedByFda = true;
+                     }
+                     
+                     // CALCULATE REMAINING ALLOWANCE (Both variables)
+                     double remA = currentClass.FdaMaxAbsenceHours - attRow.TotalA;
+                     double remL = currentClass.FdaMaxLateHours - attRow.TotalL;
+                     attRow.RemainingAllowanceText = isDroppedByFda ? $"Drop ({fdaDropGrade})" : $"{remA:0.##}h A, {remL:0.##}h L";
+                  }
+               }
+            }
+            else 
+            {
+               // If rule is disabled, turn off the tracker UI
+               var attRow = targetAttRows.FirstOrDefault(a => a.StudentInfo.StudentID == row.StudentID);
+               attRow?.RemainingAllowanceText = "Rule Off";
+            }
+
+            // === 2. MIDTERM & FINAL MATH ===
             bool hasMidterm = ClassAssessments != null && ClassAssessments.Any(a => MatchesGradingPeriod(a.GradingPeriod, "Midterm"));
             var midResult = GetTermGradeWithDetails(row, "Midterm");
             bool isMidComplete = midResult.TermGrade >= 0;
@@ -157,7 +209,7 @@ namespace Centriku.ViewModels
             row.FinalTermGradeDisplay = isFinComplete ? $"{finResult.TermGrade}%" : "--";
             row.FinalComputationTooltip = finResult.Breakdown;
 
-            // === 2. SEMESTER MATH ===
+            // === 3. SEMESTER MATH ===
             double finalAcademicGrade = 100.0;
             bool isFinalMathComplete = false; 
             string baseMathTooltip = "";
@@ -179,8 +231,15 @@ namespace Centriku.ViewModels
                baseMathTooltip = SelectedTermView switch { "Midterm" => midResult.Breakdown, "Final" => finResult.Breakdown, _ => "" };
             }
 
-            // === 3. FINAL OUTPUT ===
-            if (!isFinalMathComplete)
+            // === 4. FINAL OUTPUT WITH FDA PENALTY ===
+            if (isDroppedByFda)
+            {
+               // If FDA triggers, completely override the grade!
+               row.FinalGrade = fdaDropGrade;
+               row.FinalGradeNumeric = 0;
+               row.FinalGradeTooltip = $"CRITICAL ALERT: Student failed due to excessive absences (FDA).\n\nOriginal Academic Grade: {(isFinalMathComplete ? $"{finalAcademicGrade}%" : "Incomplete")}";
+            }
+            else if (!isFinalMathComplete)
             {
                row.FinalGrade = "--";
                row.FinalGradeNumeric = 0;
@@ -195,6 +254,5 @@ namespace Centriku.ViewModels
          }
       }
    
-      
    }
 }

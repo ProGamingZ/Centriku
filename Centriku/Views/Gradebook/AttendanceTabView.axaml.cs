@@ -51,8 +51,11 @@ namespace Centriku.Views.Gradebook
          var attColL = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalL");
          var attColA = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalA");
          var attColE = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "TotalE");
+         
+         // NEW: Locate our Allowance column
+         var attColRem = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "RemainingAllowanceText"); 
 
-         // 2. Toggle visibility
+         // 2. Toggle visibility (Unchanged)
          if (attColFirstName != null) attColFirstName.IsVisible = vm.ShowFirstName;
          if (attColLastName != null) attColLastName.IsVisible = vm.ShowLastName;
          if (attColP != null) attColP.IsVisible = vm.ShowTotalP;
@@ -60,7 +63,7 @@ namespace Centriku.Views.Gradebook
          if (attColA != null) attColA.IsVisible = vm.ShowTotalA;
          if (attColE != null) attColE.IsVisible = vm.ShowTotalE;
 
-         // 3. WIPE CLEAN: Tell the grid to keep ONLY our 6 fixed columns
+         // 3. WIPE CLEAN: Tell the grid to keep ONLY our fixed columns
          var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
          if (attColFirstName != null) staticColumns.Add(attColFirstName);
          if (attColLastName != null) staticColumns.Add(attColLastName);
@@ -68,6 +71,9 @@ namespace Centriku.Views.Gradebook
          if (attColL != null) staticColumns.Add(attColL);
          if (attColA != null) staticColumns.Add(attColA);
          if (attColE != null) staticColumns.Add(attColE);
+         
+         // Protect the Allowance column from being deleted
+         if (attColRem != null) staticColumns.Add(attColRem); 
 
          var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
          foreach (var col in columnsToRemove) grid.Columns.Remove(col);

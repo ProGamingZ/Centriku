@@ -136,17 +136,26 @@ namespace Centriku.ViewModels
                 var allClassAssessments = _allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 var allClassAssessmentIds = allClassAssessments.Select(a => a.AssessmentID).ToList();
                 var classScores = _allScores.Where(s => allClassAssessmentIds.Contains(s.AssessmentID)).ToList();
+                
+                // NEW: Pre-filter the attendance for this specific class
+                var classAttendance = _allAttendance.Where(a => a.ClassID == teacherClass.ClassID).ToList();
+                
                 var classStudents = activeRosters.Where(r => r.ClassID == teacherClass.ClassID).Select(r => r.StudentID).ToList();
 
-                int failingInThisClassCount = 0; // NEW: Tracker for the Quick Access Card
+                int failingInThisClassCount = 0; 
 
                 foreach (var studentId in classStudents)
                 {
                     if (string.IsNullOrEmpty(studentId)) continue;
 
                     var studentScores = classScores.Where(s => s.StudentID == studentId).ToList();
+                    
+                    // Isolate the student's attendance
+                    var studentAtt = classAttendance.Where(a => a.StudentID == studentId).ToList();
+
                     var termGradesList = new List<TermGradeItem>();
                     bool triggersWarning = false;
+                    bool isFdaCritical = false; // Tracks if we need the red badge!
 
                     var termsToEvaluate = new List<string> { "Midterm", "Final" };
                     double sumOfRawTerms = 0;
@@ -162,10 +171,18 @@ namespace Centriku.ViewModels
                         }
 
                         bool isTerm100Percent = classCategories.All(c => termAssessments.Any(a => a.Category == c.Name && a.MaxScore > 0));
-                        var termResult = GradeCalculationService.EvaluateFinalGrade(classCategories, termAssessments, studentScores, template ?? new GradingTemplate());
+                        
+                        // Pass the class and the raw attendance records
+                        var termResult = GradeCalculationService.EvaluateFinalGrade(
+                            classCategories, termAssessments, studentScores, template ?? new GradingTemplate(), teacherClass, studentAtt);
 
                         bool isFailingTerm = isTerm100Percent && termResult.IsFailing;
-                        if (isFailingTerm) triggersWarning = true;
+                        
+                        if (isFailingTerm) 
+                        {
+                            triggersWarning = true;
+                            if (termResult.IsFda) isFdaCritical = true; // Flag as an absence failure
+                        }
 
                         termGradesList.Add(new TermGradeItem { TermLabel = term, GradeDisplay = termResult.FinalOutput, IsFailing = isFailingTerm });
 
@@ -194,7 +211,7 @@ namespace Centriku.ViewModels
                     if (triggersWarning)
                     {
                         riskCounter++;
-                        failingInThisClassCount++; // NEW: Increment the class tracker
+                        failingInThisClassCount++; 
 
                         var student = _allStudents.FirstOrDefault(s => s.StudentID == studentId);
                         string studentName = student != null ? $"{student.LastName}, {student.FirstName}" : studentId;
@@ -204,16 +221,17 @@ namespace Centriku.ViewModels
                             ClassId = teacherClass.ClassID, 
                             StudentId = studentId, 
                             StudentName = studentName,
-                            // FORMAT UPDATED: BSCS_3C instead of just 3C
                             ClassName = $"{teacherClass.SubjectName} ({teacherClass.Program}_{teacherClass.SectionLabel})", 
-                            AbsencesText = "Failing Academic Grade", 
-                            IsCritical = false, 
+                            
+                            // FIX: Inject FDA context directly into the UI!
+                            AbsencesText = isFdaCritical ? "Exceeded Maximum Allowed Absences (FDA)" : "Failing Academic Grade", 
+                            IsCritical = isFdaCritical, 
+                            
                             TermGrades = new ObservableCollection<TermGradeItem>(termGradesList)
                         });
                     }
                 }
 
-                // Generate the Class Card WITH the failing count
                 int studentCount = classStudents.Count;
                 newCards.Add(new DashboardClassCardViewModel(teacherClass, studentCount, failingInThisClassCount));
             }

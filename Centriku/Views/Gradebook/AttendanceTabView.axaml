@@ -19,26 +19,27 @@
                </StackPanel>
                
                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                     <Button Content="View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15">
-                        <Button.Flyout>
-                              <Flyout Placement="BottomEdgeAlignedRight">
-                                 <StackPanel Spacing="10" Width="200" Margin="10">
-                                    <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                    <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
-                                    <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
-                                    <TextBlock Text="Summary Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                    <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
-                                    <CheckBox Content="Show Total Late (L)" IsChecked="{Binding ShowTotalL}"/>
-                                    <CheckBox Content="Show Total Absent (A)" IsChecked="{Binding ShowTotalA}"/>
-                                    <CheckBox Content="Show Total Excused (E)" IsChecked="{Binding ShowTotalE}"/>
-                                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
-                                    <TextBlock Text="📅 Date Range Filter" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                    <ComboBox ItemsSource="{Binding AvailableMonths}" SelectedItem="{Binding SelectedMonthFilter}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
-                                 </StackPanel>
-                              </Flyout>
-                        </Button.Flyout>
-                     </Button>
-                     <Button Command="{Binding ToggleAddRollCallCommand}" Content="Add Roll Call Day" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,0,15"/>
+                  <Button Command="{Binding OpenFdaSettingsCommand}" Content="Attendance Drop Rules" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
+                  <Button Content="View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15">
+                     <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                           <StackPanel Spacing="10" Width="200" Margin="10">
+                              <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                              <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}"/>
+                              <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}"/>
+                              <TextBlock Text="Summary Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                              <CheckBox Content="Show Total Present (P)" IsChecked="{Binding ShowTotalP}"/>
+                              <CheckBox Content="Show Total Late (L)" IsChecked="{Binding ShowTotalL}"/>
+                              <CheckBox Content="Show Total Absent (A)" IsChecked="{Binding ShowTotalA}"/>
+                              <CheckBox Content="Show Total Excused (E)" IsChecked="{Binding ShowTotalE}"/>
+                              <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
+                              <TextBlock Text="📅 Date Range Filter" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                              <ComboBox ItemsSource="{Binding AvailableMonths}" SelectedItem="{Binding SelectedMonthFilter}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                           </StackPanel>
+                        </Flyout>
+                     </Button.Flyout>
+                  </Button>
+                  <Button Command="{Binding ToggleAddRollCallCommand}" Content="Add Roll Call Day" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,0,15"/>
                </WrapPanel>
             </Grid>
             <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
@@ -50,7 +51,7 @@
             <!-- DATAGRID (Fills remaining space cleanly, enabling UI Virtualization) -->
             <DataGrid x:Name="AttendanceGrid" Grid.Column="0" 
                ItemsSource="{Binding AttendanceGridRows}" AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="AttendanceGrid_CurrentCellChanged"
-               GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="6">
+               GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="7">
                <DataGrid.Columns>
                   <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" SortMemberPath="LastName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="*"/>
                   <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" SortMemberPath="FirstName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="*"/>
@@ -62,6 +63,7 @@
                         <DataTemplate><TextBlock Text="{Binding TotalE}" HorizontalAlignment="Center" VerticalAlignment="Center"/></DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
+                  <DataGridTextColumn Header="Hours Left" Binding="{Binding RemainingAllowanceText}" SortMemberPath="RemainingAllowanceText" CanUserSort="False" IsReadOnly="True" Width="Auto" Foreground="{DynamicResource TextMutedBrush}"/>
                </DataGrid.Columns>
             </DataGrid>
 
@@ -107,6 +109,8 @@
                <WrapPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,25">
                   <TextBlock Text="Select Date:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,15,10"/>
                   <CalendarDatePicker SelectedDate="{Binding NewRollCallDate}" Background="{DynamicResource AppBackground}" Margin="0,0,15,10"/>
+                  <TextBlock Text="Meeting Duration (Hrs):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,15,10"/>
+                  <NumericUpDown Value="{Binding NewRollCallHours}" ShowButtonSpinner="False" Minimum="0.5" Maximum="8.0" Increment="0.5" Background="{DynamicResource AppBackground}" Margin="0,0,15,10" Width="100"/>
                   <TextBlock Text="(All students will default to Present)" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" FontStyle="Italic" Margin="0,0,0,10"/>
                </WrapPanel>
                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
@@ -114,6 +118,51 @@
                   <Button Command="{Binding SaveRollCallCommand}" Content="Generate Column" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10"/>
                </StackPanel>
             </Grid>
+         </Border>
+      </Border>
+
+      <Border IsVisible="{Binding IsFdaModalOpen}" Background="#B3000000" ZIndex="95">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="30" Margin="40" MaxWidth="500" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+            <StackPanel Spacing="15">
+               <TextBlock Text="Failure Due to Absences (FDA)" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+               <TextBlock Text="Configure automatic failing grades for excessive absences." Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+               
+               <ToggleSwitch x:Name="FdaToggle" Content="Enable Automatic FDA Drop" IsChecked="{Binding FdaSettingsClass.IsFdaEnabled}" FontWeight="SemiBold"/>
+               
+               <StackPanel IsEnabled="{Binding #FdaToggle.IsChecked}" Spacing="15" Margin="0,10,0,0">
+                  <TextBlock Text="Rule Type:" FontWeight="SemiBold"/>
+                  <RadioButton Content="Equivalent (Lates convert to Absences)" IsChecked="{Binding IsFdaEquivalentRule}"/>
+                  <RadioButton Content="Independent (Separate limits for Lates and Absences)" IsChecked="{Binding IsFdaIndependentRule}"/>
+                  
+                  <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" Margin="0,10,0,0">
+                     <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,10,10">
+                        <TextBlock Text="Max Absent Hours" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <NumericUpDown Value="{Binding FdaSettingsClass.FdaMaxAbsenceHours}" ShowButtonSpinner="False" Minimum="1" Increment="0.5" Background="{DynamicResource AppBackground}"/>
+                     </StackPanel>
+                     
+                     <!-- Note: Keep IsVisible here so the irrelevant rule fields still hide cleanly based on the RadioButton! -->
+                     <StackPanel Grid.Column="1" Grid.Row="0" Margin="10,0,0,10" IsVisible="{Binding IsFdaEquivalentRule}">
+                        <TextBlock Text="Late Penalty Ratio (e.g. 0.33)" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <NumericUpDown Value="{Binding FdaSettingsClass.FdaLatePenaltyRatio}" ShowButtonSpinner="False" Minimum="0.1" Increment="0.1" Background="{DynamicResource AppBackground}"/>
+                     </StackPanel>
+                     
+                     <StackPanel Grid.Column="1" Grid.Row="0" Margin="10,0,0,10" IsVisible="{Binding IsFdaIndependentRule}">
+                        <TextBlock Text="Max Late Hours" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <NumericUpDown Value="{Binding FdaSettingsClass.FdaMaxLateHours}" ShowButtonSpinner="False" Minimum="1" Increment="0.5" Background="{DynamicResource AppBackground}"/>
+                     </StackPanel>
+                  </Grid>
+                  
+                  <StackPanel Margin="0,5,0,0">
+                     <TextBlock Text="Failing Grade to Apply (e.g., '5.0', 'DRP')" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                     <TextBox Text="{Binding FdaSettingsClass.FdaDropGrade}" Background="{DynamicResource AppBackground}"/>
+                  </StackPanel>
+               </StackPanel>
+               
+               <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,20,0,0">
+                  <Button Command="{Binding CloseFdaModalCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
+                  <Button Command="{Binding SaveFdaSettingsCommand}" Content="Save Rules" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10"/>
+               </StackPanel>
+            </StackPanel>
          </Border>
       </Border>
 

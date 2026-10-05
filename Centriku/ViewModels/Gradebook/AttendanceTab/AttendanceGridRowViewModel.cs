@@ -12,10 +12,10 @@ namespace Centriku.ViewModels
 
         public System.Collections.Generic.Dictionary<string, AttendanceCellViewModel> Cells { get; set; } = [];
 
-        public int TotalP => Cells.Values.Count(c => c.Status == "P");
-        public int TotalL => Cells.Values.Count(c => c.Status == "L");
-        public int TotalA => Cells.Values.Count(c => c.Status == "A");
-        public int TotalE => Cells.Values.Count(c => c.Status == "E");
+        public double TotalP => Cells.Values.Where(c => c.Status == "P").Sum(c => c.DbModel.SessionHours);
+        public double TotalL => Cells.Values.Where(c => c.Status == "L").Sum(c => c.DbModel.SessionHours);
+        public double TotalA => Cells.Values.Where(c => c.Status == "A").Sum(c => c.DbModel.SessionHours);
+        public double TotalE => Cells.Values.Where(c => c.Status == "E").Sum(c => c.DbModel.SessionHours);
         
         public void RefreshTotals()
         {
@@ -24,7 +24,7 @@ namespace Centriku.ViewModels
             OnPropertyChanged(nameof(TotalA));
             OnPropertyChanged(nameof(TotalE));
         }
-
+        [ObservableProperty] public partial string RemainingAllowanceText { get; set; } = "--";
         public AttendanceGridRowViewModel(Student student)
         {
             StudentInfo = student;

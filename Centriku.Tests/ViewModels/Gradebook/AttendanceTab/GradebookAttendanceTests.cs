@@ -36,15 +36,15 @@ namespace Centriku.Tests.ViewModels.Gradebook
                 AttendanceDates = new ObservableCollection<DateTime>() 
             };
 
-            // Open the panel and set a date
+            // Open the panel and set a date AND hours
             vm.IsAddingRollCall = true;
             vm.NewRollCallDate = new DateTime(2026, 10, 4);
+            vm.NewRollCallHours = 2.0; // NEW: Set the meeting duration
 
             // 2. ACT
             vm.SaveRollCallCommand.Execute(null);
 
-            // SYNCHRONIZATION: SaveRollCallDay is an 'async void' method, 
-            // so we give SQLite 100ms to finish the bulk insert before asserting.
+            // SYNCHRONIZATION: SaveRollCallDay is an 'async void' method
             await Task.Delay(100);
 
             // 3. ASSERT
@@ -53,9 +53,9 @@ namespace Centriku.Tests.ViewModels.Gradebook
             // Expect 3 records: 1 GHOST_DATE UI anchor + 2 actual students
             Assert.Equal(3, records.Count);
             
-            // Prove default "Present" values were assigned
-            Assert.Contains(records, r => r.StudentID == "S-001" && r.Status == "P");
-            Assert.Contains(records, r => r.StudentID == "S-002" && r.Status == "P");
+            // NEW: Prove default "Present" values AND the 2.0 SessionHours were assigned!
+            Assert.Contains(records, r => r.StudentID == "S-001" && r.Status == "P" && r.SessionHours == 2.0);
+            Assert.Contains(records, r => r.StudentID == "S-002" && r.Status == "P" && r.SessionHours == 2.0);
             
             // Prove the UI panel closed automatically upon success
             Assert.False(vm.IsAddingRollCall);

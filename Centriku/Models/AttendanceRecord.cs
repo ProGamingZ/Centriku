@@ -20,5 +20,6 @@ namespace Centriku.Models
         public string? Status { get; set; } 
 
         public string? Reason { get; set; }
+        public double SessionHours { get; set; } = 1.5;
     }
 }

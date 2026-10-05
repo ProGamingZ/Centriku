@@ -57,7 +57,7 @@ namespace Centriku.Tests.ViewModels
             vm.SelectedYear = "2025-2026";
             await Task.Delay(50);
             Assert.Single(vm.ClassCards);
-            Assert.Equal("Mobile Prog - ", vm.ClassCards[0].FullTitle);
+            Assert.Equal("Mobile Prog", vm.ClassCards[0].FullTitle);
         }
 
         [Fact]

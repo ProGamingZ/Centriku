@@ -16,6 +16,7 @@ namespace Centriku.ViewModels
          
          [ObservableProperty] public partial bool IsAddingRollCall { get; set; } = false;
          [ObservableProperty] public partial System.DateTime? NewRollCallDate { get; set; } = System.DateTime.Today;
+         [ObservableProperty] public partial double NewRollCallHours { get; set; } = 1.5;
          private System.DateTime? _editingRollCallDate = null;
          [ObservableProperty] public partial ObservableCollection<string> AvailableMonths { get; set; } = new();
          [ObservableProperty] public partial string SelectedMonthFilter { get; set; } = "All Months";
@@ -72,13 +73,13 @@ namespace Centriku.ViewModels
                   // Build a list in memory
                   var newRecords = new System.Collections.Generic.List<AttendanceRecord>
                   {
-                     new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST" }
+                     new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST", SessionHours = NewRollCallHours }
                   };
 
                   var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
                   foreach (var r in roster)
                   {
-                     newRecords.Add(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P" });
+                     newRecords.Add(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P", SessionHours = NewRollCallHours });
                   }
 
                   // BULK INSERT
@@ -138,7 +139,54 @@ namespace Centriku.ViewModels
             _editingRollCallDate = null;
             NewRollCallDate = System.DateTime.Today;
             IsAddingRollCall = false;
+            NewRollCallHours = 1.5;
          }
+
+         [ObservableProperty] public partial bool IsFdaModalOpen { get; set; } = false;
+         [ObservableProperty] public partial TeacherClass? FdaSettingsClass { get; set; }
+         
+         // Helper for UI Radio Buttons
+         public bool IsFdaEquivalentRule 
+         { 
+             get => FdaSettingsClass?.FdaRuleType == "Equivalent";
+             set { if (value && FdaSettingsClass != null) { FdaSettingsClass.FdaRuleType = "Equivalent"; OnPropertyChanged(); OnPropertyChanged(nameof(IsFdaIndependentRule)); } }
+         }
+         public bool IsFdaIndependentRule 
+         { 
+             get => FdaSettingsClass?.FdaRuleType == "Independent";
+             set { if (value && FdaSettingsClass != null) { FdaSettingsClass.FdaRuleType = "Independent"; OnPropertyChanged(); OnPropertyChanged(nameof(IsFdaEquivalentRule)); } }
+         }
+
+         [RelayCommand]
+         public async Task OpenFdaSettingsAsync()
+         {
+             var db = _dbService.GetConnection();
+             FdaSettingsClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+             if (FdaSettingsClass != null)
+             {
+                 OnPropertyChanged(nameof(IsFdaEquivalentRule));
+                 OnPropertyChanged(nameof(IsFdaIndependentRule));
+                 IsFdaModalOpen = true;
+             }
+         }
+
+         [RelayCommand]
+         public async Task SaveFdaSettingsAsync()
+         {
+             if (FdaSettingsClass != null)
+             {
+                 IsProcessing = true;
+                 var db = _dbService.GetConnection();
+                 await db.UpdateAsync(FdaSettingsClass);
+                 IsProcessing = false;
+                 IsFdaModalOpen = false;
+                 
+                 ShowToastMessage?.Invoke("Attendance FDA Rules updated.");
+                 RecalculateFinalGrades(); // Re-run the math engine!
+             }
+         }
+         [RelayCommand] public void CloseFdaModal() => IsFdaModalOpen = false;
+
       #endregion
 
       

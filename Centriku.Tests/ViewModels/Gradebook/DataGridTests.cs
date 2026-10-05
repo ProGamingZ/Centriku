@@ -16,22 +16,22 @@ namespace Centriku.Tests.ViewModels.Gradebook
             var student = new Student { FirstName = "John", LastName = "Doe" };
             var row = new AttendanceGridRowViewModel(student);
 
-            // Add some mock attendance cells
-            row.Cells["Day1"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "P" }, () => {}, null!);
-            row.Cells["Day2"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "P" }, () => {}, null!);
-            row.Cells["Day3"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "A" }, () => {}, null!);
-            row.Cells["Day4"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "L" }, () => {}, null!);
+            // Add some mock attendance cells. (SessionHours defaults to 1.5 hrs per record)
+            row.Cells["Day1"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "P", SessionHours = 1.5 }, () => {}, null!);
+            row.Cells["Day2"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "P", SessionHours = 1.5 }, () => {}, null!);
+            row.Cells["Day3"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "A", SessionHours = 1.5 }, () => {}, null!);
+            row.Cells["Day4"] = new AttendanceCellViewModel(mockDb.Object, new AttendanceRecord { Status = "L", SessionHours = 1.5 }, () => {}, null!);
 
             // 2. ACT
-            // The row calculates these properties dynamically based on the dictionary
-            int presents = row.TotalP;
-            int absences = row.TotalA;
-            int lates = row.TotalL;
+            // Changed from int to double to support fractional contact hours
+            double presents = row.TotalP;
+            double absences = row.TotalA;
+            double lates = row.TotalL;
 
             // 3. ASSERT
-            Assert.Equal(2, presents);
-            Assert.Equal(1, absences);
-            Assert.Equal(1, lates);
+            Assert.Equal(3.0, presents); // 2 days * 1.5 hrs
+            Assert.Equal(1.5, absences); // 1 day * 1.5 hrs
+            Assert.Equal(1.5, lates);    // 1 day * 1.5 hrs
         }
 
         [Fact]
