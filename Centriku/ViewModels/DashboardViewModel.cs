@@ -23,6 +23,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial int ActiveClasses { get; set; } = 0;
         [ObservableProperty] public partial int InactiveClasses { get; set; } = 0;
         [ObservableProperty] public partial int NeedsAttention { get; set; } = 0;
+        [ObservableProperty] public partial int CriticalFailuresCount { get; set; } = 0;
         [ObservableProperty] public partial ObservableCollection<AttentionAlertViewModel> CriticalAlerts { get; set; } = new();
         public bool HasNoCriticalAlerts { get; set; } = true;
         partial void OnNeedsAttentionChanged(int value) => OnPropertyChanged(nameof(HasNoAlerts));
@@ -274,6 +275,7 @@ namespace Centriku.ViewModels
             }
             
             NeedsAttention = riskCounter;
+            CriticalFailuresCount = failedCounter;
             ClassCards = newCards; 
             AttentionAlerts = new ObservableCollection<AttentionAlertViewModel>(newAlerts);
             
