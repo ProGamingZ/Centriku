@@ -234,7 +234,7 @@
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15" MinWidth="120">
                         <TextBlock Text="Max Score*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <NumericUpDown Value="{Binding NewAssessmentMaxScore}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
+                        <NumericUpDown Value="{Binding NewAssessmentMaxScore, Converter={StaticResource SafeDoubleConverter}}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15" MinWidth="130">
                         <TextBlock Text="Format*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
