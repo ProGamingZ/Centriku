@@ -51,7 +51,6 @@ namespace Centriku
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .WithDeveloperTools()
                 .WithInterFont()
                 .LogToTrace();
     }
