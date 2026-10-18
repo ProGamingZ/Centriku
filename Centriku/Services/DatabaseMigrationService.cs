@@ -9,14 +9,15 @@ namespace Centriku.Services
 {
     public class DatabaseMigrationService
     {
-        public const int TARGET_SCHEMA_VERSION = 5;
+        public const int TARGET_SCHEMA_VERSION = 6;
 
         private readonly Dictionary<int, Func<SQLiteAsyncConnection, Task>> _migrationScripts = new()
         {
             { 2, MigrateToVersion2Async },
             { 3, MigrateToVersion3Async },
             { 4, MigrateToVersion4Async },
-            { 5, MigrateToVersion5Async } 
+            { 5, MigrateToVersion5Async },
+            { 6, MigrateToVersion6Async }
         };
 
         public async Task RunMigrationsAsync(SQLiteAsyncConnection db)
@@ -147,5 +148,30 @@ namespace Centriku.Services
                 // SAFE CATCH: If the column already exists (e.g., from a partial previous run), this is harmless.
             }
         }
+    
+        private static async Task MigrateToVersion6Async(SQLiteAsyncConnection db)
+        {
+            // Type-Safe ORM Migration: Automatically resolves [Table] names without raw SQL guessing!
+            var records = await db.Table<AttendanceRecord>().ToListAsync();
+            var recordsToUpdate = records.Where(r => r.SessionHours <= 0).ToList();
+            foreach (var r in recordsToUpdate) r.SessionHours = 1.5;
+            if (recordsToUpdate.Count > 0) await db.UpdateAllAsync(recordsToUpdate);
+
+            var classes = await db.Table<TeacherClass>().ToListAsync();
+            var classesToUpdate = new List<TeacherClass>();
+            foreach (var c in classes)
+            {
+                bool changed = false;
+                if (string.IsNullOrWhiteSpace(c.FdaRuleType)) { c.FdaRuleType = "Equivalent"; changed = true; }
+                if (c.FdaMaxAbsenceHours <= 0) { c.FdaMaxAbsenceHours = 10.0; changed = true; }
+                if (c.FdaLatePenaltyRatio <= 0) { c.FdaLatePenaltyRatio = 0.33; changed = true; }
+                if (c.FdaMaxLateHours <= 0) { c.FdaMaxLateHours = 6.0; changed = true; }
+                if (string.IsNullOrWhiteSpace(c.FdaDropGrade) || c.FdaDropGrade == "FDA") { c.FdaDropGrade = "5.0"; changed = true; }
+                if (changed) classesToUpdate.Add(c);
+            }
+            if (classesToUpdate.Count > 0) await db.UpdateAllAsync(classesToUpdate);
+        }
+
+
     }
 }
