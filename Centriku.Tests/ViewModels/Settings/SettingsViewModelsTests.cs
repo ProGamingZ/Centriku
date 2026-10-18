@@ -46,6 +46,7 @@ namespace Centriku.Tests.ViewModels.Settings
         {
             // 1. ARRANGE
             var fakeDb = new FakeDatabaseService();
+            await fakeDb.PrepareSettingsTablesAsync(); // Uses Factory helper!
             var vm = new SystemSettingsViewModel(fakeDb);
             
             // Start with a blank slate
@@ -57,6 +58,26 @@ namespace Centriku.Tests.ViewModels.Settings
             // 3. ASSERT
             Assert.Equal("Healthy", vm.DbStatus);
             Assert.Contains("Result: ok", vm.DiagnosticOutput);
+        }
+        [Fact]
+        public async Task SystemSettings_OptimizeSystem_ShouldUpdateUIStatusAndFeedback()
+        {
+            // 1. ARRANGE
+            var fakeDb = new FakeDatabaseService();
+            await fakeDb.PrepareSettingsTablesAsync();
+            var db = fakeDb.GetConnection();
+
+            // Seed 1 orphaned score
+            await db.InsertAsync(new Centriku.Models.Score { AssessmentID = 999, StudentID = "GHOST-01", PointsEarned = 50 });
+
+            var vm = new SystemSettingsViewModel(fakeDb);
+
+            // 2. ACT
+            await vm.OptimizeSystemCommand.ExecuteAsync(null);
+
+            // 3. ASSERT
+            Assert.Equal("Healthy", vm.DbStatus);
+            Assert.Contains("Cleaned 1 unused ghost record(s)", vm.StandardFeedbackMessage);
         }
     }
 }

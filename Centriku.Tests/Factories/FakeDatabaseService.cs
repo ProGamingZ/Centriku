@@ -25,9 +25,17 @@ namespace Centriku.Tests.Factories
         // Helper to quickly prep the tables needed for Settings tests
         public async Task PrepareSettingsTablesAsync()
         {
-            await _db.CreateTableAsync<AppSettings>();
+            await _db.CreateTablesAsync(CreateFlags.None,
+                typeof(AppSettings), typeof(Student), typeof(TeacherClass),
+                typeof(ClassRoster), typeof(Assessment), typeof(Score),
+                typeof(AttendanceRecord));
+
             // Enforcing Id = 1 ensures we don't trip SQLite auto-increment constraints
-            await _db.InsertAsync(new AppSettings { Id = 1, DatabaseSchemaVersion = 5 });
+            await _db.InsertAsync(new AppSettings 
+            { 
+                Id = 1, 
+                DatabaseSchemaVersion = DatabaseMigrationService.TARGET_SCHEMA_VERSION 
+            });
         }
     }
 }
