@@ -34,6 +34,8 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<Assessment> CopyFromAssessments { get; set; } = new();
         [ObservableProperty] public partial Assessment? SelectedCopyFromAssessment { get; set; }
 
+        private readonly System.Threading.SemaphoreSlim _groupDbLock = new(1, 1);
+
         partial void OnSelectedGroupAssessmentChanged(Assessment? value)
         {
             _ = LoadGroupsForSelectedAssessmentAsync();
@@ -51,18 +53,18 @@ namespace Centriku.ViewModels
             
             AvailableGroupAssessments = new ObservableCollection<Assessment>(groupAssessments);
 
-            if (previousSelectedId.HasValue)
+            Assessment? nextSelection = previousSelectedId.HasValue
+                ? AvailableGroupAssessments.FirstOrDefault(a => a.AssessmentID == previousSelectedId.Value) ?? AvailableGroupAssessments.FirstOrDefault()
+                : AvailableGroupAssessments.FirstOrDefault();
+
+            if (!ReferenceEquals(SelectedGroupAssessment, nextSelection))
             {
-                // Find the matching object in the NEW list and re-select it
-                SelectedGroupAssessment = AvailableGroupAssessments.FirstOrDefault(a => a.AssessmentID == previousSelectedId.Value) 
-                                          ?? AvailableGroupAssessments.FirstOrDefault();
+                SelectedGroupAssessment = nextSelection;
             }
             else
             {
-                SelectedGroupAssessment = AvailableGroupAssessments.FirstOrDefault();
+                await LoadGroupsForSelectedAssessmentAsync();
             }
-            
-            await LoadGroupsForSelectedAssessmentAsync();
         }
 
         public async Task LoadGroupsForSelectedAssessmentAsync()
@@ -124,73 +126,83 @@ namespace Centriku.ViewModels
 
         public async Task SaveAndSyncGroupGradeAsync(GroupCardViewModel groupCard)
         {
-            if (SelectedGroupAssessment == null) return;
-            var db = _dbService.GetConnection();
+            if (SelectedGroupAssessment == null || groupCard == null) return;
 
-            // 1. Persist group score
-            await db.UpdateAsync(groupCard.DbModel);
-
-            double gWeight = SelectedGroupAssessment.GroupWeight / 100.0;
-            double iWeight = SelectedGroupAssessment.IndividualWeight / 100.0;
-
-            var membersToUpdate = new List<AssessmentGroupMember>();
-            var scoresToInsert = new List<Score>();
-            var scoresToUpdate = new List<Score>();
-
-            // Fetch all existing scores for this group in ONE query instead of inside a loop
-            var memberIds = groupCard.Members.Select(m => m.StudentID).ToList();
-            var existingScores = await db.Table<Score>()
-                .Where(s => s.AssessmentID == SelectedGroupAssessment.AssessmentID
-                    && s.StudentID != null
-                    && memberIds.Contains(s.StudentID))
-                .ToListAsync();;
-
-            // 2. Prepare all the data in memory instantly
-            foreach (var member in groupCard.Members)
+            await _groupDbLock.WaitAsync();
+            try
             {
-                membersToUpdate.Add(member.DbModel);
+                var db = _dbService.GetConnection();
+                int assessmentId = SelectedGroupAssessment.AssessmentID;
+                double maxScore = SelectedGroupAssessment.MaxScore;
 
-                // Math: Student Grade = (GroupScore * GroupWeight) + (IndividualScore * IndividualWeight)
-                double totalEarned = groupCard.GroupScore + member.IndividualScore;
-                totalEarned = Math.Min(SelectedGroupAssessment.MaxScore, Math.Max(0, totalEarned));
-                
-                var scoreRecord = existingScores.FirstOrDefault(s => s.StudentID == member.StudentID);
+                // 1. Persist group score
+                await db.UpdateAsync(groupCard.DbModel);
 
-                if (scoreRecord == null)
+                var membersToUpdate = new List<AssessmentGroupMember>();
+                var scoresToInsert = new List<Score>();
+                var scoresToUpdate = new List<Score>();
+
+                var memberIds = groupCard.Members.Select(m => m.StudentID).ToList();
+                var existingScores = await db.Table<Score>()
+                    .Where(s => s.AssessmentID == assessmentId
+                        && s.StudentID != null
+                        && memberIds.Contains(s.StudentID))
+                    .ToListAsync();
+
+                // 2. Prepare all the data in memory
+                foreach (var member in groupCard.Members)
                 {
-                    scoresToInsert.Add(new Score
+                    membersToUpdate.Add(member.DbModel);
+
+                    double totalEarned = groupCard.GroupScore + member.IndividualScore;
+                    totalEarned = Math.Min(maxScore, Math.Max(0, totalEarned));
+                    
+                    var scoreRecord = existingScores.FirstOrDefault(s => s.StudentID == member.StudentID);
+
+                    if (scoreRecord == null)
                     {
-                        AssessmentID = SelectedGroupAssessment.AssessmentID,
-                        StudentID = member.StudentID,
-                        PointsEarned = totalEarned
-                    });
-                }
-                else
-                {
-                    scoreRecord.PointsEarned = totalEarned;
-                    scoresToUpdate.Add(scoreRecord);
+                        scoreRecord = new Score
+                        {
+                            AssessmentID = assessmentId,
+                            StudentID = member.StudentID,
+                            PointsEarned = totalEarned
+                        };
+                        scoresToInsert.Add(scoreRecord);
+                    }
+                    else
+                    {
+                        scoreRecord.PointsEarned = totalEarned;
+                        scoresToUpdate.Add(scoreRecord);
+                    }
+
+                    var gradebookRow = _allGradebookRows.FirstOrDefault(r => r.StudentID == member.StudentID);
+                    if (gradebookRow != null)
+                    {
+                        gradebookRow.Scores[assessmentId] = new ScoreCellViewModel(_dbService, scoreRecord, maxScore, RecalculateFinalGrades);
+                    }
                 }
 
-                // Update in-memory Grades sheet row instantly for UI responsiveness
-                var gradebookRow = GradebookRows.FirstOrDefault(r => r.StudentID == member.StudentID);
-                if (gradebookRow != null && gradebookRow.Scores.ContainsKey(SelectedGroupAssessment.AssessmentID))
+                // 3. Execute DB writes with runInTransaction: false (Protected by _groupDbLock, avoiding savepoint bugs)
+                if (membersToUpdate.Count > 0) await db.UpdateAllAsync(membersToUpdate, runInTransaction: false);
+                if (scoresToInsert.Count > 0) await db.InsertAllAsync(scoresToInsert, runInTransaction: false);
+                if (scoresToUpdate.Count > 0) await db.UpdateAllAsync(scoresToUpdate, runInTransaction: false);
+
+                groupCard.UpdateAllMemberTotals();
+
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    gradebookRow.Scores[SelectedGroupAssessment.AssessmentID].PointsEarned = totalEarned;
-                }
+                    TriggerGridRedraw();
+                    RecalculateFinalGrades();
+                });
             }
-
-            // 3. Execute all DB operations in BULK (Instantaneous)
-            await db.UpdateAllAsync(membersToUpdate);
-            if (scoresToInsert.Any()) await db.InsertAllAsync(scoresToInsert, runInTransaction: true);
-            if (scoresToUpdate.Any()) await db.UpdateAllAsync(scoresToUpdate, runInTransaction: true);
-
-            groupCard.UpdateAllMemberTotals();
-
-            // 4. Run the heavy final grade recalculation in the background so the UI doesn't freeze!
-            _ = Task.Run(() => 
+            catch (Exception ex)
             {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => RecalculateFinalGrades());
-            });
+                ShowToastMessage?.Invoke($"Error saving group score: {ex.Message}");
+            }
+            finally
+            {
+                _groupDbLock.Release();
+            }
         }
 
         [RelayCommand]
@@ -253,6 +265,7 @@ namespace Centriku.ViewModels
             if (SelectedGroupAssessment == null || string.IsNullOrWhiteSpace(NewGroupNameInput)) return;
             IsProcessing = true;
             
+            await _groupDbLock.WaitAsync();
             try
             {
                 var db = _dbService.GetConnection();
@@ -275,23 +288,39 @@ namespace Centriku.ViewModels
                     return;
                 }
 
-                var newGroup = new AssessmentGroup { AssessmentID = SelectedGroupAssessment.AssessmentID, ClassID = ClassId, GroupName = trimmedName, GroupScore = 0 };
+                var newGroup = new AssessmentGroup 
+                { 
+                    AssessmentID = SelectedGroupAssessment.AssessmentID, 
+                    ClassID = ClassId, 
+                    GroupName = trimmedName, 
+                    GroupScore = 0 
+                };
                 
-                // BULK TRANSACTION: Insert the group and all members in a single lock
-                await db.RunInTransactionAsync(tran => 
+                await db.InsertAsync(newGroup);
+
+                var newMembers = selectedStudents.Select(student => new AssessmentGroupMember
                 {
-                    tran.Insert(newGroup); // Generates the ID instantly
-                    foreach (var student in selectedStudents)
-                    {
-                        tran.Insert(new AssessmentGroupMember { GroupID = newGroup.GroupID, AssessmentID = SelectedGroupAssessment.AssessmentID, StudentID = student.Student.StudentID!, IndividualScore = 0 });
-                    }
-                });
+                    GroupID = newGroup.GroupID,
+                    AssessmentID = SelectedGroupAssessment.AssessmentID,
+                    StudentID = student.Student.StudentID!,
+                    IndividualScore = 0
+                }).ToList();
+
+                await db.InsertAllAsync(newMembers, runInTransaction: false);
 
                 IsCreatingGroupModalOpen = false;
                 await LoadGroupsForSelectedAssessmentAsync();
                 ShowToastMessage?.Invoke($"Group '{newGroup.GroupName}' created successfully.");
             }
-            finally { IsProcessing = false; }
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error creating group: {ex.Message}");
+            }
+            finally 
+            { 
+                _groupDbLock.Release();
+                IsProcessing = false; 
+            }
         }
 
         [RelayCommand]
@@ -309,35 +338,48 @@ namespace Centriku.ViewModels
                 $"Are you sure you want to delete '{targetGroup.GroupName}'?\n\nThis will remove the group and permanently erase all scores for its members in this assessment.",
                 async () =>
                 {
-                    var db = _dbService.GetConnection();
-                    
-                    // 1. Fetch the members safely using the ORM
-                    var membersToWipe = await db.Table<AssessmentGroupMember>()
-                                                .Where(m => m.GroupID == targetGroup.GroupID)
-                                                .ToListAsync();
-                                                
-                    var studentIds = membersToWipe.Select(m => m.StudentID).Where(id => id != null).ToList();
-
-                    // 2. Fetch their associated scores
-                    var scoresToDelete = new System.Collections.Generic.List<Score>();
-                    if (studentIds.Any())
+                    await _groupDbLock.WaitAsync();
+                    try
                     {
-                        scoresToDelete = await db.Table<Score>()
-                            .Where(s => s.AssessmentID == assessmentId && s.StudentID != null && studentIds.Contains(s.StudentID))
-                            .ToListAsync();
+                        var db = _dbService.GetConnection();
+                        
+                        // 1. Fetch the members safely
+                        var membersToWipe = await db.Table<AssessmentGroupMember>()
+                                                    .Where(m => m.GroupID == targetGroup.GroupID)
+                                                    .ToListAsync();
+                                                    
+                        var studentIds = membersToWipe.Select(m => m.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToList();
+
+                        // 2. Fetch their associated scores
+                        var scoresToDelete = new List<Score>();
+                        if (studentIds.Count > 0)
+                        {
+                            scoresToDelete = await db.Table<Score>()
+                                .Where(s => s.AssessmentID == assessmentId && s.StudentID != null && studentIds.Contains(s.StudentID))
+                                .ToListAsync();
+                        }
+
+                        foreach (var s in scoresToDelete) await db.DeleteAsync(s);
+                        foreach (var m in membersToWipe) await db.DeleteAsync(m);
+                        await db.DeleteAsync(targetGroup);
+                        
+                        IsDeleteGroupModalOpen = false;
+                        DeleteGroupModal = null;
+
+                        await LoadGradebookData();
+                        await LoadGroupsForSelectedAssessmentAsync();
+                        ShowToastMessage?.Invoke($"Deleted '{targetGroup.GroupName}'.");
                     }
-
-                    // 3. Safe ORM Transaction
-                    await db.RunInTransactionAsync(tran => 
+                    catch (Exception ex)
                     {
-                        foreach (var s in scoresToDelete) tran.Delete(s);
-                        foreach (var m in membersToWipe) tran.Delete(m);
-                        tran.Delete(targetGroup);
-                    });
-                    
-                    await LoadGroupsForSelectedAssessmentAsync();
-                    RecalculateFinalGrades();
-                    ShowToastMessage?.Invoke($"Deleted '{targetGroup.GroupName}'.");
+                        IsDeleteGroupModalOpen = false;
+                        DeleteGroupModal = null;
+                        ShowToastMessage?.Invoke($"Error deleting group: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _groupDbLock.Release();
+                    }
                 },
                 () => { IsDeleteGroupModalOpen = false; DeleteGroupModal = null; }
             );
@@ -422,24 +464,33 @@ namespace Centriku.ViewModels
                 var membersToAdd = selectedStudents.Where(s => !existingMemberIds.Contains(s.StudentID)).ToList();
 
                 // BULK TRANSACTION: Replaces the slow N+1 foreach loops!
-                await db.RunInTransactionAsync(tran => 
+                await _groupDbLock.WaitAsync();
+                try
                 {
-                    tran.Update(_groupToEdit.DbModel);
-                    
-                    foreach (var m in membersToRemove) tran.Delete(m.DbModel);
-                    foreach (var s in scoresToRemove) tran.Delete(s);
-                    
+                    await db.UpdateAsync(_groupToEdit.DbModel);
+                    foreach (var m in membersToRemove) await db.DeleteAsync(m.DbModel);
+                    foreach (var s in scoresToRemove) await db.DeleteAsync(s);
                     foreach (var s in membersToAdd)
                     {
-                        tran.Insert(new AssessmentGroupMember { GroupID = _groupToEdit.DbModel.GroupID, AssessmentID = SelectedGroupAssessment.AssessmentID, StudentID = s.StudentID, IndividualScore = 0 });
+                        await db.InsertAsync(new AssessmentGroupMember 
+                        { 
+                            GroupID = _groupToEdit.DbModel.GroupID, 
+                            AssessmentID = SelectedGroupAssessment.AssessmentID, 
+                            StudentID = s.StudentID, 
+                            IndividualScore = 0 
+                        });
                     }
-                });
+                }
+                finally
+                {
+                    _groupDbLock.Release();
+                }
 
                 IsEditingGroupModalOpen = false;
                 _groupToEdit = null;
                 
+                await LoadGradebookData();
                 await LoadGroupsForSelectedAssessmentAsync();
-                RecalculateFinalGrades();
                 ShowToastMessage?.Invoke("Group updated successfully.");
             }
             finally { IsProcessing = false; }
