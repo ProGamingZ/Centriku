@@ -29,45 +29,74 @@ namespace Centriku.ViewModels
             var performanceList = new List<StudentClassPerformanceViewModel>();
 
             var rosters = await db.Table<Centriku.Models.ClassRoster>().Where(r => r.StudentID == studentId).ToListAsync();
-                                  
-            foreach (var roster in rosters)
+            if (!rosters.Any())
             {
-                var tClass = await db.Table<Centriku.Models.TeacherClass>().Where(c => c.ClassID == roster.ClassID).FirstOrDefaultAsync();
-                if (tClass == null) continue;
+                SelectedStudentClasses.Clear();
+                SelectedStudentClassPerformance = null;
+                HasEnrolledClasses = false;
+                return;
+            }
 
-                var template = await db.Table<Centriku.Models.GradingTemplate>().Where(t => t.TemplateID == tClass.GradingTemplateID).FirstOrDefaultAsync();
-                var attendance = await db.Table<Centriku.Models.AttendanceRecord>().Where(a => a.ClassID == roster.ClassID && a.StudentID == studentId).ToListAsync();
-                int absences = attendance.Count(a => a.Status == "Absent" || a.Status == "A");
-                int lates = attendance.Count(a => a.Status == "Late" || a.Status == "L");
+            // Batch-load related tables once to prevent N+1 query lag
+            var classIds = rosters.Select(r => r.ClassID).ToHashSet();
+            var allClasses = (await db.Table<Centriku.Models.TeacherClass>().ToListAsync()).Where(c => classIds.Contains(c.ClassID)).ToList();
+            var allTemplates = await db.Table<Centriku.Models.GradingTemplate>().ToListAsync();
+            var allCategories = await db.Table<Centriku.Models.GradingCategory>().ToListAsync();
+            var allAssessments = (await db.Table<Centriku.Models.Assessment>().ToListAsync()).Where(a => classIds.Contains(a.ClassID)).ToList();
+            var studentScores = await db.Table<Centriku.Models.Score>().Where(s => s.StudentID == studentId).ToListAsync();
+            var studentAttendance = await db.Table<Centriku.Models.AttendanceRecord>().Where(a => a.StudentID == studentId).ToListAsync();
 
-                var perf = new StudentClassPerformanceViewModel
+            foreach (var tClass in allClasses)
+            {
+                var template = allTemplates.FirstOrDefault(t => t.TemplateID == tClass.GradingTemplateID) ?? new Centriku.Models.GradingTemplate();
+                var classCategories = allCategories.Where(c => c.TemplateID == tClass.GradingTemplateID).ToList();
+                var classAssessments = allAssessments.Where(a => a.ClassID == tClass.ClassID).ToList();
+                var classAtt = studentAttendance.Where(a => a.ClassID == tClass.ClassID).ToList();
+
+                // Sum actual SessionHours instead of raw row counts
+                double absentHours = System.Math.Round(classAtt.Where(a => a.Status == "Absent" || a.Status == "A").Sum(a => a.SessionHours), 2);
+                double lateHours = System.Math.Round(classAtt.Where(a => a.Status == "Late" || a.Status == "L").Sum(a => a.SessionHours), 2);
+
+                var midAssessments = classAssessments.Where(a => a.GradingPeriod == "Midterm").ToList();
+                var finAssessments = classAssessments.Where(a => a.GradingPeriod == "Final").ToList();
+
+                string midDisplay = "--";
+                string finDisplay = "--";
+                string semDisplay = "--";
+
+                bool isMidComplete = midAssessments.Any() && classCategories.All(c => midAssessments.Any(a => a.Category == c.Name)) &&
+                                     midAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID));
+                bool isFinComplete = finAssessments.Any() && classCategories.All(c => finAssessments.Any(a => a.Category == c.Name)) &&
+                                     finAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID));
+
+                var midResult = Centriku.Services.GradeCalculationService.EvaluateFinalGrade(classCategories, midAssessments, studentScores, template, tClass, classAtt);
+                var finResult = Centriku.Services.GradeCalculationService.EvaluateFinalGrade(classCategories, finAssessments, studentScores, template, tClass, classAtt);
+
+                if (midAssessments.Any()) midDisplay = midResult.FinalOutput;
+                if (finAssessments.Any()) finDisplay = finResult.FinalOutput;
+
+                if (midResult.IsFda || finResult.IsFda)
                 {
-                    SubjectName = tClass.SubjectName ?? "Unknown Subject", Term = tClass.Term ?? "Unknown Term",
-                    Absences = absences, Lates = lates
-                };
-
-                string FormatGrade(double? raw)
+                    semDisplay = tClass.FdaDropGrade;
+                }
+                else if (isMidComplete && isFinComplete)
                 {
-                    if (raw == null) return "--";
-                    double val = raw.Value;
-                    // Always transmutate using the template's Base Value
-                    if (template != null) 
-                    {
-                        val = (val / 100.0) * (100.0 - template.NrfgBaseValue) + template.NrfgBaseValue;
-                    }
-                    return $"{val.ToString("0.##")}%";
+                    double semAvg = System.Math.Round((midResult.TermNumericGrade + finResult.TermNumericGrade) / 2.0, 0, System.MidpointRounding.AwayFromZero);
+                    semDisplay = $"{semAvg}%";
                 }
 
-                // Strictly College Semestral Calculation
-                double? mid = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Midterm");
-                double? fin = await CalculateTermGradeRawAsync(db, studentId, tClass.ClassID, tClass.GradingTemplateID, "Final");
-                perf.MidtermGrade = FormatGrade(mid); perf.FinalTermGrade = FormatGrade(fin);
-                perf.SemesterAverage = (mid != null && fin != null) ? FormatGrade((mid + fin) / 2.0) : "--";
-                perf.AverageScorePercentage = perf.SemesterAverage;
-
-                var allAssessments = await db.Table<Centriku.Models.Assessment>().Where(a => a.ClassID == roster.ClassID).ToListAsync();
-                perf.GradedTasksCount = allAssessments.Count;
-                performanceList.Add(perf);
+                performanceList.Add(new StudentClassPerformanceViewModel
+                {
+                    SubjectName = tClass.SubjectName ?? "Unknown Subject",
+                    Term = tClass.Term ?? "Unknown Term",
+                    Absences = absentHours,
+                    Lates = lateHours,
+                    MidtermGrade = midDisplay,
+                    FinalTermGrade = finDisplay,
+                    SemesterAverage = semDisplay,
+                    AverageScorePercentage = semDisplay,
+                    GradedTasksCount = classAssessments.Count
+                });
             }
 
             SelectedStudentClasses = new ObservableCollection<StudentClassPerformanceViewModel>(performanceList);

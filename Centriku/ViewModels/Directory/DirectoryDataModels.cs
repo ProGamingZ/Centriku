@@ -42,8 +42,8 @@ namespace Centriku.ViewModels
 
         public int GradedTasksCount { get; set; }
         public string AverageScorePercentage { get; set; } = "--";
-        public int Absences { get; set; }
-        public int Lates { get; set; }
+        public double Absences { get; set; }
+        public double Lates { get; set; }
     }
 
 }

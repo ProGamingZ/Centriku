@@ -164,14 +164,21 @@ namespace Centriku.ViewModels
         private async Task SaveStudentAsync()
         {
             if (string.IsNullOrWhiteSpace(NewStudentId) || string.IsNullOrWhiteSpace(NewStudentLastName)) return;
+
+            string trimmedId = NewStudentId.Trim();
             var db = _dbService.GetConnection();
+
+            // PREVENT SILENT OVERWRITE: Do not overwrite an existing student if the ID is already taken
+            var existing = await db.Table<Centriku.Models.Student>().Where(s => s.StudentID == trimmedId).FirstOrDefaultAsync();
+            if (existing != null) return;
+
             var newStudent = new Centriku.Models.Student
             {
-                StudentID = NewStudentId, FirstName = NewStudentFirstName, MiddleName = NewStudentMiddleName, LastName = NewStudentLastName,
-                Suffix = NewStudentSuffix, Gender = NewStudentGender, GradeYearLevel = NewStudentGradeYearLevel,
-                Program = NewStudentProgram, SectionName = NewStudentSectionName, EnrollmentStatus = NewStudentEnrollmentStatus, IsArchived = false
+                StudentID = trimmedId, FirstName = NewStudentFirstName.Trim(), MiddleName = NewStudentMiddleName.Trim(), LastName = NewStudentLastName.Trim(),
+                Suffix = NewStudentSuffix.Trim(), Gender = NewStudentGender, GradeYearLevel = NewStudentGradeYearLevel.Trim(),
+                Program = NewStudentProgram.Trim(), SectionName = NewStudentSectionName.Trim(), EnrollmentStatus = NewStudentEnrollmentStatus, IsArchived = false
             };
-            await db.InsertOrReplaceAsync(newStudent);
+            await db.InsertAsync(newStudent);
             
             NewStudentId = string.Empty; NewStudentFirstName = string.Empty; NewStudentMiddleName = string.Empty;
             NewStudentLastName = string.Empty; NewStudentSuffix = string.Empty; NewStudentGradeYearLevel = string.Empty;
@@ -179,6 +186,7 @@ namespace Centriku.ViewModels
             
             IsAddingStudent = false;
             await LoadStudentsAsync();
+            OnStudentRosterChanged?.Invoke();
         }
 
         private async Task EditOrSaveStudentAsync(StudentRowViewModel row)
@@ -216,7 +224,22 @@ namespace Centriku.ViewModels
         {
             if (row == null) return;
             var db = _dbService.GetConnection();
-            await db.DeleteAsync(row.DbModel); await LoadStudentsAsync(); 
+            string targetId = row.StudentID;
+
+            // CASCADE DELETE: Wipe all child records so no Ghost/Orphan records remain in the system!
+            var rosters = await db.Table<Centriku.Models.ClassRoster>().Where(r => r.StudentID == targetId).ToListAsync();
+            var scores = await db.Table<Centriku.Models.Score>().Where(s => s.StudentID == targetId).ToListAsync();
+            var attendance = await db.Table<Centriku.Models.AttendanceRecord>().Where(a => a.StudentID == targetId).ToListAsync();
+            var groupMembers = await db.Table<Centriku.Models.AssessmentGroupMember>().Where(m => m.StudentID == targetId).ToListAsync();
+
+            foreach (var r in rosters) await db.DeleteAsync(r);
+            foreach (var s in scores) await db.DeleteAsync(s);
+            foreach (var a in attendance) await db.DeleteAsync(a);
+            foreach (var gm in groupMembers) await db.DeleteAsync(gm);
+
+            await db.DeleteAsync(row.DbModel);
+            await LoadStudentsAsync();
+            OnStudentRosterChanged?.Invoke();
         }
 
         [ObservableProperty] public partial ObservableCollection<StagedStudent> StagedStudents { get; set; } = new();
@@ -411,20 +434,38 @@ namespace Centriku.ViewModels
         public async Task ConfirmBulkImportAsync()
         {
             if (!StagedStudents.Any()) return;
+
+            // Always re-evaluate staged data in case the user edited cells inline without clicking "Re-Check Data"
+            await RecheckStagedDataAsync();
+
             var db = _dbService.GetConnection();
             var settings = await db.Table<Centriku.Models.AppSettings>().FirstOrDefaultAsync() ?? new Centriku.Models.AppSettings();
-            var toInsert = new List<Centriku.Models.Student>(); var toUpdate = new List<Centriku.Models.Student>();
+            
+            // Deduplicate by StudentID within the staged batch itself so InsertAllAsync never hits a PRIMARY KEY collision
+            var toInsert = new Dictionary<string, Centriku.Models.Student>(StringComparer.OrdinalIgnoreCase);
+            var toUpdate = new Dictionary<string, Centriku.Models.Student>(StringComparer.OrdinalIgnoreCase);
 
-            foreach(var staged in StagedStudents)
+            foreach (var staged in StagedStudents)
             {
-                if (staged.IsError) continue; 
-                if (staged.IsDuplicate) { if (settings.DuplicateHandlingRule == "Update") toUpdate.Add(staged.DbModel); }
-                else toInsert.Add(staged.DbModel);
+                if (staged.IsError || string.IsNullOrWhiteSpace(staged.DbModel.StudentID)) continue;
+                
+                if (staged.IsDuplicate)
+                {
+                    if (settings.DuplicateHandlingRule == "Update")
+                        toUpdate[staged.DbModel.StudentID] = staged.DbModel;
+                }
+                else
+                {
+                    toInsert[staged.DbModel.StudentID] = staged.DbModel;
+                }
             }
-            if (toInsert.Count != 0) await db.InsertAllAsync(toInsert, runInTransaction: true);
-            if (toUpdate.Count != 0) await db.UpdateAllAsync(toUpdate, runInTransaction: true);
+
+            if (toInsert.Count != 0) await db.InsertAllAsync(toInsert.Values, runInTransaction: false);
+            if (toUpdate.Count != 0) await db.UpdateAllAsync(toUpdate.Values, runInTransaction: false);
+            
             CancelBulkImport();
             await LoadStudentsAsync();
+            OnStudentRosterChanged?.Invoke();
         }
         
         [RelayCommand]
@@ -465,6 +506,11 @@ namespace Centriku.ViewModels
 
         partial void OnSearchQueryChanged(string value) => UpdateDisplayedStudents();
         partial void OnArchiveSearchQueryChanged(string value) => UpdateDisplayedArchivedStudents();
+
+        partial void OnSelectedTabIndexChanged(int value)
+        {
+            if (value == 1) _ = LoadImportSettingsPreviewAsync();
+        }
 
         private void UpdateDisplayedArchivedStudents()
         {
