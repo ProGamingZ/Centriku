@@ -16,7 +16,7 @@ namespace Centriku.ViewModels
     public partial class StudentRowViewModel(Centriku.Models.Student student) : ObservableObject
     {
         public Centriku.Models.Student DbModel { get; } = student;
-
+        public string OriginalStudentID { get; set; } = student.StudentID ?? string.Empty;
         [ObservableProperty] public partial bool IsEditing { get; set; } = false;
 
         public string StudentID { get => DbModel.StudentID ?? string.Empty; set { DbModel.StudentID = value; OnPropertyChanged(); } }
