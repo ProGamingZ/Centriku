@@ -33,40 +33,41 @@ x:DataType="vm:DirectoryViewModel">
                 <StackPanel>
                     <TextBlock Text="Current Column Configuration:" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
                     <DataGrid ItemsSource="{Binding CurrentSettingsPreview}" AutoGenerateColumns="False" IsReadOnly="True" 
-                              GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
-                              CornerRadius="8" Height="80" HorizontalScrollBarVisibility="Auto">
+                              CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+                              GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
+                              CornerRadius="8" RowHeight="38" HorizontalAlignment="Stretch">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{Binding Col1H}" Binding="{Binding Col1Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col2H}" Binding="{Binding Col2Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col3H}" Binding="{Binding Col3Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col4H}" Binding="{Binding Col4Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col5H}" Binding="{Binding Col5Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col6H}" Binding="{Binding Col6Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col7H}" Binding="{Binding Col7Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col8H}" Binding="{Binding Col8Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col9H}" Binding="{Binding Col9Text}" Width="110"/>
-                            <DataGridTextColumn Header="{Binding Col10H}" Binding="{Binding Col10Text}" Width="110"/>
+                            <DataGridTextColumn Header="{Binding Col1H}" Binding="{Binding Col1Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col2H}" Binding="{Binding Col2Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col3H}" Binding="{Binding Col3Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col4H}" Binding="{Binding Col4Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col5H}" Binding="{Binding Col5Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col6H}" Binding="{Binding Col6Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col7H}" Binding="{Binding Col7Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col8H}" Binding="{Binding Col8Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col9H}" Binding="{Binding Col9Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col10H}" Binding="{Binding Col10Text}" Width="*" MinWidth="90"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock Text="If this doesn't match your Excel file, click 'Import Settings' at the top right to fix it before importing." FontStyle="Italic" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,10,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
-            <!-- RESTORED: The compact file upload box -->
+            <!-- File Upload Dropzone -->
             <StackPanel IsVisible="{Binding !IsLoading}">
-                <Border IsVisible="{Binding !HasStagedStudents}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" MaxWidth="700" HorizontalAlignment="Left">
-                   <StackPanel Spacing="15" HorizontalAlignment="Center">
-                         <TextBlock Text="📄" FontSize="48" HorizontalAlignment="Center"/>
-                         <TextBlock Text="Select your CSV or Excel file to begin." FontWeight="Bold" FontSize="16" HorizontalAlignment="Center"/>
-                         <TextBlock Text="Centriku will check your data for errors before importing." Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                         <Button Click="OnImportCsvClicked" Content="Choose Data File" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10" CornerRadius="8" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                <Border IsVisible="{Binding !HasStagedStudents}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Stretch">
+                   <StackPanel Spacing="12" HorizontalAlignment="Center">
+                         <TextBlock Classes="Icon" Text="{DynamicResource IconExport}" FontSize="42" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center"/>
+                         <TextBlock Text="Select your CSV or Excel file to begin." FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                         <TextBlock Text="Centriku will check your data for errors and duplicates before importing." Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                         <Button Click="OnImportCsvClicked" Content="Choose Data File" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="24,10" CornerRadius="8" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                    </StackPanel>
                 </Border>
             </StackPanel>
 
-            <Border IsVisible="{Binding IsLoading}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="12" Padding="40" MaxWidth="600" HorizontalAlignment="Left">
+            <Border IsVisible="{Binding IsLoading}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Stretch">
                 <StackPanel Spacing="15" HorizontalAlignment="Center">
-                    <TextBlock Text="⏳" FontSize="48" HorizontalAlignment="Center"/> 
+                    <ProgressBar IsIndeterminate="True" Width="180" Height="6" CornerRadius="3" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Center"/>
                     <TextBlock Text="Processing File..." FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" Foreground="{DynamicResource PrimaryBrush}"/>
                     <TextBlock Text="Reading data and checking for duplicates. Please wait." Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                 </StackPanel>
@@ -74,40 +75,36 @@ x:DataType="vm:DirectoryViewModel">
 
             <StackPanel IsVisible="{Binding HasStagedStudents}" Spacing="16">
                 <DataGrid ItemsSource="{Binding StagedStudents}" AutoGenerateColumns="False" IsReadOnly="False" 
-                          GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
-                          CornerRadius="8" Height="420" RowHeight="36" HorizontalAlignment="Stretch">
+                          CanUserResizeColumns="False" CanUserReorderColumns="False"
+                          GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
+                          CornerRadius="8" Height="420" RowHeight="40" HorizontalAlignment="Stretch">
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Action" Width="110" IsReadOnly="True">
+                        <DataGridTemplateColumn Header="Action" Width="115" IsReadOnly="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding StatusColor}" CornerRadius="4" Padding="6,2" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding ImportStatus}" Foreground="#1A1A1A" FontWeight="Bold" FontSize="11"/>
+                                    <Border Background="{Binding StatusColor}" CornerRadius="4" Padding="8,3" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ImportStatus}" Foreground="#111827" FontWeight="Bold" FontSize="11"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Student ID" Binding="{Binding DbModel.StudentID}" Width="120"/>
-                        
-                        <!-- Proportional Star Columns absorb extra table width -->
-                        <DataGridTextColumn Header="Last Name" Binding="{Binding DbModel.LastName}" Width="1.4*" MinWidth="100"/>
-                        <DataGridTextColumn Header="First Name" Binding="{Binding DbModel.FirstName}" Width="1.4*" MinWidth="100"/>
-                        <DataGridTextColumn Header="Middle Name" Binding="{Binding DbModel.MiddleName}" Width="1*" MinWidth="80"/>
-                        
-                        <DataGridTextColumn Header="Suffix" Binding="{Binding DbModel.Suffix}" Width="65"/>
-                        <DataGridTextColumn Header="Gender" Binding="{Binding DbModel.Gender}" Width="80"/>
-                        <DataGridTextColumn Header="Year" Binding="{Binding DbModel.GradeYearLevel}" Width="85"/>
-                        <DataGridTextColumn Header="Program" Binding="{Binding DbModel.Program}" Width="1.1*" MinWidth="85"/>
-                        <DataGridTextColumn Header="Section" Binding="{Binding DbModel.SectionName}" Width="75"/>
-                        <DataGridTextColumn Header="Status" Binding="{Binding DbModel.EnrollmentStatus}" Width="100"/>
+                        <DataGridTextColumn Header="Student ID" Binding="{Binding DbModel.StudentID}" Width="1.1*" MinWidth="115"/>
+                        <DataGridTextColumn Header="Last Name" Binding="{Binding DbModel.LastName}" Width="1.4*" MinWidth="115"/>
+                        <DataGridTextColumn Header="First Name" Binding="{Binding DbModel.FirstName}" Width="1.4*" MinWidth="115"/>
+                        <DataGridTextColumn Header="Middle Name" Binding="{Binding DbModel.MiddleName}" Width="1.1*" MinWidth="100"/>
+                        <DataGridTextColumn Header="Suffix" Binding="{Binding DbModel.Suffix}" Width="75"/>
+                        <DataGridTextColumn Header="Gender" Binding="{Binding DbModel.Gender}" Width="100"/>
+                        <DataGridTextColumn Header="Year" Binding="{Binding DbModel.GradeYearLevel}" Width="95"/>
+                        <DataGridTextColumn Header="Program" Binding="{Binding DbModel.Program}" Width="1*" MinWidth="95"/>
+                        <DataGridTextColumn Header="Section" Binding="{Binding DbModel.SectionName}" Width="85"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding DbModel.EnrollmentStatus}" Width="105"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
                 <Grid ColumnDefinitions="*, Auto, Auto, Auto">
                     <Button Grid.Column="1" Command="{Binding CancelBulkImportCommand}" Content="Cancel &amp; Clear" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Padding="18,10" Margin="0,0,12,0"/>
-                    
                     <Button Grid.Column="2" Command="{Binding RecheckStagedDataCommand}" Content="Re-Check Data" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Padding="18,10" CornerRadius="8" Margin="0,0,12,0" ToolTip.Tip="Scans the table and updates any rows you edited."/>
-                    
                     <Button Grid.Column="3" Command="{Binding ConfirmBulkImportCommand}" Content="Confirm &amp; Save to Directory" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="22,10" CornerRadius="8"/>
                 </Grid>
             </StackPanel>

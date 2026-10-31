@@ -18,7 +18,7 @@
                      PlaceholderText="Search archives by Student ID, Name, Program, or Section..." 
                      Background="{DynamicResource SurfaceBrush}" 
                      BorderBrush="{DynamicResource BorderBrush}" 
-                     CornerRadius="8" Padding="15,10" Width="380" MaxWidth="400" HorizontalAlignment="Left"/>
+                     CornerRadius="8" Padding="15,10" Width="430" MaxWidth="460" HorizontalAlignment="Left"/>
             
             <Button Grid.Column="1" Content="Columns ⚙️" 
                      Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
@@ -62,86 +62,85 @@
       </Grid>
 
       <DataGrid Grid.Row="2" Margin="24,0,24,24" ItemsSource="{Binding DisplayedArchivedStudents}" AutoGenerateColumns="False" 
-               CanUserSortColumns="True" CanUserResizeColumns="True" CanUserReorderColumns="True" IsReadOnly="True" 
+               CanUserSortColumns="True" CanUserResizeColumns="False" CanUserReorderColumns="False" IsReadOnly="True" 
                GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" 
-               RowHeight="36" FrozenColumnCount="2"
+               RowHeight="40"
                HorizontalAlignment="Stretch" 
                VerticalAlignment="Stretch">
                <DataGrid.Columns>
                   
                   <!-- Checkbox Selection Column -->
-                  <DataGridTemplateColumn Width="50" CanUserSort="False" CanUserReorder="False" CanUserResize="False">
+                  <DataGridTemplateColumn Width="48" CanUserSort="False">
                      <DataGridTemplateColumn.Header>
-                        <CheckBox IsChecked="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).IsAllArchiveSelected}" HorizontalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).IsAllArchiveSelected}"/>
                      </DataGridTemplateColumn.Header>
                      <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                           <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                           <CheckBox IsChecked="{Binding IsSelected}"/>
                         </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Student ID" SortMemberPath="StudentID" Width="120" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveStudentIdColumn}">
+                  <DataGridTemplateColumn Header="Student ID" SortMemberPath="StudentID" Width="1.1*" MinWidth="115" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveStudentIdColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="8,0">
-                                 <TextBlock Text="{Binding StudentID}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding StudentID}" ToolTip.Tip="{Binding StudentID}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding StudentID}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <!-- Flexible Star Columns -->
-                  <DataGridTemplateColumn Header="Last Name" SortMemberPath="LastName" Width="1.4*" MinWidth="130" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveLastNameColumn}">
+                  <DataGridTemplateColumn Header="Last Name" SortMemberPath="LastName" Width="1.4*" MinWidth="125" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveLastNameColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="8,0">
-                                 <TextBlock Text="{Binding LastName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding LastName}" ToolTip.Tip="{Binding LastName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding LastName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
                   
-                  <DataGridTemplateColumn Header="First Name" SortMemberPath="FirstName" Width="1.4*" MinWidth="130" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveFirstNameColumn}">
+                  <DataGridTemplateColumn Header="First Name" SortMemberPath="FirstName" Width="1.4*" MinWidth="125" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveFirstNameColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="8,0">
-                                 <TextBlock Text="{Binding FirstName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding FirstName}" ToolTip.Tip="{Binding FirstName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding FirstName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
                   
-                  <DataGridTemplateColumn Header="Middle Name" SortMemberPath="MiddleName" Width="1*" MinWidth="90" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveMiddleNameColumn}">
+                  <DataGridTemplateColumn Header="Middle Name" SortMemberPath="MiddleName" Width="1.1*" MinWidth="110" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveMiddleNameColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="8,0">
-                                 <TextBlock Text="{Binding MiddleName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding MiddleName}" ToolTip.Tip="{Binding MiddleName}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding MiddleName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Suffix" SortMemberPath="Suffix" Width="70" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSuffixColumn}">
+                  <DataGridTemplateColumn Header="Suffix" SortMemberPath="Suffix" Width="75" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSuffixColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="6,0">
-                                 <TextBlock Text="{Binding Suffix}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="8,0">
+                                 <TextBlock Text="{Binding Suffix}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding Suffix}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Gender" SortMemberPath="Gender" Width="85" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveGenderColumn}">
+                  <DataGridTemplateColumn Header="Gender" SortMemberPath="Gender" Width="105" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveGenderColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="6,0">
-                                 <TextBlock Text="{Binding Gender}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="8,0">
+                                 <TextBlock Text="{Binding Gender}" ToolTip.Tip="{Binding Gender}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <ComboBox SelectedItem="{Binding Gender}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch">
                                        <x:String>Male</x:String>
                                        <x:String>Female</x:String>
@@ -151,34 +150,33 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Year" SortMemberPath="GradeYearLevel" Width="90" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveGradeYearLevelColumn}">
+                  <DataGridTemplateColumn Header="Year" SortMemberPath="GradeYearLevel" Width="95" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveGradeYearLevelColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="6,0">
-                                 <TextBlock Text="{Binding GradeYearLevel}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="8,0">
+                                 <TextBlock Text="{Binding GradeYearLevel}" ToolTip.Tip="{Binding GradeYearLevel}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding GradeYearLevel}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <!-- Flexible Program Column -->
-                  <DataGridTemplateColumn Header="Program" SortMemberPath="Program" Width="1.1*" MinWidth="90" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveProgramColumn}">
+                  <DataGridTemplateColumn Header="Program" SortMemberPath="Program" Width="1*" MinWidth="95" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveProgramColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="8,0">
-                                 <TextBlock Text="{Binding Program}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="10,0">
+                                 <TextBlock Text="{Binding Program}" ToolTip.Tip="{Binding Program}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding Program}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
 
-                  <DataGridTemplateColumn Header="Section" SortMemberPath="SectionName" Width="80" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSectionNameColumn}">
+                  <DataGridTemplateColumn Header="Section" SortMemberPath="SectionName" Width="85" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveSectionNameColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="6,0">
-                                 <TextBlock Text="{Binding SectionName}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="8,0">
+                                 <TextBlock Text="{Binding SectionName}" ToolTip.Tip="{Binding SectionName}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <TextBox Text="{Binding SectionName}" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Padding="5,2" MinHeight="0"/>
                               </Panel>
                            </DataTemplate>
@@ -188,8 +186,8 @@
                   <DataGridTemplateColumn Header="Status" SortMemberPath="EnrollmentStatus" Width="105" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveEnrollmentStatusColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
-                              <Panel Margin="6,0">
-                                 <TextBlock Text="{Binding EnrollmentStatus}" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
+                              <Panel Margin="8,0">
+                                 <TextBlock Text="{Binding EnrollmentStatus}" ToolTip.Tip="{Binding EnrollmentStatus}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}"/>
                                  <ComboBox SelectedItem="{Binding EnrollmentStatus}" IsVisible="{Binding IsEditing}" VerticalAlignment="Center" Padding="5,2" MinHeight="0" HorizontalAlignment="Stretch">
                                        <x:String>Regular</x:String>
                                        <x:String>Irregular</x:String>
@@ -200,7 +198,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
                                                                   
-                  <DataGridTemplateColumn Header="Actions" Width="90" CanUserSort="False" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
+                  <DataGridTemplateColumn Header="Actions" Width="90" CanUserSort="False" IsReadOnly="True">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
