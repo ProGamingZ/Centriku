@@ -12,35 +12,53 @@
                   Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
       </StackPanel>
 
-      <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="24,0,24,20">
-         <TextBox Grid.Column="0" Text="{Binding ArchiveSearchQuery}" 
-                  PlaceholderText="Search archives by Student ID, Name, Program, or Section..." 
-                  Background="{DynamicResource SurfaceBrush}" 
-                  BorderBrush="{DynamicResource BorderBrush}" 
-                  CornerRadius="8" Padding="15,10" MaxWidth="400" HorizontalAlignment="Left"/>
-         
-         <Button Grid.Column="1" Content="Columns ⚙️" 
-                  Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
-                  BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                  CornerRadius="8" Padding="15,10" Margin="0,0,15,0">
-               <Button.Flyout>
-                  <Flyout>
-                     <StackPanel Spacing="10" MinWidth="150">
-                           <TextBlock Text="Toggle Columns" FontWeight="Bold" Margin="0,0,0,5"/>
-                           <CheckBox Content="Student ID" IsChecked="{Binding ShowArchiveStudentIdColumn}"/>
-                           <CheckBox Content="Last Name" IsChecked="{Binding ShowArchiveLastNameColumn}"/>
-                           <CheckBox Content="First Name" IsChecked="{Binding ShowArchiveFirstNameColumn}"/>
-                           <CheckBox Content="Middle Name" IsChecked="{Binding ShowArchiveMiddleNameColumn}"/>
-                           <CheckBox Content="Suffix" IsChecked="{Binding ShowArchiveSuffixColumn}"/>
-                           <CheckBox Content="Gender" IsChecked="{Binding ShowArchiveGenderColumn}"/>
-                           <CheckBox Content="Year" IsChecked="{Binding ShowArchiveGradeYearLevelColumn}"/>
-                           <CheckBox Content="Program" IsChecked="{Binding ShowArchiveProgramColumn}"/>
-                           <CheckBox Content="Section" IsChecked="{Binding ShowArchiveSectionNameColumn}"/>
-                           <CheckBox Content="Status" IsChecked="{Binding ShowArchiveEnrollmentStatusColumn}"/>
-                     </StackPanel>
-                  </Flyout>
-               </Button.Flyout>
-         </Button>
+      <Grid Grid.Row="1" Margin="24,0,24,15" RowDefinitions="Auto, Auto">
+         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto" Margin="0,0,0,10">
+            <TextBox Grid.Column="0" Text="{Binding ArchiveSearchQuery}" 
+                     PlaceholderText="Search archives by Student ID, Name, Program, or Section..." 
+                     Background="{DynamicResource SurfaceBrush}" 
+                     BorderBrush="{DynamicResource BorderBrush}" 
+                     CornerRadius="8" Padding="15,10" Width="380" MaxWidth="400" HorizontalAlignment="Left"/>
+            
+            <Button Grid.Column="1" Content="Columns ⚙️" 
+                     Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
+                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                     CornerRadius="8" Padding="15,10" Margin="0,0,12,0">
+                  <Button.Flyout>
+                     <Flyout>
+                        <StackPanel Spacing="10" MinWidth="150">
+                              <TextBlock Text="Toggle Columns" FontWeight="Bold" Margin="0,0,0,5"/>
+                              <CheckBox Content="Student ID" IsChecked="{Binding ShowArchiveStudentIdColumn}"/>
+                              <CheckBox Content="Last Name" IsChecked="{Binding ShowArchiveLastNameColumn}"/>
+                              <CheckBox Content="First Name" IsChecked="{Binding ShowArchiveFirstNameColumn}"/>
+                              <CheckBox Content="Middle Name" IsChecked="{Binding ShowArchiveMiddleNameColumn}"/>
+                              <CheckBox Content="Suffix" IsChecked="{Binding ShowArchiveSuffixColumn}"/>
+                              <CheckBox Content="Gender" IsChecked="{Binding ShowArchiveGenderColumn}"/>
+                              <CheckBox Content="Year" IsChecked="{Binding ShowArchiveGradeYearLevelColumn}"/>
+                              <CheckBox Content="Program" IsChecked="{Binding ShowArchiveProgramColumn}"/>
+                              <CheckBox Content="Section" IsChecked="{Binding ShowArchiveSectionNameColumn}"/>
+                              <CheckBox Content="Status" IsChecked="{Binding ShowArchiveEnrollmentStatusColumn}"/>
+                        </StackPanel>
+                     </Flyout>
+                  </Button.Flyout>
+            </Button>
+
+            <Button Grid.Column="2" Command="{Binding PromptBulkRestoreCommand}" 
+                    Content="Restore" 
+                    Background="Transparent" Foreground="#10B981" 
+                    BorderBrush="#10B981" BorderThickness="1" FontWeight="Bold" 
+                    CornerRadius="8" Padding="20,10" Margin="0,0,12,0"/>
+
+            <Button Grid.Column="3" Command="{Binding PromptBulkDeleteCommand}" 
+                    Content="Delete" 
+                    Background="Transparent" Foreground="#EF4444" 
+                    BorderBrush="#EF4444" BorderThickness="1" FontWeight="Bold" 
+                    CornerRadius="8" Padding="20,10"/>
+         </Grid>
+
+         <TextBlock Grid.Row="1" Text="{Binding DynamicArchiveCounter}" 
+                    Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" 
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
       </Grid>
 
       <DataGrid Grid.Row="2" Margin="24,0,24,24" ItemsSource="{Binding DisplayedArchivedStudents}" AutoGenerateColumns="False" 
@@ -51,6 +69,18 @@
                VerticalAlignment="Stretch">
                <DataGrid.Columns>
                   
+                  <!-- Checkbox Selection Column -->
+                  <DataGridTemplateColumn Width="50" CanUserSort="False" CanUserReorder="False" CanUserResize="False">
+                     <DataGridTemplateColumn.Header>
+                        <CheckBox IsChecked="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).IsAllArchiveSelected}" HorizontalAlignment="Center"/>
+                     </DataGridTemplateColumn.Header>
+                     <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                           <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+
                   <DataGridTemplateColumn Header="Student ID" SortMemberPath="StudentID" Width="120" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowArchiveStudentIdColumn}">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
@@ -170,7 +200,7 @@
                      </DataGridTemplateColumn.CellTemplate>
                   </DataGridTemplateColumn>
                                                                   
-                  <DataGridTemplateColumn Header="Actions" Width="160" CanUserSort="False" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
+                  <DataGridTemplateColumn Header="Actions" Width="90" CanUserSort="False" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
                      <DataGridTemplateColumn.CellTemplate>
                            <DataTemplate>
                               <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -187,18 +217,6 @@
                                           CommandParameter="{Binding}"
                                           Background="Transparent" ToolTip.Tip="View Full Profile">
                                        <TextBlock Classes="Icon" Text="{DynamicResource IconPerson}" Foreground="{DynamicResource TextMainBrush}" FontSize="15"/>
-                                 </Button>
-                                 
-                                 <Button Command="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).RestoreStudentCommand}"
-                                          CommandParameter="{Binding}"
-                                          Background="Transparent" ToolTip.Tip="Restore Student">
-                                       <TextBlock Classes="Icon" Text="{DynamicResource IconRestore}" Foreground="#10B981" FontSize="15"/>
-                                 </Button>
-
-                                 <Button Command="{Binding #ArchivesRoot.((vm:DirectoryViewModel)DataContext).DeleteStudentCommand}"
-                                          CommandParameter="{Binding}"
-                                          Background="Transparent" ToolTip.Tip="Permanently Delete">
-                                       <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="#EF4444" FontSize="15"/>
                                  </Button>
                               </StackPanel>
                            </DataTemplate>

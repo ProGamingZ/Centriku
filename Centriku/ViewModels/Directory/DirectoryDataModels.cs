@@ -18,6 +18,7 @@ namespace Centriku.ViewModels
         public Centriku.Models.Student DbModel { get; } = student;
         public string OriginalStudentID { get; set; } = student.StudentID ?? string.Empty;
         [ObservableProperty] public partial bool IsEditing { get; set; } = false;
+        [ObservableProperty] public partial bool IsSelected { get; set; } = false;
 
         public string StudentID { get => DbModel.StudentID ?? string.Empty; set { DbModel.StudentID = value; OnPropertyChanged(); } }
         public string FirstName { get => DbModel.FirstName ?? string.Empty; set { DbModel.FirstName = value; OnPropertyChanged(); } }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ExcelDataReader;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Centriku.ViewModels.Modals;
 
 namespace Centriku.ViewModels
 {
@@ -83,6 +84,41 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string SelectedStatusFilter { get; set; } = "All Statuses";
         
         [ObservableProperty] public partial string DynamicStudentCounter { get; set; } = "Showing: 0 students";
+        [ObservableProperty] public partial string DynamicArchiveCounter { get; set; } = "Showing: 0 students";
+
+        // Master & Archive Select-All Checkboxes
+        [ObservableProperty] public partial bool IsAllMasterSelected { get; set; } = false;
+        partial void OnIsAllMasterSelectedChanged(bool value)
+        {
+            foreach (var row in DisplayedStudents) row.IsSelected = value;
+        }
+
+        [ObservableProperty] public partial bool IsAllArchiveSelected { get; set; } = false;
+        partial void OnIsAllArchiveSelectedChanged(bool value)
+        {
+            foreach (var row in DisplayedArchivedStudents) row.IsSelected = value;
+        }
+
+        // Confirmation Modal State (Shared by Archive, Restore, and Delete)
+        [ObservableProperty] public partial bool IsConfirmModalOpen { get; set; } = false;
+        [ObservableProperty] public partial ConfirmDeleteModalViewModel? ConfirmModal { get; set; }
+        [ObservableProperty] public partial string ConfirmModalButtonText { get; set; } = "Confirm";
+        [ObservableProperty] public partial string ConfirmModalButtonColor { get; set; } = "#EF4444";
+
+        // Toast Feedback State
+        public Action<string>? ShowToastMessage { get; set; }
+        [ObservableProperty] public partial string ToastMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial bool IsToastVisible { get; set; } = false;
+
+        private async void TriggerToast(string message)
+        {
+            ToastMessage = message;
+            IsToastVisible = true;
+            ShowToastMessage?.Invoke(message);
+            await Task.Delay(3000);
+            if (ToastMessage == message) IsToastVisible = false;
+        }
+
 
         partial void OnSelectedYearFilterChanged(string value) => UpdateDisplayedStudents();
         partial void OnSelectedProgramFilterChanged(string value) => UpdateDisplayedStudents();
@@ -323,6 +359,126 @@ namespace Centriku.ViewModels
             await LoadStudentsAsync();
             OnStudentRosterChanged?.Invoke();
         }
+
+        [RelayCommand]
+        public void PromptBulkArchive()
+        {
+            var selected = _allStudents.Where(s => s.IsSelected).ToList();
+            if (selected.Count == 0)
+            {
+                TriggerToast("Please select at least one student first.");
+                return;
+            }
+
+            ConfirmModalButtonText = "Archive";
+            ConfirmModalButtonColor = "#F59E0B";
+            ConfirmModal = new ConfirmDeleteModalViewModel(
+                "Archive Student(s)?",
+                $"Are you sure you want to move {selected.Count} selected student(s) to the Archives?",
+                async () =>
+                {
+                    var db = _dbService.GetConnection();
+                    foreach (var row in selected)
+                    {
+                        row.DbModel.IsArchived = true;
+                        row.IsSelected = false;
+                    }
+                    await db.UpdateAllAsync(selected.Select(r => r.DbModel), runInTransaction: false);
+
+                    IsAllMasterSelected = false;
+                    IsConfirmModalOpen = false;
+                    ConfirmModal = null;
+
+                    await LoadStudentsAsync();
+                    OnStudentRosterChanged?.Invoke();
+                    TriggerToast($"Archived {selected.Count} student(s).");
+                },
+                () => { IsConfirmModalOpen = false; ConfirmModal = null; }
+            );
+            IsConfirmModalOpen = true;
+        }
+        [RelayCommand]
+        public void PromptBulkRestore()
+        {
+            var selected = _allArchivedStudents.Where(s => s.IsSelected).ToList();
+            if (selected.Count == 0)
+            {
+                TriggerToast("Please select at least one student first.");
+                return;
+            }
+
+            ConfirmModalButtonText = "Restore";
+            ConfirmModalButtonColor = "#10B981";
+            ConfirmModal = new ConfirmDeleteModalViewModel(
+                "Restore Student(s)?",
+                $"Are you sure you want to restore {selected.Count} selected student(s) to the active Master Roster?",
+                async () =>
+                {
+                    var db = _dbService.GetConnection();
+                    foreach (var row in selected)
+                    {
+                        row.DbModel.IsArchived = false;
+                        row.IsSelected = false;
+                    }
+                    await db.UpdateAllAsync(selected.Select(r => r.DbModel), runInTransaction: false);
+
+                    IsAllArchiveSelected = false;
+                    IsConfirmModalOpen = false;
+                    ConfirmModal = null;
+
+                    await LoadStudentsAsync();
+                    OnStudentRosterChanged?.Invoke();
+                    TriggerToast($"Restored {selected.Count} student(s).");
+                },
+                () => { IsConfirmModalOpen = false; ConfirmModal = null; }
+            );
+            IsConfirmModalOpen = true;
+        }
+        [RelayCommand]
+        public void PromptBulkDelete()
+        {
+            var selected = _allArchivedStudents.Where(s => s.IsSelected).ToList();
+            if (selected.Count == 0)
+            {
+                TriggerToast("Please select at least one student first.");
+                return;
+            }
+
+            ConfirmModalButtonText = "Delete Permanently";
+            ConfirmModalButtonColor = "#EF4444";
+            ConfirmModal = new ConfirmDeleteModalViewModel(
+                "Permanently Delete Student(s)?",
+                $"Are you sure you want to permanently delete {selected.Count} selected student(s)?\n\nThis will permanently erase their profile, class enrollments, scores, group memberships, and attendance records.",
+                async () =>
+                {
+                    var db = _dbService.GetConnection();
+                    var targetIds = selected.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
+
+                    var rosters = (await db.Table<Centriku.Models.ClassRoster>().ToListAsync()).Where(r => targetIds.Contains(r.StudentID)).ToList();
+                    var scores = (await db.Table<Centriku.Models.Score>().ToListAsync()).Where(s => s.StudentID != null && targetIds.Contains(s.StudentID)).ToList();
+                    var attendance = (await db.Table<Centriku.Models.AttendanceRecord>().ToListAsync()).Where(a => a.StudentID != null && targetIds.Contains(a.StudentID)).ToList();
+                    var groupMembers = (await db.Table<Centriku.Models.AssessmentGroupMember>().ToListAsync()).Where(m => targetIds.Contains(m.StudentID)).ToList();
+
+                    foreach (var r in rosters) await db.DeleteAsync(r);
+                    foreach (var s in scores) await db.DeleteAsync(s);
+                    foreach (var a in attendance) await db.DeleteAsync(a);
+                    foreach (var gm in groupMembers) await db.DeleteAsync(gm);
+                    foreach (var row in selected) await db.DeleteAsync(row.DbModel);
+
+                    IsAllArchiveSelected = false;
+                    IsConfirmModalOpen = false;
+                    ConfirmModal = null;
+
+                    await LoadStudentsAsync();
+                    OnStudentRosterChanged?.Invoke();
+                    TriggerToast($"Permanently deleted {selected.Count} student(s).");
+                },
+                () => { IsConfirmModalOpen = false; ConfirmModal = null; }
+            );
+            IsConfirmModalOpen = true;
+        }
+
+
 
         [ObservableProperty] public partial ObservableCollection<StagedStudent> StagedStudents { get; set; } = new();
         [ObservableProperty] public partial bool HasStagedStudents { get; set; } = false;
@@ -596,38 +752,50 @@ namespace Centriku.ViewModels
 
         private void UpdateDisplayedArchivedStudents()
         {
-            if (string.IsNullOrWhiteSpace(ArchiveSearchQuery)) { DisplayedArchivedStudents = new ObservableCollection<StudentRowViewModel>(_allArchivedStudents); return; }
-            var lowerQuery = ArchiveSearchQuery.ToLower();
-            var filtered = _allArchivedStudents.Where(s => (s.StudentID?.Contains(lowerQuery) == true) || (s.LastName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || (s.FirstName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || (s.Program?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true) || (s.SectionName?.ToLower().Contains(lowerQuery, StringComparison.CurrentCultureIgnoreCase) == true));
+            var lowerQuery = ArchiveSearchQuery?.ToLower() ?? string.Empty;
+
+            var filtered = _allArchivedStudents.Where(s =>
+                s.IsSelected || // STICKY SELECTION: Always keep checked students visible!
+                string.IsNullOrWhiteSpace(lowerQuery) ||
+                (s.StudentID?.ToLower().Contains(lowerQuery) == true) ||
+                (s.LastName?.ToLower().Contains(lowerQuery) == true) ||
+                (s.FirstName?.ToLower().Contains(lowerQuery) == true) ||
+                (s.Program?.ToLower().Contains(lowerQuery) == true) ||
+                (s.SectionName?.ToLower().Contains(lowerQuery) == true)
+            ).ToList();
+
             DisplayedArchivedStudents = new ObservableCollection<StudentRowViewModel>(filtered);
+            DynamicArchiveCounter = $"Showing: {filtered.Count} students";
         }
 
         private void UpdateDisplayedStudents()
         {
-            var filtered = _allStudents.AsEnumerable();
+            var lowerQuery = SearchQuery?.ToLower() ?? string.Empty;
 
-            // 1. Text Search Filter
-            if (!string.IsNullOrWhiteSpace(SearchQuery))
+            bool MatchesFilters(StudentRowViewModel s)
             {
-                var lowerQuery = SearchQuery.ToLower();
-                filtered = filtered.Where(s => 
-                    (s.StudentID?.ToLower().Contains(lowerQuery) == true) || 
-                    (s.LastName?.ToLower().Contains(lowerQuery) == true) || 
-                    (s.FirstName?.ToLower().Contains(lowerQuery) == true) || 
-                    (s.Program?.ToLower().Contains(lowerQuery) == true) || 
-                    (s.SectionName?.ToLower().Contains(lowerQuery) == true));
+                if (!string.IsNullOrWhiteSpace(lowerQuery))
+                {
+                    bool matchesSearch =
+                        (s.StudentID?.ToLower().Contains(lowerQuery) == true) ||
+                        (s.LastName?.ToLower().Contains(lowerQuery) == true) ||
+                        (s.FirstName?.ToLower().Contains(lowerQuery) == true) ||
+                        (s.Program?.ToLower().Contains(lowerQuery) == true) ||
+                        (s.SectionName?.ToLower().Contains(lowerQuery) == true);
+                    if (!matchesSearch) return false;
+                }
+
+                if (SelectedYearFilter != "All Years" && s.GradeYearLevel != SelectedYearFilter) return false;
+                if (SelectedProgramFilter != "All Programs" && s.Program != SelectedProgramFilter) return false;
+                if (SelectedSectionFilter != "All Sections" && s.SectionName != SelectedSectionFilter) return false;
+                if (SelectedStatusFilter != "All Statuses" && s.EnrollmentStatus != SelectedStatusFilter) return false;
+
+                return true;
             }
 
-            // 2. Dropdown Filters
-            if (SelectedYearFilter != "All Years") filtered = filtered.Where(s => s.GradeYearLevel == SelectedYearFilter);
-            if (SelectedProgramFilter != "All Programs") filtered = filtered.Where(s => s.Program == SelectedProgramFilter);
-            if (SelectedSectionFilter != "All Sections") filtered = filtered.Where(s => s.SectionName == SelectedSectionFilter);
-            if (SelectedStatusFilter != "All Statuses") filtered = filtered.Where(s => s.EnrollmentStatus == SelectedStatusFilter);
-
-            var finalResults = filtered.ToList();
+            // STICKY SELECTION: Include the student if they are already checked OR if they match current filters
+            var finalResults = _allStudents.Where(s => s.IsSelected || MatchesFilters(s)).ToList();
             DisplayedStudents = new ObservableCollection<StudentRowViewModel>(finalResults);
-            
-            // 3. Update the Dynamic Counter
             DynamicStudentCounter = $"Showing: {finalResults.Count} students";
         }
     }

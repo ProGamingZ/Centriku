@@ -3,7 +3,8 @@
              xmlns:vm="using:Centriku.ViewModels"
              xmlns:dir="using:Centriku.Views.Directory"
              x:Class="Centriku.Views.DirectoryView"
-             x:DataType="vm:DirectoryViewModel">
+             x:DataType="vm:DirectoryViewModel"
+             x:Name="DirectoryRoot">
 
     <Grid>
         <TabControl Margin="10" SelectedIndex="{Binding SelectedTabIndex}">
@@ -23,6 +24,29 @@
         </TabControl>
 
         <dir:StudentProfileOverlay />
+
+        <!-- Shared Confirmation Modal for Bulk Archive, Restore, and Delete -->
+        <Border IsVisible="{Binding IsConfirmModalOpen}" Background="#B3000000" ZIndex="150">
+            <Border DataContext="{Binding ConfirmModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <TextBlock Text="{Binding Message}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+                    
+                    <Grid ColumnDefinitions="*, Auto, Auto">
+                        <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                        <Button Grid.Column="2" Command="{Binding ConfirmCommand}" 
+                                Content="{Binding #DirectoryRoot.((vm:DirectoryViewModel)DataContext).ConfirmModalButtonText}" 
+                                Background="{Binding #DirectoryRoot.((vm:DirectoryViewModel)DataContext).ConfirmModalButtonColor}" 
+                                Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- Floating Toast Notification Banner -->
+        <Border IsVisible="{Binding IsToastVisible}" Background="#1E293B" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="8" Padding="20,12" Margin="0,0,0,30" HorizontalAlignment="Center" VerticalAlignment="Bottom" ZIndex="200" BoxShadow="0 8 20 0 #66000000">
+            <TextBlock Text="{Binding ToastMessage}" Foreground="White" FontWeight="SemiBold" FontSize="14"/>
+        </Border>
     </Grid>
 
 </UserControl>

@@ -18,8 +18,8 @@
       <!-- Search & Filters -->
       <Grid Grid.Row="1" Margin="24,0,24,15" RowDefinitions="Auto, Auto">
          
-         <!-- Top Bar: Search, Columns, and Add Button -->
-         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,12">
+         <!-- Top Bar: Search, Columns, Archive, and Add Button -->
+         <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto, Auto" Margin="0,0,0,12">
             <TextBox Grid.Column="0" Text="{Binding SearchQuery}" 
                PlaceholderText="Search by Student ID, Name, Program, or Section..." 
                Background="{DynamicResource SurfaceBrush}" 
@@ -49,7 +49,13 @@
                </Button.Flyout>
             </Button>
 
-            <Button Grid.Column="2" Command="{Binding ToggleAddStudentFormCommand}" 
+            <Button Grid.Column="2" Command="{Binding PromptBulkArchiveCommand}" 
+               Content="Archive" 
+               Background="Transparent" Foreground="#F59E0B" 
+               BorderBrush="#F59E0B" BorderThickness="1" FontWeight="Bold" 
+               CornerRadius="8" Padding="20,10" Margin="0,0,12,0"/>
+
+            <Button Grid.Column="3" Command="{Binding ToggleAddStudentFormCommand}" 
                Content="Add New Student" 
                Background="{DynamicResource PrimaryBrush}" 
                Foreground="White" FontWeight="Bold" 
@@ -155,6 +161,18 @@
             VerticalAlignment="Stretch">
             <DataGrid.Columns>
                
+               <!-- Checkbox Selection Column -->
+               <DataGridTemplateColumn Width="50" CanUserSort="False" CanUserReorder="False" CanUserResize="False">
+                  <DataGridTemplateColumn.Header>
+                     <CheckBox IsChecked="{Binding #MasterRosterRoot.((vm:DirectoryViewModel)DataContext).IsAllMasterSelected}" HorizontalAlignment="Center"/>
+                  </DataGridTemplateColumn.Header>
+                  <DataGridTemplateColumn.CellTemplate>
+                     <DataTemplate>
+                        <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                     </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+               </DataGridTemplateColumn>
+
                <!-- Fixed metadata columns -->
                <DataGridTemplateColumn Header="Student ID" SortMemberPath="StudentID" Width="120" IsVisible="{ReflectionBinding $parent[UserControl].DataContext.ShowStudentIdColumn}">
                   <DataGridTemplateColumn.CellTemplate>
@@ -275,8 +293,8 @@
                   </DataGridTemplateColumn.CellTemplate>
                </DataGridTemplateColumn>
                                                                                                       
-               <!-- Action buttons pinned to the right edge -->
-               <DataGridTemplateColumn Header="Actions" Width="120" CanUserSort="False" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
+               <!-- Action buttons pinned to the right edge (Edit & View only) -->
+               <DataGridTemplateColumn Header="Actions" Width="90" CanUserSort="False" IsReadOnly="True" CanUserReorder="False" CanUserResize="False">
                   <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -293,12 +311,6 @@
                                        CommandParameter="{Binding}"
                                        Background="Transparent" ToolTip.Tip="View Full Profile">
                                     <TextBlock Classes="Icon" Text="{DynamicResource IconPerson}" Foreground="{DynamicResource TextMainBrush}" FontSize="15"/>
-                              </Button>
-                              
-                              <Button Command="{Binding #MasterRosterRoot.((vm:DirectoryViewModel)DataContext).ArchiveStudentCommand}"
-                                       CommandParameter="{Binding}"
-                                       Background="Transparent" ToolTip.Tip="Archive Student">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconArchive}" Foreground="#F59E0B" FontSize="15"/>
                               </Button>
                            </StackPanel>
                         </DataTemplate>
