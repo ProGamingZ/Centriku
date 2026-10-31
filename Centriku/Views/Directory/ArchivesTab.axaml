@@ -45,14 +45,14 @@
 
             <Button Grid.Column="2" Command="{Binding PromptBulkRestoreCommand}" 
                     Content="Restore" 
-                    Background="Transparent" Foreground="#10B981" 
-                    BorderBrush="#10B981" BorderThickness="1" FontWeight="Bold" 
+                    Background="Transparent" Foreground="{DynamicResource SuccessBrush}" 
+                    BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1" FontWeight="Bold" 
                     CornerRadius="8" Padding="20,10" Margin="0,0,12,0"/>
 
             <Button Grid.Column="3" Command="{Binding PromptBulkDeleteCommand}" 
                     Content="Delete" 
-                    Background="Transparent" Foreground="#EF4444" 
-                    BorderBrush="#EF4444" BorderThickness="1" FontWeight="Bold" 
+                    Background="Transparent" Foreground="{DynamicResource DangerBrush}" 
+                    BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" FontWeight="Bold" 
                     CornerRadius="8" Padding="20,10"/>
          </Grid>
 
@@ -64,7 +64,7 @@
       <DataGrid Grid.Row="2" Margin="24,0,24,24" ItemsSource="{Binding DisplayedArchivedStudents}" AutoGenerateColumns="False" 
                CanUserSortColumns="True" CanUserResizeColumns="True" CanUserReorderColumns="True" IsReadOnly="True" 
                GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" 
-               RowHeight="36"
+               RowHeight="36" FrozenColumnCount="2"
                HorizontalAlignment="Stretch" 
                VerticalAlignment="Stretch">
                <DataGrid.Columns>

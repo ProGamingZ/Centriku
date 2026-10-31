@@ -22,10 +22,10 @@ x:DataType="vm:DirectoryViewModel">
     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="24,0,24,40" Spacing="20">
             
-            <Border IsVisible="{Binding HasImportError}" Background="#3F1014" BorderBrush="#DC2626" BorderThickness="1" CornerRadius="8" Padding="15">
+            <Border IsVisible="{Binding HasImportError}" Background="{DynamicResource DangerBgBrush}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="8" Padding="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="❌" FontSize="20" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding ImportSummaryMessage}" Foreground="#FECACA" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    <TextBlock Classes="Icon" Text="{DynamicResource IconCritical}" Foreground="{DynamicResource DangerBrush}" FontSize="20" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ImportSummaryMessage}" Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>
 

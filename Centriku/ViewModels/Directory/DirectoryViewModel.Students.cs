@@ -324,42 +324,6 @@ namespace Centriku.ViewModels
             OnStudentRosterChanged?.Invoke();
         }
 
-        private async Task ArchiveStudentAsync(StudentRowViewModel row)
-        {
-            if (row == null) return;
-            var db = _dbService.GetConnection();
-            row.DbModel.IsArchived = true; await db.UpdateAsync(row.DbModel); await LoadStudentsAsync(); OnStudentRosterChanged?.Invoke();
-        }
-
-        private async Task RestoreStudentAsync(StudentRowViewModel row)
-        {
-            if (row == null) return;
-            var db = _dbService.GetConnection();
-            row.DbModel.IsArchived = false; await db.UpdateAsync(row.DbModel); await LoadStudentsAsync(); OnStudentRosterChanged?.Invoke();
-        }
-
-        private async Task DeleteStudentAsync(StudentRowViewModel row)
-        {
-            if (row == null) return;
-            var db = _dbService.GetConnection();
-            string targetId = row.StudentID;
-
-            // CASCADE DELETE: Wipe all child records so no Ghost/Orphan records remain in the system!
-            var rosters = await db.Table<Centriku.Models.ClassRoster>().Where(r => r.StudentID == targetId).ToListAsync();
-            var scores = await db.Table<Centriku.Models.Score>().Where(s => s.StudentID == targetId).ToListAsync();
-            var attendance = await db.Table<Centriku.Models.AttendanceRecord>().Where(a => a.StudentID == targetId).ToListAsync();
-            var groupMembers = await db.Table<Centriku.Models.AssessmentGroupMember>().Where(m => m.StudentID == targetId).ToListAsync();
-
-            foreach (var r in rosters) await db.DeleteAsync(r);
-            foreach (var s in scores) await db.DeleteAsync(s);
-            foreach (var a in attendance) await db.DeleteAsync(a);
-            foreach (var gm in groupMembers) await db.DeleteAsync(gm);
-
-            await db.DeleteAsync(row.DbModel);
-            await LoadStudentsAsync();
-            OnStudentRosterChanged?.Invoke();
-        }
-
         [RelayCommand]
         public void PromptBulkArchive()
         {
