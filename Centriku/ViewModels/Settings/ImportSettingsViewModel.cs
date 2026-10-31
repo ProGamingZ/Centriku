@@ -77,10 +77,12 @@ namespace Centriku.ViewModels.Settings
       public string DefaultSectionName { get => CurrentSettings.DefaultSectionName; set { CurrentSettings.DefaultSectionName = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
       public string DefaultEnrollmentStatus { get => CurrentSettings.DefaultEnrollmentStatus; set { CurrentSettings.DefaultEnrollmentStatus = value; OnPropertyChanged(); if (!_isUpdating) UpdateMappingState(); } }
 
+      private readonly Centriku.Services.IDatabaseService _dbService;
       public IRelayCommand SaveSettingsCommand { get; }
 
-      public ImportSettingsViewModel()
+      public ImportSettingsViewModel(Centriku.Services.IDatabaseService? dbService = null)
       {
+         _dbService = dbService ?? new Centriku.Services.DatabaseService();
          SaveSettingsCommand = new RelayCommand(SaveSettings);
          LoadSettings();
       }
@@ -88,7 +90,7 @@ namespace Centriku.ViewModels.Settings
       private async void LoadSettings()
       {
          await Centriku.Services.DatabaseService.WaitForDatabaseReadyAsync();
-         var db = new Centriku.Services.DatabaseService().GetConnection();
+         var db = _dbService.GetConnection();
          var savedSettings = await db.Table<AppSettings>().FirstOrDefaultAsync();
          if (savedSettings != null) CurrentSettings = savedSettings;
          else { CurrentSettings = new AppSettings(); await db.InsertAsync(CurrentSettings); }
@@ -192,7 +194,7 @@ namespace Centriku.ViewModels.Settings
       private async void SaveSettings()
       {
          IsSaving = true;
-         var db = new Centriku.Services.DatabaseService().GetConnection();
+         var db = _dbService.GetConnection();
          await db.UpdateAsync(CurrentSettings);
          await Task.Delay(600); 
          IsSaving = false;

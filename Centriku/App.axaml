@@ -119,6 +119,60 @@
             <Setter Property="Data" Value="M 0,0 L 8,0 L 4,8 Z"/>
         </Style>
 
+        <!-- CENTRALIZED CHECKBOX THEME (Selected & Unselected)    -->
+        <Style Selector="CheckBox /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Width" Value="18"/>
+            <Setter Property="Height" Value="18"/>
+        </Style>
+        <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
+        </Style>
+        <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="CheckBox:checked /template/ Path#CheckGlyph">
+            <Setter Property="Fill" Value="White"/>
+        </Style>
+
+        <!-- NON-OVERLAPPING, THEME-STYLIZED SCROLLBARS            -->
+        <!-- Disables overlay mode so scrollbars reserve their own space and NEVER cover table cells -->
+        <Style Selector="ScrollViewer">
+            <Setter Property="AllowAutoHide" Value="False"/>
+        </Style>
+        <Style Selector="DataGrid /template/ ScrollBar#PART_VerticalScrollbar">
+            <Setter Property="AllowAutoHide" Value="False"/>
+            <Setter Property="Margin" Value="2,0,0,0"/>
+        </Style>
+        <Style Selector="ScrollBar">
+            <Setter Property="AllowAutoHide" Value="False"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ScrollBar:vertical">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="MinWidth" Value="10"/>
+        </Style>
+        <Style Selector="ScrollBar:horizontal">
+            <Setter Property="Height" Value="10"/>
+            <Setter Property="MinHeight" Value="10"/>
+        </Style>
+        <Style Selector="ScrollBar /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource ScrollBarThumbBrush}"/>
+            <Setter Property="CornerRadius" Value="5"/>
+        </Style>
+        <Style Selector="ScrollBar:pointerover /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource ScrollBarThumbHoverBrush}"/>
+        </Style>
+        <!-- Hide bulky up/down scrollbar line buttons for a modern clean track -->
+        <Style Selector="ScrollBar /template/ RepeatButton">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+
     </Application.Styles>
 
     <Application.Resources>
@@ -148,6 +202,9 @@
                     
                     <SolidColorBrush x:Key="DangerBrush">#EF4444</SolidColorBrush>
                     <SolidColorBrush x:Key="DangerBgBrush">#1AEF4444</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#334155</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#8B5CF6</SolidColorBrush>
                 </ResourceDictionary> 
 
                 <ResourceDictionary x:Key="Light">
@@ -172,6 +229,9 @@
                     
                     <SolidColorBrush x:Key="DangerBrush">#DC2626</SolidColorBrush>
                     <SolidColorBrush x:Key="DangerBgBrush">#1AEF4444</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#CBD5E1</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#8B5CF6</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries> 
 

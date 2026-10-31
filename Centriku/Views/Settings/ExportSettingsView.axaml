@@ -5,135 +5,149 @@
              x:DataType="vm:ExportSettingsViewModel">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid RowDefinitions="Auto, Auto, Auto, *" Margin="24,24,24,20">
+        <StackPanel Margin="14,10,24,24" Spacing="18">
             
-            <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="Global Export Configuration" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                <TextBlock Text="Set your default preferences for all CSV spreadsheets exported from Centriku." Foreground="{DynamicResource TextMutedBrush}"/>
-            </StackPanel>
+            <!-- Header Bar with Action Buttons Pinned Right -->
+            <Grid ColumnDefinitions="*, Auto, Auto">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="Global Export Configuration" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <TextBlock Text="Set your default folder, file naming convention, and formatting preferences for exported spreadsheets." FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,0"/>
+                </StackPanel>
 
-            <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                <Button Grid.Column="1" Command="{Binding ResetDefaultsCommand}" Content="Reset Defaults" Background="Transparent" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" CornerRadius="8" Padding="16,10" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                <Button Grid.Column="2" Command="{Binding SaveSettingsCommand}" Content="Save Export Settings" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10" CornerRadius="8" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Proportional 3-Column Settings Grid -->
+            <Grid ColumnDefinitions="*, *, *">
                 
-                <Border Margin="0,0,20,20" Width="380" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="15">
+                <!-- CARD 1: File & Directory Management -->
+                <Border Grid.Column="0" Margin="0,0,16,0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="14">
                         <TextBlock Text="File &amp; Directory Management" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
-                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,-5,0,5"/>
+                        <Border Height="1" Background="{DynamicResource BorderBrush}"/>
 
                         <Grid ColumnDefinitions="*, Auto">
-                            <StackPanel Grid.Column="0" Spacing="5" Margin="0,0,20,0">
-                                <TextBlock Text="Default Save Location" FontWeight="SemiBold"/>
-                                <TextBlock Text="Where should exported files be saved by default?" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding DefaultExportFolderPath, TargetNullValue='No Default Folder Selected (Downloads will prompt)'}" 
-                                           FontStyle="Italic" Foreground="{DynamicResource PrimaryBrush}" Margin="0,5,0,0" TextWrapping="Wrap" FontSize="11"/>
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,12,0">
+                                <TextBlock Text="Default Save Location" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Destination folder for exported files:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
-                            <Button Grid.Column="1" Content="Browse..." Click="OnBrowseFolderClicked" Background="{DynamicResource SurfaceVariantBrush}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Browse..." Click="OnBrowseFolderClicked" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" CornerRadius="6" VerticalAlignment="Top"/>
                         </Grid>
 
-                        <StackPanel Spacing="5" Margin="0,10,0,0">
-                            <TextBlock Text="File Naming Format" FontWeight="SemiBold"/>
-                            <TextBlock Text="How should the system automatically name your file?" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                            <ComboBox ItemsSource="{Binding NamingFormats}" SelectedItem="{Binding FileNamingFormat}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}" Margin="0,5,0,0"/>
-                            <TextBlock Text="{Binding ExampleFileName}" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontStyle="Italic" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <Border Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                            <TextBlock Text="{Binding DefaultExportFolderPath, TargetNullValue='Default Downloads Folder'}" 
+                                       Foreground="{DynamicResource PrimaryBrush}" TextWrapping="Wrap" FontSize="11" FontWeight="SemiBold"/>
+                        </Border>
+
+                        <StackPanel Spacing="5" Margin="0,4,0,0">
+                            <TextBlock Text="File Naming Format" FontWeight="SemiBold" FontSize="13"/>
+                            <ComboBox ItemsSource="{Binding NamingFormats}" SelectedItem="{Binding FileNamingFormat}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                            <TextBlock Text="{Binding ExampleFileName}" FontSize="11" Foreground="{DynamicResource PrimaryBrush}" FontStyle="Italic" TextWrapping="Wrap" Margin="0,2,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <Border Margin="0,0,20,20" Width="380" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="15">
+                <!-- CARD 2: Data & Privacy Controls -->
+                <Border Grid.Column="1" Margin="0,0,16,0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="16">
                         <TextBlock Text="Data &amp; Privacy Controls" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
-                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,-5,0,5"/>
+                        <Border Height="1" Background="{DynamicResource BorderBrush}"/>
 
-                        <StackPanel Orientation="Horizontal" Spacing="15">
-                            <ToggleSwitch IsChecked="{Binding ExportIncludeStudentId}" OnContent="Included" OffContent="Hidden"/>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Include Student IDs" FontWeight="SemiBold"/>
-                                <TextBlock Text="Show the 12-digit Student ID in column A." FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
+                                <TextBlock Text="Include Student IDs" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="Output Student ID numbers in the exported sheet." FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
-                        </StackPanel>
+                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding ExportIncludeStudentId}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                        </Grid>
 
-                        <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,10,0,0">
-                            <ToggleSwitch IsChecked="{Binding ExportIncludeArchived}" OnContent="Included" OffContent="Hidden"/>
-                            <StackPanel VerticalAlignment="Center" MaxWidth="240">
-                                <TextBlock Text="Include Archived/Dropped Students" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                <TextBlock Text="Add inactive students to the bottom of the exported list." FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+                        <Border Height="1" Background="{DynamicResource BorderBrush}" Opacity="0.5"/>
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
+                                <TextBlock Text="Include Archived/Dropped Students" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+                                <TextBlock Text="Append inactive students to the bottom of the exported class record." FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                             </StackPanel>
-                        </StackPanel>
+                            <ToggleSwitch Grid.Column="1" IsChecked="{Binding ExportIncludeArchived}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
-                <Border Margin="0,0,20,20" Width="380" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
-                    <StackPanel Spacing="15">
+                <!-- CARD 3: Spreadsheet Formatting -->
+                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="14">
                         <TextBlock Text="Spreadsheet Formatting" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
-                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,-5,0,5"/>
+                        <Border Height="1" Background="{DynamicResource BorderBrush}"/>
 
-                        <Grid ColumnDefinitions="1*, 1*" RowDefinitions="Auto, Auto">
-                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5" Margin="0,0,15,15">
-                                <TextBlock Text="Missing Scores" FontWeight="SemiBold"/>
-                                <TextBlock Text="How to output blank cells." FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <Grid ColumnDefinitions="*, *">
+                            <StackPanel Grid.Column="0" Spacing="5" Margin="0,0,8,0">
+                                <TextBlock Text="Missing Scores" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBlock Text="Blank cell output:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding MissingScoreRules}" SelectedItem="{Binding ExportMissingScoreRule}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="5" Margin="0,0,0,15">
-                                <TextBlock Text="Decimal Precision" FontWeight="SemiBold"/>
-                                <TextBlock Text="Exact vs Rounded." FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <StackPanel Grid.Column="1" Spacing="5" Margin="8,0,0,0">
+                                <TextBlock Text="Decimal Precision" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBlock Text="Exact vs Rounded:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                                 <ComboBox ItemsSource="{Binding DecimalPrecisions}" SelectedItem="{Binding ExportDecimalPrecision}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
                             </StackPanel>
-
-                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Spacing="5">
-                                <TextBlock Text="Attendance Export Depth" FontWeight="SemiBold"/>
-                                <TextBlock Text="Choose between a daily breakdown or just summary totals." FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding AttendanceDetails}" SelectedItem="{Binding ExportAttendanceDetail}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
-                            </StackPanel>
                         </Grid>
+
+                        <StackPanel Spacing="5" Margin="0,6,0,0">
+                            <TextBlock Text="Attendance Export Depth" FontWeight="SemiBold" FontSize="12"/>
+                            <TextBlock Text="Choose between a daily breakdown or summary totals:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <ComboBox ItemsSource="{Binding AttendanceDetails}" SelectedItem="{Binding ExportAttendanceDetail}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
-            </WrapPanel>
+            </Grid>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15" Margin="0,0,20,20">
-                <Button Command="{Binding ResetDefaultsCommand}" Content="Reset to Defaults" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}"/>
-                <Button Command="{Binding SaveSettingsCommand}" Content="Save Export Settings" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="20,10" CornerRadius="8"/>
-            </StackPanel>
-
-            <Border Grid.Row="3" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="12" Padding="20" Margin="0,0,20,20" VerticalAlignment="Top">
+            <!-- Live Export Previews Card -->
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Export Previews" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
-                    <TextBlock Text="See how your tables will look based on your current settings above." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-5,0,10"/>
+                    <TextBlock Text="Live Export Previews" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"/>
+                    <TextBlock Text="Preview how your exported spreadsheets will format student rows based on the rules above." Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,-4,0,6"/>
                     
                     <TabControl>
-
-                        <TabItem Header="Semestral" FontSize="14" FontWeight="SemiBold">
-                            <DataGrid ItemsSource="{Binding SemestralPreviewRows}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Height="150" Margin="0,10,0,0">
+                        <TabItem Header="Semestral Record" FontSize="14" FontWeight="SemiBold">
+                            <DataGrid ItemsSource="{Binding SemestralPreviewRows}" AutoGenerateColumns="False" IsReadOnly="True" 
+                                      CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+                                      GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
+                                      CornerRadius="8" RowHeight="38" Height="135" Margin="0,10,0,0" HorizontalAlignment="Stretch">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Student ID" Binding="{Binding StudentId}" IsVisible="{Binding ExportIncludeStudentId}" Width="130"/>
-                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*"/>
-                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*"/>
-                                    <DataGridTextColumn Header="Assessment 1" Binding="{Binding Score1}" Width="*"/>
-                                    <DataGridTextColumn Header="Assessment 2" Binding="{Binding Score2}" Width="*"/>
-                                    <DataGridTextColumn Header="Midterm Grade" Binding="{Binding Average}" Width="*"/>
+                                    <DataGridTextColumn Header="Student ID" Binding="{Binding StudentId}" IsVisible="{Binding ExportIncludeStudentId}" Width="1.1*" MinWidth="120"/>
+                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="1.4*"/>
+                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="1.4*"/>
+                                    <DataGridTextColumn Header="Assessment 1" Binding="{Binding Score1}" Width="1*"/>
+                                    <DataGridTextColumn Header="Assessment 2" Binding="{Binding Score2}" Width="1*"/>
+                                    <DataGridTextColumn Header="Midterm Grade" Binding="{Binding Average}" Width="1*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </TabItem>
 
-                        <TabItem Header="Attendance" FontSize="14" FontWeight="SemiBold">
-                            <DataGrid ItemsSource="{Binding AttendancePreviewRows}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="8" Height="150" Margin="0,10,0,0">
+                        <TabItem Header="Attendance Sheet" FontSize="14" FontWeight="SemiBold">
+                            <DataGrid ItemsSource="{Binding AttendancePreviewRows}" AutoGenerateColumns="False" IsReadOnly="True" 
+                                      CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+                                      GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
+                                      CornerRadius="8" RowHeight="38" Height="135" Margin="0,10,0,0" HorizontalAlignment="Stretch">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*"/>
-                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*"/>
-                                    <DataGridTextColumn Header="Total P" Binding="{Binding TotalP}" Width="100"/>
-                                    <DataGridTextColumn Header="Total L" Binding="{Binding TotalL}" Width="100"/>
-                                    <DataGridTextColumn Header="Total A" Binding="{Binding TotalA}" Width="100"/>
-                                    <DataGridTextColumn Header="Total E" Binding="{Binding TotalE}" Width="100"/>
-                                    <DataGridTextColumn Header="2026-06-01" Binding="{Binding Day1}" IsVisible="{Binding IsAttendanceDetailed}" Width="120"/>
-                                    <DataGridTextColumn Header="2026-06-02" Binding="{Binding Day2}" IsVisible="{Binding IsAttendanceDetailed}" Width="120"/>
+                                    <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="1.4*"/>
+                                    <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="1.4*"/>
+                                    <DataGridTextColumn Header="Total P" Binding="{Binding TotalP}" Width="90"/>
+                                    <DataGridTextColumn Header="Total L" Binding="{Binding TotalL}" Width="90"/>
+                                    <DataGridTextColumn Header="Total A" Binding="{Binding TotalA}" Width="90"/>
+                                    <DataGridTextColumn Header="Total E" Binding="{Binding TotalE}" Width="90"/>
+                                    <DataGridTextColumn Header="2026-06-01" Binding="{Binding Day1}" IsVisible="{Binding IsAttendanceDetailed}" Width="115"/>
+                                    <DataGridTextColumn Header="2026-06-02" Binding="{Binding Day2}" IsVisible="{Binding IsAttendanceDetailed}" Width="115"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </TabItem>
-
                     </TabControl>
                 </StackPanel>
             </Border>
 
-        </Grid>
+        </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -30,26 +30,37 @@ x:DataType="vm:DirectoryViewModel">
             </Border>
 
             <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" HorizontalAlignment="Stretch">
-                <StackPanel>
-                    <TextBlock Text="Current Column Configuration:" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Current Column Configuration &amp; Auto-Fill Defaults" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="Click 'Import Settings' above to modify" FontStyle="Italic" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Contextual Auto-Fill Summary Pill Bar -->
+                    <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <TextBlock Grid.Column="0" Text="Auto-Fill for Blank/Ignored Cells:  " FontWeight="Bold" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding AutoFillSummaryText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
                     <DataGrid ItemsSource="{Binding CurrentSettingsPreview}" AutoGenerateColumns="False" IsReadOnly="True" 
                               CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserSortColumns="False"
                               GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
                               CornerRadius="8" RowHeight="38" HorizontalAlignment="Stretch">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="{Binding Col1H}" Binding="{Binding Col1Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col2H}" Binding="{Binding Col2Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col3H}" Binding="{Binding Col3Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col4H}" Binding="{Binding Col4Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col5H}" Binding="{Binding Col5Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col6H}" Binding="{Binding Col6Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col7H}" Binding="{Binding Col7Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col8H}" Binding="{Binding Col8Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col9H}" Binding="{Binding Col9Text}" Width="*" MinWidth="90"/>
-                            <DataGridTextColumn Header="{Binding Col10H}" Binding="{Binding Col10Text}" Width="*" MinWidth="90"/>
+                            <DataGridTextColumn Header="{Binding Col1H}" Binding="{Binding Col1Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col2H}" Binding="{Binding Col2Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col3H}" Binding="{Binding Col3Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col4H}" Binding="{Binding Col4Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col5H}" Binding="{Binding Col5Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col6H}" Binding="{Binding Col6Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col7H}" Binding="{Binding Col7Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col8H}" Binding="{Binding Col8Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col9H}" Binding="{Binding Col9Text}" Width="*" MinWidth="85"/>
+                            <DataGridTextColumn Header="{Binding Col10H}" Binding="{Binding Col10Text}" Width="*" MinWidth="85"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <TextBlock Text="If this doesn't match your Excel file, click 'Import Settings' at the top right to fix it before importing." FontStyle="Italic" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,10,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
 
@@ -79,11 +90,23 @@ x:DataType="vm:DirectoryViewModel">
                           GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 
                           CornerRadius="8" Height="420" RowHeight="40" HorizontalAlignment="Stretch">
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="Action" Width="115" IsReadOnly="True">
+                        <DataGridTemplateColumn Header="Action" Width="135" IsReadOnly="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Background="{Binding StatusColor}" CornerRadius="4" Padding="8,3" Margin="4" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding ImportStatus}" Foreground="#111827" FontWeight="Bold" FontSize="11"/>
+                                    <Border Background="{Binding StatusColor}"
+                                            BorderBrush="{Binding StatusBorderColor}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10,4"
+                                            Margin="6,4"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ImportStatus}"
+                                                   ToolTip.Tip="{Binding ImportStatus}"
+                                                   Foreground="{Binding StatusTextColor}"
+                                                   FontWeight="Bold"
+                                                   FontSize="11"
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

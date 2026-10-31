@@ -19,10 +19,14 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool IsDuplicate { get; set; }
             [ObservableProperty] public partial bool IsError { get; set; } 
             [ObservableProperty] public partial string ImportStatus { get; set; } = string.Empty;
-            [ObservableProperty] public partial string StatusColor { get; set; } = "#FFFFFF";
+            [ObservableProperty] public partial string StatusColor { get; set; } = "#1A10B981";
+            [ObservableProperty] public partial string StatusBorderColor { get; set; } = "#10B981";
+            [ObservableProperty] public partial string StatusTextColor { get; set; } = "#10B981";
             public StagedStudent(Centriku.Models.Student student) { DbModel = student; }
         }
+
             [ObservableProperty] public partial ObservableCollection<Centriku.ViewModels.Settings.PreviewStudentRow> CurrentSettingsPreview { get; set; } = new();
+            [ObservableProperty] public partial string AutoFillSummaryText { get; set; } = string.Empty;
             [ObservableProperty] public partial string Col1H { get; set; } = ""; [ObservableProperty] public partial string Col2H { get; set; } = "";
             [ObservableProperty] public partial string Col3H { get; set; } = ""; [ObservableProperty] public partial string Col4H { get; set; } = "";
             [ObservableProperty] public partial string Col5H { get; set; } = ""; [ObservableProperty] public partial string Col6H { get; set; } = "";
@@ -67,6 +71,15 @@ namespace Centriku.ViewModels
                 };
                 
                 CurrentSettingsPreview = new ObservableCollection<Centriku.ViewModels.Settings.PreviewStudentRow> { singleRow };
+            
+                string genderDef = string.IsNullOrWhiteSpace(settings.DefaultGender) || settings.DefaultGender == "None" ? "None" : settings.DefaultGender;
+                string yearDef = string.IsNullOrWhiteSpace(settings.DefaultGradeLevel) ? "None" : settings.DefaultGradeLevel;
+                string progDef = string.IsNullOrWhiteSpace(settings.DefaultProgram) ? "None" : settings.DefaultProgram;
+                string secDef = string.IsNullOrWhiteSpace(settings.DefaultSectionName) ? "None" : settings.DefaultSectionName;
+                string statDef = string.IsNullOrWhiteSpace(settings.DefaultEnrollmentStatus) ? "Regular" : settings.DefaultEnrollmentStatus;
+                string dupRule = settings.DuplicateHandlingRule == "Skip" ? "Skip Duplicates" : "Update Existing";
+
+                AutoFillSummaryText = $"Gender: {genderDef}   •   Year: {yearDef}   •   Program: {progDef}   •   Section: {secDef}   •   Status: {statDef}   •   Rule: {dupRule}";
             }
         private List<StudentRowViewModel> _allStudents = [];
         private List<StudentRowViewModel> _allArchivedStudents = [];
@@ -483,7 +496,7 @@ namespace Centriku.ViewModels
                             else if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) { isError = true; errorMsg = "Error: Missing First Name"; }
                         }
 
-                        if (isError) { staged.IsError = true; staged.ImportStatus = errorMsg; staged.StatusColor = "#EF4444"; }
+                        if (isError) { staged.IsError = true; ApplyStagedBadgeTheme(staged, errorMsg, "Error"); }
                         else
                         {
                             bool isDup = false;
@@ -517,8 +530,8 @@ namespace Centriku.ViewModels
                             if (isDup)
                             {
                                 staged.IsDuplicate = true;
-                                if (settings.DuplicateHandlingRule == "Skip") { staged.ImportStatus = "Will Skip"; staged.StatusColor = "#6B7280"; } 
-                                else { staged.ImportStatus = "Will Update"; staged.StatusColor = "#EAB308"; } 
+                                if (settings.DuplicateHandlingRule == "Skip") { ApplyStagedBadgeTheme(staged, "Will Skip", "Skip"); } 
+                                else { ApplyStagedBadgeTheme(staged, "Will Update", "Update"); } 
                             }
                             else { staged.ImportStatus = "New Student"; staged.StatusColor = "#22C55E"; }
                         }
@@ -561,6 +574,34 @@ namespace Centriku.ViewModels
             finally { IsLoading = false; }
         }
 
+        private static void ApplyStagedBadgeTheme(StagedStudent staged, string status, string category)
+        {
+            staged.ImportStatus = status;
+            switch (category)
+            {
+                case "Error":
+                    staged.StatusColor = "#1AEF4444";       // DangerBgBrush
+                    staged.StatusBorderColor = "#EF4444"; // DangerBrush
+                    staged.StatusTextColor = "#EF4444";
+                    break;
+                case "Skip":
+                    staged.StatusColor = "#1E2538";       // SurfaceVariant
+                    staged.StatusBorderColor = "#8A94A6"; // TextMutedBrush
+                    staged.StatusTextColor = "#8A94A6";
+                    break;
+                case "Update":
+                    staged.StatusColor = "#1AF59E0B";     // WarningBgBrush
+                    staged.StatusBorderColor = "#F59E0B"; // WarningBrush
+                    staged.StatusTextColor = "#F59E0B";
+                    break;
+                default: // "New"
+                    staged.StatusColor = "#1A10B981";     // SuccessBgBrush
+                    staged.StatusBorderColor = "#10B981"; // SuccessBrush
+                    staged.StatusTextColor = "#10B981";
+                    break;
+            }
+        }
+
         [RelayCommand]
         public async Task RecheckStagedDataAsync()
         {
@@ -584,7 +625,7 @@ namespace Centriku.ViewModels
                     else if (settings.FirstNameColumnIndex != -1 && string.IsNullOrWhiteSpace(parsed.FirstName)) { isError = true; errorMsg = "Error: Missing First Name"; }
                 }
 
-                if (isError) { staged.IsError = true; staged.ImportStatus = errorMsg; staged.StatusColor = "#EF4444"; errorCount++; }
+                if (isError) { staged.IsError = true; ApplyStagedBadgeTheme(staged, errorMsg, "Error"); errorCount++; }
                 else
                 {
                     staged.IsError = false; 
@@ -619,10 +660,10 @@ namespace Centriku.ViewModels
                     if (isDup)
                     {
                         staged.IsDuplicate = true;
-                        if (settings.DuplicateHandlingRule == "Skip") { staged.ImportStatus = "Will Skip"; staged.StatusColor = "#6B7280"; } 
-                        else { staged.ImportStatus = "Will Update"; staged.StatusColor = "#EAB308"; } 
+                        if (settings.DuplicateHandlingRule == "Skip") { ApplyStagedBadgeTheme(staged, "Will Skip", "Skip"); } 
+                        else { ApplyStagedBadgeTheme(staged, "Will Update", "Update"); } 
                     }
-                    else { staged.IsDuplicate = false; staged.ImportStatus = "New Student"; staged.StatusColor = "#22C55E"; }
+                    else { staged.IsDuplicate = false; ApplyStagedBadgeTheme(staged, "New Student", "New"); }
                 }
             }
             int total = StagedStudents.Count; int dupes = StagedStudents.Count(s => s.IsDuplicate);
