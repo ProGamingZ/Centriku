@@ -13,25 +13,33 @@
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         
+        <!-- 1. ICON TYPOGRAPHY                                    -->
         <Style Selector="TextBlock.Icon">
             <Setter Property="FontFamily" Value="{DynamicResource FluentIcons}"/>
             <Setter Property="FontSize" Value="24"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        
-        <Style Selector="DataGridColumnHeader:pointerover /template/ Grid#PART_ColumnHeaderRoot">
-            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
-        </Style>
-        <Style Selector="DataGridColumnHeader:pressed /template/ Grid#PART_ColumnHeaderRoot">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+
+        <!-- 2. DATAGRID (TABLES: ALT, HOVER, SELECTED, FOCUSED)   -->
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="CornerRadius" Value="10"/>
         </Style>
 
+        <!-- Even & Odd Alternating Rows -->
+        <Style Selector="DataGridRow">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+        </Style>
         <Style Selector="DataGridRow:nth-child(odd)">
             <Setter Property="Background" Value="{DynamicResource DataGridAltRowBrush}"/> 
         </Style>
-        <Style Selector="DataGridRow:pointerover, DataGridRow:selected">
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
+
+        <!-- Row Hover & Selected States -->
         <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
             <Setter Property="Fill" Value="{DynamicResource DataGridHoverBrush}"/>
             <Setter Property="Opacity" Value="1"/>
@@ -41,12 +49,16 @@
             <Setter Property="Fill" Value="{DynamicResource DataGridSelectedBrush}"/>
             <Setter Property="Opacity" Value="1"/> 
         </Style>
-        <Style Selector="DataGridCell:selected, DataGridCell:pointerover, DataGridCell:selected:pointerover">
-            <Setter Property="Background" Value="Transparent"/>
+        <Style Selector="DataGridRow:selected">
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
         </Style>
-        
+
+        <!-- Cell Focus State (Clean Primary Inner Ring when navigating/editing cells) -->
         <Style Selector="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="FocusAdorner" Value="{x:Null}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
         <Style Selector="DataGridCell:current /template/ Rectangle#CurrencyVisual">
             <Setter Property="IsVisible" Value="False"/>
@@ -54,26 +66,20 @@
         <Style Selector="DataGridCell:focus /template/ Grid#FocusVisual">
             <Setter Property="IsVisible" Value="False"/>
         </Style>
-        
-        <Style Selector="DataGrid CheckBox">
-            <Setter Property="MinWidth" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+        <Style Selector="DataGridCell:focus-within">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputFocusBgBrush}"/>
         </Style>
 
+        <!-- Column Headers with Pronounced Bottom & Side Borders -->
         <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-        </Style>
-
-        <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,1,2"/>
-            <Setter Property="Padding" Value="6,6"/>
+            <Setter Property="Padding" Value="8,8"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <ControlTemplate>
@@ -95,7 +101,7 @@
                                   Margin="6,0,0,0"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center"
-                                  Fill="{TemplateBinding Foreground}"
+                                  Fill="{DynamicResource PrimaryBrush}"
                                   IsVisible="False"/>
                         </Grid>
                     </Border>
@@ -103,28 +109,160 @@
             </Setter>
         </Style>
         <Style Selector="DataGridColumnHeader:pointerover /template/ Border#PART_ColumnHeaderRoot">
-            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource DataGridHoverBrush}"/>
         </Style>
         <Style Selector="DataGridColumnHeader:pressed /template/ Border#PART_ColumnHeaderRoot">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource DataGridSelectedBrush}"/>
         </Style>
-        <!-- Ascending -->
         <Style Selector="DataGridColumnHeader:sortascending /template/ Path#SortArrow">
             <Setter Property="IsVisible" Value="True"/>
             <Setter Property="Data" Value="M 0,8 L 4,0 L 8,8 Z"/>
         </Style>
-        <!-- Descending -->
         <Style Selector="DataGridColumnHeader:sortdescending /template/ Path#SortArrow">
             <Setter Property="IsVisible" Value="True"/>
             <Setter Property="Data" Value="M 0,0 L 8,0 L 4,8 Z"/>
         </Style>
 
-        <!-- CENTRALIZED CHECKBOX THEME (Selected & Unselected)    -->
-        <Style Selector="CheckBox /template/ Border#NormalRectangle">
-            <Setter Property="Background" Value="{DynamicResource AppBackground}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
+        <!-- 3. INPUT FIELDS (TEXTBOX & NUMERICUPDOWN)             -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHoverBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Background" Value="{DynamicResource InputFocusBgBrush}"/>
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="NumericUpDown:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHoverBrush}"/>
+        </Style>
+        <Style Selector="NumericUpDown:focus-within">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+
+        <!-- 4. DROPDOWNS (COMBOBOX & COMBOBOXITEM)                -->
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,7"/>
+        </Style>
+        <Style Selector="ComboBox:pointerover /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHoverBrush}"/>
+        </Style>
+        <Style Selector="ComboBox:focus /template/ Border#Background, ComboBox:pressed /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="ComboBox /template/ Border#PopupBorder">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="2,1"/>
+            <Setter Property="Padding" Value="10,7"/>
+        </Style>
+        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DataGridHoverBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+        </Style>
+        <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DataGridSelectedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- 5. BUTTONS, RADIOBUTTONS, CHECKBOXES, TOGGLESWITCHES  -->
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Opacity" Value="0.93"/>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.98)"/>
+            <Setter Property="Opacity" Value="0.86"/>
+        </Style>
+
+        <!-- RadioButton (Radial Buttons) -->
+        <Style Selector="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="RadioButton /template/ Ellipse#OuterEllipse">
+            <Setter Property="Stroke" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="StrokeThickness" Value="2"/>
+            <Setter Property="Fill" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="Width" Value="18"/>
+            <Setter Property="Height" Value="18"/>
+        </Style>
+        <Style Selector="RadioButton:pointerover /template/ Ellipse#OuterEllipse">
+            <Setter Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Fill" Value="{DynamicResource SurfaceVariantBrush}"/>
+        </Style>
+        <Style Selector="RadioButton:checked /template/ Ellipse#OuterEllipse">
+            <Setter Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="RadioButton:checked /template/ Ellipse#CheckOuterEllipse">
+            <Setter Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
+            <Setter Property="Fill" Value="White"/>
+            <Setter Property="Stroke" Value="White"/>
+        </Style>
+
+        <!-- CheckBox -->
+        <Style Selector="DataGrid CheckBox">
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="CheckBox /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="5"/>
             <Setter Property="Width" Value="18"/>
             <Setter Property="Height" Value="18"/>
         </Style>
@@ -140,8 +278,16 @@
             <Setter Property="Fill" Value="White"/>
         </Style>
 
-        <!-- NON-OVERLAPPING, THEME-STYLIZED SCROLLBARS            -->
-        <!-- Disables overlay mode so scrollbars reserve their own space and NEVER cover table cells -->
+        <!-- ToggleSwitch -->
+        <Style Selector="ToggleSwitch">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+
+        <!-- 6. NON-OVERLAPPING, THEME-STYLIZED SCROLLBARS         -->
         <Style Selector="ScrollViewer">
             <Setter Property="AllowAutoHide" Value="False"/>
         </Style>
@@ -168,70 +314,88 @@
         <Style Selector="ScrollBar:pointerover /template/ Thumb">
             <Setter Property="Background" Value="{DynamicResource ScrollBarThumbHoverBrush}"/>
         </Style>
-        <!-- Hide bulky up/down scrollbar line buttons for a modern clean track -->
         <Style Selector="ScrollBar /template/ RepeatButton">
             <Setter Property="IsVisible" Value="False"/>
         </Style>
-
     </Application.Styles>
 
+    <!-- CENTRALIZED DESIGN TOKENS (LIGHT & DARK PALETTES)         -->
     <Application.Resources>
         <ResourceDictionary>
             <FontFamily x:Key="FluentIcons">avares://Centriku/Assets/Fonts/FluentSystemIcons-Regular.ttf#FluentSystemIcons-Regular</FontFamily>
             <conv:SafeDoubleConverter x:Key="SafeDoubleConverter"/>
             <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="AppBackground">#0A0F1C</SolidColorBrush>
-                    <SolidColorBrush x:Key="SurfaceBrush">#151A28</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextMainBrush">#FFFFFF</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextMutedBrush">#8A94A6</SolidColorBrush>
-                    <SolidColorBrush x:Key="BorderBrush">#2A2A35</SolidColorBrush>
-                    <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush> 
 
-                    <SolidColorBrush x:Key="SurfaceVariantBrush">#1E2538</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridAltRowBrush">#0D1324</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridHoverBrush">#1E2538</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridSelectedBrush">#2B214D</SolidColorBrush>
+                <!-- DARK THEME: Deep Obsidian-Slate (Rich, Non-Neon, Pronounced Edges) -->
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AppBackground">#0F172A</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceBrush">#1E293B</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceVariantBrush">#26334D</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="InputBgBrush">#131C2E</SolidColorBrush>
+                    <SolidColorBrush x:Key="InputFocusBgBrush">#1A2540</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="TextMainBrush">#F8FAFC</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMutedBrush">#94A3B8</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="BorderBrush">#334155</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderStrongBrush">#475569</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="PrimaryBrush">#7C3AED</SolidColorBrush>
+                    <SolidColorBrush x:Key="PrimaryHoverBrush">#8B5CF6</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#172033</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridHoverBrush">#28354E</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridSelectedBrush">#3B276B</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#475569</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#8B5CF6</SolidColorBrush>
 
                     <SolidColorBrush x:Key="SuccessBrush">#10B981</SolidColorBrush>
-                    <SolidColorBrush x:Key="SuccessBgBrush">#1A10B981</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessBgBrush">#2210B981</SolidColorBrush>
                     
                     <SolidColorBrush x:Key="WarningBrush">#F59E0B</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningTextBrush">#D97706</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningBgBrush">#1AF59E0B</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningTextBrush">#FBBF24</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBgBrush">#22F59E0B</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="DangerBrush">#EF4444</SolidColorBrush>
-                    <SolidColorBrush x:Key="DangerBgBrush">#1AEF4444</SolidColorBrush>
-
-                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#334155</SolidColorBrush>
-                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#8B5CF6</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBrush">#F43F5E</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBgBrush">#22F43F5E</SolidColorBrush>
                 </ResourceDictionary> 
 
+                <!-- LIGHT THEME: Soft Alabaster-Slate (Low Glare, Eye-Safe, Crisp Borders) -->
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppBackground">#F3F4F6</SolidColorBrush> 
-                    <SolidColorBrush x:Key="SurfaceBrush">#FFFFFF</SolidColorBrush>  
-                    <SolidColorBrush x:Key="TextMainBrush">#111827</SolidColorBrush>   
-                    <SolidColorBrush x:Key="TextMutedBrush">#4B5563</SolidColorBrush>   
-                    <SolidColorBrush x:Key="BorderBrush">#CBD5E1</SolidColorBrush>   
-                    <SolidColorBrush x:Key="PrimaryBrush">#8B5CF6</SolidColorBrush>  
-                    
+                    <SolidColorBrush x:Key="AppBackground">#EDF2F7</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceBrush">#F8FAFC</SolidColorBrush>
                     <SolidColorBrush x:Key="SurfaceVariantBrush">#E2E8F0</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridAltRowBrush">#F8FAFC</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridHoverBrush">#F3F4F6</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridSelectedBrush">#EDE9FE</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="InputBgBrush">#FFFFFF</SolidColorBrush>
+                    <SolidColorBrush x:Key="InputFocusBgBrush">#F5F3FF</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="TextMainBrush">#0F172A</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMutedBrush">#475569</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="BorderBrush">#CBD5E1</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderStrongBrush">#94A3B8</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="PrimaryBrush">#6D28D9</SolidColorBrush>
+                    <SolidColorBrush x:Key="PrimaryHoverBrush">#7C3AED</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#F1F5F9</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridHoverBrush">#E2E8F0</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridSelectedBrush">#DDD6FE</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#94A3B8</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#6D28D9</SolidColorBrush>
 
                     <SolidColorBrush x:Key="SuccessBrush">#059669</SolidColorBrush>
-                    <SolidColorBrush x:Key="SuccessBgBrush">#1A10B981</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessBgBrush">#1F059669</SolidColorBrush>
                     
                     <SolidColorBrush x:Key="WarningBrush">#D97706</SolidColorBrush>
                     <SolidColorBrush x:Key="WarningTextBrush">#B45309</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningBgBrush">#1AF59E0B</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBgBrush">#1FD97706</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="DangerBrush">#DC2626</SolidColorBrush>
-                    <SolidColorBrush x:Key="DangerBgBrush">#1AEF4444</SolidColorBrush>
-
-                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#CBD5E1</SolidColorBrush>
-                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#8B5CF6</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBrush">#E11D48</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBgBrush">#1FE11D48</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries> 
 
@@ -260,8 +424,6 @@
             <x:String x:Key="IconRestore">&#57577;</x:String>
             <x:String x:Key="IconCrown">&#xf020f;</x:String>
             <x:String x:Key="IconDuplicate">&#xF382;</x:String>
-
-
         </ResourceDictionary>
     </Application.Resources>
 
