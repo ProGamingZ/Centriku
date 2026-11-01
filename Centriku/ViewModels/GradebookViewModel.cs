@@ -15,8 +15,18 @@ namespace Centriku.ViewModels
             [ObservableProperty] public partial bool IsProcessing { get; set; } = false;
             [ObservableProperty] public partial int SelectedTabIndex { get; set; } = 0;
             [ObservableProperty] public partial int ClassId { get; set; }
-            [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;        
+            [ObservableProperty] public partial string ClassTitle { get; set; } = string.Empty;   
+
             public System.Action<string>? ShowToastMessage { get; set; } 
+            [ObservableProperty] public partial string ToastMessage { get; set; } = string.Empty;
+            [ObservableProperty] public partial bool IsToastVisible { get; set; } = false;
+            public async void TriggerToast(string message)
+            {
+                ToastMessage = message;
+                IsToastVisible = true;
+                await Task.Delay(3000);
+                if (ToastMessage == message) IsToastVisible = false;
+            }
 
             [ObservableProperty] public partial bool ShowStudentId { get; set; } = true;
             [ObservableProperty] public partial bool ShowFirstName { get; set; } = true;
@@ -267,6 +277,7 @@ namespace Centriku.ViewModels
             public GradebookViewModel(IDatabaseService dbService)
             {
                 _dbService = dbService;
+                ShowToastMessage = TriggerToast;
                 ToggleEnrollmentCommand = new RelayCommand(ToggleEnrollment);
                 SaveEnrollmentCommand = new RelayCommand(SaveEnrollment);
                 

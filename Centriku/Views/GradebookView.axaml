@@ -4,24 +4,54 @@
              xmlns:gb="using:Centriku.Views.Gradebook"
              x:Class="Centriku.Views.GradebookView"
              x:DataType="vm:GradebookViewModel">
+    <Grid>
+        <TabControl Margin="10" SelectedIndex="{Binding SelectedTabIndex}">
+            <TabItem Header="Grades" FontSize="16" FontWeight="SemiBold">         
+                <gb:GradesTabView DataContext="{Binding}" />
+            </TabItem>
 
-    <TabControl Margin="10" SelectedIndex="{Binding SelectedTabIndex}">
-        
-        <TabItem Header="Grades" FontSize="16" FontWeight="SemiBold">         
-            <gb:GradesTabView DataContext="{Binding}" />
-        </TabItem>
+            <TabItem Header="Groups" FontSize="16" FontWeight="SemiBold">
+                <gb:GroupsTabView DataContext="{Binding}" />
+            </TabItem>
 
-        <TabItem Header="Groups" FontSize="16" FontWeight="SemiBold">
-            <gb:GroupsTabView DataContext="{Binding}" />
-        </TabItem>
+            <TabItem Header="Attendance" FontSize="16" FontWeight="SemiBold">
+                <gb:AttendanceTabView DataContext="{Binding}" />
+            </TabItem>
 
-        <TabItem Header="Attendance" FontSize="16" FontWeight="SemiBold">
-            <gb:AttendanceTabView DataContext="{Binding}" />
-        </TabItem>
-
-        <TabItem Header="Recitation" FontSize="16" FontWeight="SemiBold">
-            <gb:RecitationTabView DataContext="{Binding}" />
-        </TabItem>
-        
-    </TabControl>
+            <TabItem Header="Recitation" FontSize="16" FontWeight="SemiBold">
+                <gb:RecitationTabView DataContext="{Binding}" />
+            </TabItem>
+        </TabControl>
+        <!-- Centralized Bottom-Right Toast Notification -->
+        <Border IsVisible="{Binding IsToastVisible}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource PrimaryBrush}"
+                BorderThickness="4,1,1,1"
+                CornerRadius="8"
+                Padding="16,12"
+                Margin="0,0,30,30"
+                MinWidth="300"
+                MaxWidth="420"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                ZIndex="250"
+                BoxShadow="0 10 25 0 #66000000">
+            <Grid ColumnDefinitions="Auto, *">
+                <TextBlock Grid.Column="0"
+                           Classes="Icon"
+                           Text="{DynamicResource IconEarlyWarning}"
+                           Foreground="{DynamicResource PrimaryBrush}"
+                           FontSize="18"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding ToastMessage}"
+                           Foreground="{DynamicResource TextMainBrush}"
+                           FontWeight="SemiBold"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

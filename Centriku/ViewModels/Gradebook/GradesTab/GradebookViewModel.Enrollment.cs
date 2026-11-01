@@ -14,21 +14,14 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsEnrolling { get; set; } = false;
         [ObservableProperty] public partial bool IsRemoveStudentModalOpen { get; set; } = false;
         [ObservableProperty] public partial string RemoveModalMessage { get; set; } = string.Empty;
-        // ---  Modal Control Properties (Now handles Lists!) ---
         [ObservableProperty] public partial bool IsTransferStudentModalOpen { get; set; } = false;
         [ObservableProperty] public partial string TransferModalMessage { get; set; } = string.Empty;
         [ObservableProperty] public partial ObservableCollection<TeacherClass> AvailableTransferClasses { get; set; } = new();
         [ObservableProperty] public partial TeacherClass? SelectedTransferClass { get; set; }
         
-        private System.Collections.Generic.List<Student> _studentsToRemove = new();
-        private System.Collections.Generic.List<Student> _studentsToTransfer = new();
-        
-        
-        // Full list of students fetched from DB
         private System.Collections.Generic.List<EnrollmentItemViewModel> _allAvailableStudents = new();
-        
-        // The filtered list bound to the UI
         [ObservableProperty] public partial ObservableCollection<EnrollmentItemViewModel> AvailableStudents { get; set; } = new();
+        [ObservableProperty] public partial string DynamicEnrollmentCounter { get; set; } = "Showing: 0 students";
         
         // Filter Options
         [ObservableProperty] public partial ObservableCollection<string> EnrollmentYearFilters { get; set; } = new();
@@ -42,7 +35,6 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string SelectedEnrollmentSection { get; set; } = "All"; 
         [ObservableProperty] public partial string SelectedEnrollmentStatus { get; set; } = "All";
 
-        // Trigger filtering when selections change
         partial void OnSelectedEnrollmentYearChanged(string value) => FilterAvailableStudents();
         partial void OnSelectedEnrollmentProgramChanged(string value) => FilterAvailableStudents();
         partial void OnSelectedEnrollmentSectionChanged(string value) => FilterAvailableStudents(); 
@@ -50,6 +42,7 @@ namespace Centriku.ViewModels
 
         public IRelayCommand ToggleEnrollmentCommand { get; }
         public IRelayCommand SaveEnrollmentCommand { get; }
+
         [RelayCommand]
         public void SelectAllStudents()
         {
@@ -66,24 +59,22 @@ namespace Centriku.ViewModels
         {
             if (IsEnrolling)
             {
-                IsEnrolling = false; // Just close it if it's already open
+                IsEnrolling = false;
                 return;
             }
             
             IsEnrolling = true;
             IsAddingAssessment = false;
-            IsProcessing = true; // Turn on the loading spinner instantly!
+            IsProcessing = true;
 
             try
             {
-                // Give the Avalonia UI thread a microsecond to draw the spinner before we lock the CPU
                 await Task.Delay(50); 
 
                 var db = _dbService.GetConnection();
                 var allStudents = await db.Table<Student>().ToListAsync();
                 
-                // O(1) HASHSET: Instant memory lookup instead of a slow loop
-                var enrolledIds = new System.Collections.Generic.HashSet<string>(GradebookRows.Select(s => s.StudentID));
+                var enrolledIds = new System.Collections.Generic.HashSet<string>(_allGradebookRows.Select(s => s.StudentID));
 
                 _allAvailableStudents.Clear();
                 var uniqueYears = new System.Collections.Generic.HashSet<string> { "All" };
@@ -91,9 +82,9 @@ namespace Centriku.ViewModels
                 var uniqueSections = new System.Collections.Generic.HashSet<string> { "All" }; 
                 var uniqueStatuses = new System.Collections.Generic.HashSet<string> { "All" };
 
-                foreach (var s in allStudents)
+                foreach (var s in allStudents.OrderBy(st => st.LastName))
                 {
-                    if (s.StudentID != null && !enrolledIds.Contains(s.StudentID) && !s.IsArchived)
+                    if (s.StudentID != null && !enrolledIds.Contains(s.StudentID) && !s.IsArchived && s.EnrollmentStatus != "Dropped")
                     {
                         _allAvailableStudents.Add(new EnrollmentItemViewModel(s));
                         
@@ -118,43 +109,48 @@ namespace Centriku.ViewModels
             }
             finally
             {
-                IsProcessing = false; // Hide the spinner
+                IsProcessing = false;
             }
         }
 
         private void FilterAvailableStudents()
         {
+            // STICKY SELECTION: Keep checked students visible even when switching Section/Program filters!
             var filtered = _allAvailableStudents.Where(s => 
-                (SelectedEnrollmentYear == "All" || s.DbModel.GradeYearLevel == SelectedEnrollmentYear) &&
-                (SelectedEnrollmentProgram == "All" || s.DbModel.Program == SelectedEnrollmentProgram) &&
-                (SelectedEnrollmentSection == "All" || s.DbModel.SectionName == SelectedEnrollmentSection) && 
-                (SelectedEnrollmentStatus == "All" || s.DbModel.EnrollmentStatus == SelectedEnrollmentStatus)
+                s.IsSelected ||
+                ((SelectedEnrollmentYear == "All" || s.DbModel.GradeYearLevel == SelectedEnrollmentYear) &&
+                 (SelectedEnrollmentProgram == "All" || s.DbModel.Program == SelectedEnrollmentProgram) &&
+                 (SelectedEnrollmentSection == "All" || s.DbModel.SectionName == SelectedEnrollmentSection) && 
+                 (SelectedEnrollmentStatus == "All" || s.DbModel.EnrollmentStatus == SelectedEnrollmentStatus))
             ).ToList();
 
             AvailableStudents = new ObservableCollection<EnrollmentItemViewModel>(filtered);
+            DynamicEnrollmentCounter = $"Showing: {filtered.Count} available";
         }
 
         private async void SaveEnrollment()
         {
+            var selectedStudents = _allAvailableStudents.Where(s => s.IsSelected).ToList();
+            if (!selectedStudents.Any())
+            {
+                ShowToastMessage?.Invoke("Please select at least one student to enroll.");
+                return;
+            }
+
             IsProcessing = true;
             try 
             {
                 var db = _dbService.GetConnection();
-                var selectedStudents = _allAvailableStudents.Where(s => s.IsSelected).ToList();
 
-                // 1. Create a list in memory
                 var newRosters = selectedStudents.Select(student => new ClassRoster
                 {
                     ClassID = ClassId, 
                     StudentID = student.DbModel.StudentID 
                 }).ToList();
 
-                // 2. BULK INSERT: This hits the hard drive exactly 1 time instead of 50+ times.
-                await db.InsertAllAsync(newRosters);
+                await db.InsertAllAsync(newRosters, runInTransaction: false);
 
                 IsEnrolling = false;
-                
-                // Use your existing helper to refresh all data seamlessly
                 await RefreshRostersAsync(); 
                 
                 int count = selectedStudents.Count;
@@ -165,18 +161,15 @@ namespace Centriku.ViewModels
             finally { IsProcessing = false; }
         }
 
-        // --- 1. NEW: Object References for the Extracted Modals ---
         [ObservableProperty] public partial RemoveStudentModalViewModel? RemoveStudentModal { get; set; }
         [ObservableProperty] public partial TransferStudentModalViewModel? TransferStudentModal { get; set; }
 
-        // --- 3. Instantiator Commands ---
         [RelayCommand]
         public void BulkRemoveStudents()
         {
-            var studentsToRemove = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
+            var studentsToRemove = _allGradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
             if (!studentsToRemove.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
             
-            // Inject dependencies into the new external ViewModel
             RemoveStudentModal = new RemoveStudentModalViewModel(
                 _dbService,
                 ClassId, 
@@ -191,10 +184,9 @@ namespace Centriku.ViewModels
         [RelayCommand]
         public async Task BulkTransferStudents()
         {
-            var studentsToTransfer = GradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
+            var studentsToTransfer = _allGradebookRows.Where(r => r.IsSelected).Select(r => r.StudentInfo).ToList();
             if (!studentsToTransfer.Any()) { ShowToastMessage?.Invoke("Please select at least one student first."); return; }
             
-            // Inject dependencies into the new external ViewModel
             TransferStudentModal = new TransferStudentModalViewModel(
                 _dbService,
                 ClassId, 
@@ -204,10 +196,8 @@ namespace Centriku.ViewModels
                 () => { IsTransferStudentModalOpen = false; TransferStudentModal = null; IsAllRosterSelected = false; }, 
                 ShowToastMessage!);
                 
-            // Fetch available classes from DB before showing the UI
             await TransferStudentModal.LoadClassesAsync();
             IsTransferStudentModalOpen = true;
         }
-    
     }
 }

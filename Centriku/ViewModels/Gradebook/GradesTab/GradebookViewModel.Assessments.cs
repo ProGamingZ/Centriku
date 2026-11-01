@@ -36,70 +36,83 @@ namespace Centriku.ViewModels
          IsEnrolling = false; 
          NewAssessmentType = string.IsNullOrEmpty(assessment.AssessmentType) ? "Solo" : assessment.AssessmentType;
       }
+
       private async Task SaveAssessmentAsync()
       {
          try 
          {
-             if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
-                return;
+            if (string.IsNullOrWhiteSpace(NewAssessmentTitle) || SelectedCategory == null || NewAssessmentMaxScore <= 0) 
+               return;
 
-             // EXCEL LIMIT VALIDATION ---
-             int existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod));
-             
-             if (_editingAssessmentId.HasValue) 
-             {
-                existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod) && a.AssessmentID != _editingAssessmentId.Value);
-             }
+            // EXCEL LIMIT VALIDATION (0-Based SequenceOrder: 0=10, 1=5, 2=1)
+            int existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod));
+            
+            if (_editingAssessmentId.HasValue) 
+            {
+               existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod) && a.AssessmentID != _editingAssessmentId.Value);
+            }
 
-             int maxAllowed = SelectedCategory.SequenceOrder switch { 0 => 10, 1 => 5, 2 => 1, _ => 10 };
+            int maxAllowed = SelectedCategory.SequenceOrder switch { 0 => 10, 1 => 5, 2 => 1, _ => 10 };
 
-             if (existingCount >= maxAllowed)
-             {
-                ShowToastMessage?.Invoke($"Limit Reached: Official class records only allow {maxAllowed} assessment(s) for {SelectedCategory.Name} per term.");
-                return;
-             }
+            if (existingCount >= maxAllowed)
+            {
+               ShowToastMessage?.Invoke($"Limit Reached: Official class records only allow {maxAllowed} assessment(s) for {SelectedCategory.Name} per term.");
+               return;
+            }
 
-             var db = _dbService.GetConnection();
-             await db.CreateTableAsync<Assessment>();
-             if (_editingAssessmentId.HasValue)
-             {
-                // === UPDATE MODE ===
-                var assessmentToUpdate = await db.Table<Assessment>().Where(a => a.AssessmentID == _editingAssessmentId.Value).FirstOrDefaultAsync();
-                assessmentToUpdate.Title = NewAssessmentTitle;
-                assessmentToUpdate.Category = SelectedCategory.Name;
-                assessmentToUpdate.GradingPeriod = NewAssessmentPeriod; 
-                assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
-                assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
-                assessmentToUpdate.AssessmentType = NewAssessmentType;
-                assessmentToUpdate.GroupWeight = 0;
-                assessmentToUpdate.IndividualWeight = 0;
+            var db = _dbService.GetConnection();
+            await db.CreateTableAsync<Assessment>();
 
-                await db.UpdateAsync(assessmentToUpdate);
-             }
-             else
-             {
-                // === CREATE MODE ===
-                var newAssessment = new Assessment
-                {
-                   ClassID = ClassId, Title = NewAssessmentTitle, Category = SelectedCategory.Name, GradingPeriod = NewAssessmentPeriod,
-                   MaxScore = NewAssessmentMaxScore, DateGiven = NewAssessmentDate ?? System.DateTime.Now, AssessmentType = NewAssessmentType,
-                   GroupWeight = 0, IndividualWeight = 0
-                };
-                await db.InsertAsync(newAssessment);
-             }
-             ResetAssessmentForm();
-             await LoadGradebookData(); 
-             await LoadGroupsDataAsync(); 
+            if (_editingAssessmentId.HasValue)
+            {
+               // === UPDATE MODE ===
+               var assessmentToUpdate = await db.Table<Assessment>().Where(a => a.AssessmentID == _editingAssessmentId.Value).FirstOrDefaultAsync();
+               if (assessmentToUpdate != null)
+               {
+                  assessmentToUpdate.Title = NewAssessmentTitle.Trim();
+                  assessmentToUpdate.Category = SelectedCategory.Name;
+                  assessmentToUpdate.GradingPeriod = NewAssessmentPeriod; 
+                  assessmentToUpdate.MaxScore = NewAssessmentMaxScore;
+                  assessmentToUpdate.DateGiven = NewAssessmentDate ?? System.DateTime.Now;
+                  assessmentToUpdate.AssessmentType = NewAssessmentType;
+                  assessmentToUpdate.GroupWeight = 0;
+                  assessmentToUpdate.IndividualWeight = 0;
+
+                  await db.UpdateAsync(assessmentToUpdate);
+
+                  // CLAMP EXISTING SCORES: Ensure no student or group retains a score higher than the new MaxScore
+                  var overMaxScores = await db.Table<Score>()
+                     .Where(s => s.AssessmentID == assessmentToUpdate.AssessmentID && s.PointsEarned > NewAssessmentMaxScore)
+                     .ToListAsync();
+                  foreach (var s in overMaxScores) s.PointsEarned = NewAssessmentMaxScore;
+                  if (overMaxScores.Count > 0) await db.UpdateAllAsync(overMaxScores, runInTransaction: false);
+               }
+            }
+            else
+            {
+               // === CREATE MODE ===
+               var newAssessment = new Assessment
+               {
+                  ClassID = ClassId, Title = NewAssessmentTitle.Trim(), Category = SelectedCategory.Name, GradingPeriod = NewAssessmentPeriod,
+                  MaxScore = NewAssessmentMaxScore, DateGiven = NewAssessmentDate ?? System.DateTime.Now, AssessmentType = NewAssessmentType,
+                  GroupWeight = 0, IndividualWeight = 0
+               };
+               await db.InsertAsync(newAssessment);
+            }
+
+            ResetAssessmentForm();
+            await LoadGradebookData(); 
+            await LoadGroupsDataAsync(); 
          }
          catch (Exception ex)
          {
-             ShowToastMessage?.Invoke($"Error saving assessment: {ex.Message}");
+            ShowToastMessage?.Invoke($"Error saving assessment: {ex.Message}");
          }
       }
+
       [ObservableProperty] public partial bool IsDeleteAssessmentModalOpen { get; set; } = false;
       [ObservableProperty] public partial ConfirmDeleteModalViewModel? DeleteAssessmentModal { get; set; }
 
-      // 1. Opens the confirmation modal
       private void DeleteAssessment(Assessment? assessmentToDel)
       {
          if (assessmentToDel == null) return;
@@ -108,23 +121,37 @@ namespace Centriku.ViewModels
             $"Are you sure you want to delete '{assessmentToDel.Title}'?\n\nThis will permanently erase all student scores and group configurations attached to this column.",
             async () =>
             {
-               var db = _dbService.GetConnection();
-               
-               // 1. Delete associated scores & group data
-               var scores = await db.Table<Score>().Where(s => s.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
-               var groups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
-               var members = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
-               
-               await db.RunInTransactionAsync(tran =>
+               await _groupDbLock.WaitAsync();
+               try
                {
-                  foreach (var s in scores) tran.Delete(s);
-                  foreach (var g in groups) tran.Delete(g);
-                  foreach (var m in members) tran.Delete(m);
-                  tran.Delete(assessmentToDel); // Finally, delete the column itself
-               });
+                  var db = _dbService.GetConnection();
+                  
+                  var scores = await db.Table<Score>().Where(s => s.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
+                  var groups = await db.Table<AssessmentGroup>().Where(g => g.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
+                  var members = await db.Table<AssessmentGroupMember>().Where(m => m.AssessmentID == assessmentToDel.AssessmentID).ToListAsync();
+                  
+                  foreach (var s in scores) await db.DeleteAsync(s);
+                  foreach (var m in members) await db.DeleteAsync(m);
+                  foreach (var g in groups) await db.DeleteAsync(g);
+                  await db.DeleteAsync(assessmentToDel);
 
-               await LoadGradebookData();
-               ShowToastMessage?.Invoke($"Successfully deleted '{assessmentToDel.Title}'.");
+                  IsDeleteAssessmentModalOpen = false;
+                  DeleteAssessmentModal = null;
+
+                  await LoadGradebookData();
+                  await LoadGroupsDataAsync();
+                  ShowToastMessage?.Invoke($"Successfully deleted '{assessmentToDel.Title}'.");
+               }
+               catch (Exception ex)
+               {
+                  IsDeleteAssessmentModalOpen = false;
+                  DeleteAssessmentModal = null;
+                  ShowToastMessage?.Invoke($"Error deleting assessment: {ex.Message}");
+               }
+               finally
+               {
+                  _groupDbLock.Release();
+               }
             },
             () => { IsDeleteAssessmentModalOpen = false; DeleteAssessmentModal = null; }
          );
@@ -133,13 +160,13 @@ namespace Centriku.ViewModels
 
       private void ResetAssessmentForm()
       {
-         _editingAssessmentId = null; // Clears the "Edit Mode" tracking ID
+         _editingAssessmentId = null;
          NewAssessmentTitle = string.Empty;
          NewAssessmentMaxScore = 100;
          NewAssessmentDate = System.DateTime.Now;
          SelectedCategory = null;
          NewAssessmentPeriod = IsSemesterAverageView ? (GradingPeriods.FirstOrDefault() ?? "Midterm") : SelectedTermView;
-         IsAddingAssessment = false; // Hides the form
+         IsAddingAssessment = false;
          NewAssessmentType = "Solo";
       }
 

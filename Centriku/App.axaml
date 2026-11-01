@@ -359,6 +359,8 @@
                     <SolidColorBrush x:Key="PrimaryBgBrush">#227C3AED</SolidColorBrush>
                     <SolidColorBrush x:Key="InfoBrush">#3B82F6</SolidColorBrush>
                     <SolidColorBrush x:Key="InfoBgBrush">#223B82F6</SolidColorBrush>
+                    <SolidColorBrush x:Key="TsColumnBrush">#A78BFA</SolidColorBrush>
+                    <SolidColorBrush x:Key="WsColumnBrush">#FBBF24</SolidColorBrush>
 
                     <SolidColorBrush x:Key="DataGridAltRowBrush">#172033</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridHoverBrush">#28354E</SolidColorBrush>
@@ -398,6 +400,8 @@
                     <SolidColorBrush x:Key="PrimaryBgBrush">#1F6D28D9</SolidColorBrush>
                     <SolidColorBrush x:Key="InfoBrush">#2563EB</SolidColorBrush>
                     <SolidColorBrush x:Key="InfoBgBrush">#1F2563EB</SolidColorBrush>
+                    <SolidColorBrush x:Key="TsColumnBrush">#7C3AED</SolidColorBrush>
+                    <SolidColorBrush x:Key="WsColumnBrush">#D97706</SolidColorBrush>
                     
                     <SolidColorBrush x:Key="DataGridAltRowBrush">#F1F5F9</SolidColorBrush>
                     <SolidColorBrush x:Key="DataGridHoverBrush">#E2E8F0</SolidColorBrush>

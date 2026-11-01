@@ -12,114 +12,122 @@
       <Grid RowDefinitions="Auto, *">
          
          <!-- HEADER & TOOLBAR -->
-         <StackPanel Grid.Row="0" Margin="40,30,40,20">
-            <Grid ColumnDefinitions="1*, 1.5*">
+         <StackPanel Grid.Row="0" Margin="24,20,24,15">
+            <Grid ColumnDefinitions="*, Auto">
                <StackPanel Grid.Column="0" Margin="0,0,20,0">
                   <TextBlock Text="{Binding ClassTitle}" TextWrapping="Wrap" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                  <WrapPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <TextBlock Text="Viewing Grade For:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,10,10"/>
-                        <ComboBox ItemsSource="{Binding TermViews}" SelectedItem="{Binding SelectedTermView}" Width="200" Background="{DynamicResource AppBackground}" CornerRadius="6" Margin="0,0,0,10"/>
-                        <TextBox Text="{Binding SearchQuery}" PlaceholderText="Search ID or Name..." Width="250" Background="{DynamicResource AppBackground}" CornerRadius="6" Margin="0,0,0,10"/>
-                     </WrapPanel>
+                  <WrapPanel Orientation="Horizontal" Margin="0,12,0,0">
+                     <StackPanel Margin="0,0,15,8">
+                        <TextBlock Text="Term View" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding TermViews}" SelectedItem="{Binding SelectedTermView}" MinWidth="185"/>
+                     </StackPanel>
+                     <StackPanel Margin="0,0,15,8">
+                        <TextBlock Text="Search Roster" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SearchQuery}" PlaceholderText="Search by Student ID or Name..." Width="280"/>
+                     </StackPanel>
+                  </WrapPanel>
                </StackPanel>
 
-               <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                  <Button Content="Export Excel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20,10" Margin="0,0,15,15" FontWeight="Bold">
-                     <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedRight">
-                           <StackPanel Spacing="10" Width="260" Margin="10">
-                                 <TextBlock Text="Export Options" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                 <TextBlock Text="Select official documents to generate:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                                 <StackPanel Margin="0,10,0,10">
-                                    <CheckBox Content="NwSSU Class Record (Grades)" IsChecked="{Binding ExportClassRecord}" FontWeight="Bold"/>
-                                    <CheckBox Content="NwSSU Class Attendance" IsChecked="{Binding ExportClassAttendance}" FontWeight="Bold"/>
-                                 </StackPanel>
-                                 <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,5"/>
-                                 <TextBlock Text="Export Location:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                                 <TextBlock Text="{Binding ExportFolderDisplay}" FontSize="11" TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
-                                 <Button Content="Change Folder..." Click="OnChangeExportFolderClicked" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,5,0,0"/>
-                                 <Button Command="{Binding ExportCsvCommand}" Content="Confirm Export"  Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,15,0,0"/>
-                           </StackPanel>
-                        </Flyout>
-                     </Button.Flyout>
-                  </Button>
-
-                  <Button Content="View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15">
+               <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="8" Margin="0,0,0,8">
+                  <WrapPanel HorizontalAlignment="Right">
+                     <Button Content="Export Excel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="8" Padding="18,10" Margin="0,0,10,8" FontWeight="Bold">
                         <Button.Flyout>
                            <Flyout Placement="BottomEdgeAlignedRight">
-                              <Grid RowDefinitions="Auto, *" Width="250" MaxHeight="450" Margin="10">
-                                    <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,10">
-                                       <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                       <CheckBox Content="Show Student ID" IsChecked="{Binding ShowStudentId}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Midterm" IsChecked="{Binding ShowMidtermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="10,0,0,0"/>
-                                       <CheckBox Content="Show Final" IsChecked="{Binding ShowFinalTermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="10,0,0,0"/>   
-                                       <CheckBox Content="{Binding DynamicFinalColumnName, StringFormat='Show {0}'}" IsChecked="{Binding ShowFinalGrade}" Margin="10,0,0,0" />
+                              <StackPanel Spacing="10" Width="260" Margin="10">
+                                    <TextBlock Text="Export Options" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <TextBlock Text="Select official documents to generate:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+                                    <StackPanel Spacing="6" Margin="0,6,0,6">
+                                       <CheckBox Content="NwSSU Class Record (Grades)" IsChecked="{Binding ExportClassRecord}" FontWeight="Bold"/>
+                                       <CheckBox Content="NwSSU Class Attendance" IsChecked="{Binding ExportClassAttendance}" FontWeight="Bold"/>
                                     </StackPanel>
-
-                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowAssessmentFilters}">
-                                       <StackPanel>
-                                          <TextBlock Text="Grading Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
-                                          <ItemsControl ItemsSource="{Binding CategoryFilters}">
-                                                <ItemsControl.ItemTemplate>
-                                                   <DataTemplate>
-                                                      <StackPanel Margin="0,0,0,15">
-                                                            <CheckBox Content="{Binding CategoryName}" IsChecked="{Binding IsCategoryVisible}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
-                                                            <ItemsControl ItemsSource="{Binding Assessments}" Margin="20,5,0,0">
-                                                               <ItemsControl.ItemTemplate>
-                                                                  <DataTemplate>
-                                                                        <CheckBox Content="{Binding Title}" IsChecked="{Binding IsVisible}" Margin="0,0,0,5"/>
-                                                                  </DataTemplate>
-                                                               </ItemsControl.ItemTemplate>
-                                                            </ItemsControl>
-                                                      </StackPanel>
-                                                   </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                          </ItemsControl>
-                                       </StackPanel>
-                                    </ScrollViewer>
-                              </Grid>
+                                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,4"/>
+                                    <TextBlock Text="Export Location:" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <TextBlock Text="{Binding ExportFolderDisplay}" FontSize="11" TextWrapping="Wrap" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                                    <Button Content="Change Folder..." Click="OnChangeExportFolderClicked" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,4,0,0"/>
+                                    <Button Command="{Binding ExportCsvCommand}" Content="Confirm Export" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,10,0,0"/>
+                              </StackPanel>
                            </Flyout>
                         </Button.Flyout>
-                  </Button>
+                     </Button>
 
-                  <Button Command="{Binding ToggleAddAssessmentCommand}" IsVisible="{Binding ShowAssessmentFilters}" Content="Add Assessment" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
-                  <Button Command="{Binding BulkTransferStudentsCommand}" Content="Transfer" Background="Transparent" Foreground="#3B82F6" BorderBrush="#3B82F6" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
-                  <Button Command="{Binding BulkRemoveStudentsCommand}" Content="Unenroll" Background="Transparent" Foreground="#EF4444" BorderBrush="#EF4444" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,15,15"/>
-                  <Button Command="{Binding ToggleEnrollmentCommand}" Content="Enroll Students" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10" Margin="0,0,0,15"/>
-               </WrapPanel>
+                     <Button Content="View Options" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" FontWeight="Bold" CornerRadius="8" Padding="18,10" Margin="0,0,10,8">
+                           <Button.Flyout>
+                              <Flyout Placement="BottomEdgeAlignedRight">
+                                 <Grid RowDefinitions="Auto, *" Width="250" MaxHeight="450" Margin="10">
+                                       <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,10">
+                                          <TextBlock Text="Student Details" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                          <CheckBox Content="Show Student ID" IsChecked="{Binding ShowStudentId}" Margin="6,0,0,0"/>
+                                          <CheckBox Content="Show Last Name" IsChecked="{Binding ShowLastName}" Margin="6,0,0,0"/>
+                                          <CheckBox Content="Show First Name" IsChecked="{Binding ShowFirstName}" Margin="6,0,0,0"/>
+                                          <CheckBox Content="Show Midterm" IsChecked="{Binding ShowMidtermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="6,0,0,0"/>
+                                          <CheckBox Content="Show Final" IsChecked="{Binding ShowFinalTermGrade}" IsVisible="{Binding IsSemesterAverageView}" Margin="6,0,0,0"/>   
+                                          <CheckBox Content="{Binding DynamicFinalColumnName, StringFormat='Show {0}'}" IsChecked="{Binding ShowFinalGrade}" Margin="6,0,0,0" />
+                                       </StackPanel>
+
+                                       <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" IsVisible="{Binding ShowAssessmentFilters}">
+                                          <StackPanel>
+                                             <TextBlock Text="Grading Columns" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
+                                             <ItemsControl ItemsSource="{Binding CategoryFilters}">
+                                                   <ItemsControl.ItemTemplate>
+                                                      <DataTemplate>
+                                                         <StackPanel Margin="0,0,0,12">
+                                                               <CheckBox Content="{Binding CategoryName}" IsChecked="{Binding IsCategoryVisible}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                                                               <ItemsControl ItemsSource="{Binding Assessments}" Margin="18,5,0,0">
+                                                                  <ItemsControl.ItemTemplate>
+                                                                     <DataTemplate>
+                                                                           <CheckBox Content="{Binding Title}" IsChecked="{Binding IsVisible}" Margin="0,0,0,4"/>
+                                                                     </DataTemplate>
+                                                                  </ItemsControl.ItemTemplate>
+                                                               </ItemsControl>
+                                                         </StackPanel>
+                                                      </DataTemplate>
+                                                   </ItemsControl.ItemTemplate>
+                                             </ItemsControl>
+                                          </StackPanel>
+                                       </ScrollViewer>
+                                 </Grid>
+                              </Flyout>
+                           </Button.Flyout>
+                     </Button>
+
+                     <Button Command="{Binding ToggleAddAssessmentCommand}" IsVisible="{Binding ShowAssessmentFilters}" Content="+ Add Assessment" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1.5" FontWeight="Bold" CornerRadius="8" Padding="18,10" Margin="0,0,10,8"/>
+                     <Button Command="{Binding BulkTransferStudentsCommand}" Content="Transfer" Background="Transparent" Foreground="{DynamicResource InfoBrush}" BorderBrush="{DynamicResource InfoBrush}" BorderThickness="1.5" FontWeight="Bold" CornerRadius="8" Padding="18,10" Margin="0,0,10,8"/>
+                     <Button Command="{Binding BulkRemoveStudentsCommand}" Content="Unenroll" Background="Transparent" Foreground="{DynamicResource DangerBrush}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1.5" FontWeight="Bold" CornerRadius="8" Padding="18,10" Margin="0,0,10,8"/>
+                     <Button Command="{Binding ToggleEnrollmentCommand}" Content="Enroll Students" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="18,10" Margin="0,0,0,8"/>
+                  </WrapPanel>
+
+                  <TextBlock Text="{Binding DynamicGradesCounter}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+               </StackPanel>
             </Grid>
-            <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
+            <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,8,0,0"/>
          </StackPanel>
 
-         <!-- DATAGRID (Fills remaining space cleanly, enabling UI Virtualization) -->
+         <!-- DATAGRID -->
          <DataGrid x:Name="RosterGrid" Grid.Row="1" Margin="24,0,24,24" 
             ItemsSource="{Binding GradebookRows}" 
             SelectedItem="{Binding SelectedGradebookRow, Mode=TwoWay}" 
             AutoGenerateColumns="False" IsReadOnly="False" SelectionMode="Single" CurrentCellChanged="RosterGrid_CurrentCellChanged"
-            GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CanUserSortColumns="True" CanUserResizeColumns="False"
-            CornerRadius="8" RowHeight="36" VerticalAlignment="Stretch" FrozenColumnCount="4">
+            GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderStrongBrush}" CanUserSortColumns="True" CanUserResizeColumns="False" CanUserReorderColumns="False"
+            CornerRadius="10" RowHeight="40" VerticalAlignment="Stretch" FrozenColumnCount="4">
             <DataGrid.Columns>
-               <DataGridTemplateColumn Width="80" CanUserSort="False">
+               <DataGridTemplateColumn Width="48" CanUserSort="False">
                   <DataGridTemplateColumn.Header>
-                     <CheckBox IsChecked="{Binding #GradesRootControl.((vm:GradebookViewModel)DataContext).IsAllRosterSelected}" HorizontalAlignment="Center"/>
+                     <CheckBox IsChecked="{Binding #GradesRootControl.((vm:GradebookViewModel)DataContext).IsAllRosterSelected}"/>
                   </DataGridTemplateColumn.Header>
                   <DataGridTemplateColumn.CellTemplate>
                      <DataTemplate>
-                        <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <CheckBox IsChecked="{Binding IsSelected}"/>
                      </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>
                </DataGridTemplateColumn>
                <DataGridTextColumn Header="Student ID" Binding="{Binding StudentID}" SortMemberPath="StudentID" CanUserSort="True" IsReadOnly="True" Width="130"/>
-               <!-- RESPONSIVE DESIGN: Width="*" stretches the name columns nicely! -->
                <DataGridTextColumn Header="Last Name" Binding="{Binding StudentInfo.LastName}" SortMemberPath="StudentInfo.LastName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="*"/>
                <DataGridTextColumn Header="First Name" Binding="{Binding StudentInfo.FirstName}" SortMemberPath="StudentInfo.FirstName" CanUserSort="True" IsReadOnly="True" MinWidth="130" Width="*"/>
                
-               <DataGridTemplateColumn Header="Computed Grade Final,Midterm,Semester" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="140">
+               <DataGridTemplateColumn Header="Computed Grade" SortMemberPath="FinalGradeNumeric" CanUserSort="True" IsReadOnly="True" Width="145">
                   <DataGridTemplateColumn.CellTemplate>
                      <DataTemplate>
-                        <TextBlock Text="{Binding FinalGrade}" ToolTip.Tip="{Binding FinalGradeTooltip}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding FinalGrade}" ToolTip.Tip="{Binding FinalGradeTooltip}" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                      </DataTemplate>
                   </DataGridTemplateColumn.CellTemplate>
                </DataGridTemplateColumn>
@@ -127,37 +135,38 @@
          </DataGrid>
       </Grid>
       
-      <!-- ============================================== -->
-      <!-- FLOATING MODAL OVERLAYS (Modern UX Standard)   -->
-      <!-- ============================================== -->
+      <!-- FLOATING MODAL OVERLAYS                        -->
 
       <!-- 1. ENROLL STUDENTS MODAL -->
       <Border IsVisible="{Binding IsEnrolling}" Background="#B3000000" ZIndex="90">
-         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="30" Margin="40" MaxWidth="1060" MaxHeight="600" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Margin="40" MaxWidth="1060" MaxHeight="620" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <Grid RowDefinitions="Auto, Auto, *, Auto">
-               <TextBlock Grid.Row="0" Text="Select Students to Enroll" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+               <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
+                  <TextBlock Grid.Column="0" Text="Select Students to Enroll" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding DynamicEnrollmentCounter}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+               </Grid>
                
                <!-- Filters -->
                <Grid Grid.Row="1" ColumnDefinitions="*, Auto" Margin="0,0,0,15">
                   <WrapPanel Grid.Column="0" Orientation="Horizontal">
-                     <StackPanel Margin="0,0,15,10">
-                        <TextBlock Text="Year" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding EnrollmentYearFilters}" SelectedItem="{Binding SelectedEnrollmentYear}" Background="{DynamicResource AppBackground}" Width="120"/>
+                     <StackPanel Margin="0,0,12,10">
+                        <TextBlock Text="Year" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding EnrollmentYearFilters}" SelectedItem="{Binding SelectedEnrollmentYear}" MinWidth="135"/>
                      </StackPanel>
-                     <StackPanel Margin="0,0,15,10">
-                        <TextBlock Text="Program" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding EnrollmentProgramFilters}" SelectedItem="{Binding SelectedEnrollmentProgram}" Background="{DynamicResource AppBackground}" Width="120"/>
+                     <StackPanel Margin="0,0,12,10">
+                        <TextBlock Text="Program" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding EnrollmentProgramFilters}" SelectedItem="{Binding SelectedEnrollmentProgram}" MinWidth="140"/>
                      </StackPanel>
-                     <StackPanel Margin="0,0,15,10">
-                        <TextBlock Text="Section" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding EnrollmentSectionFilters}" SelectedItem="{Binding SelectedEnrollmentSection}" Background="{DynamicResource AppBackground}" Width="120"/>
+                     <StackPanel Margin="0,0,12,10">
+                        <TextBlock Text="Section" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding EnrollmentSectionFilters}" SelectedItem="{Binding SelectedEnrollmentSection}" MinWidth="135"/>
                      </StackPanel>
                      <StackPanel Margin="0,0,0,10">
-                        <TextBlock Text="Status" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding EnrollmentStatusFilters}" SelectedItem="{Binding SelectedEnrollmentStatus}" Background="{DynamicResource AppBackground}" Width="120"/>
+                        <TextBlock Text="Status" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding EnrollmentStatusFilters}" SelectedItem="{Binding SelectedEnrollmentStatus}" MinWidth="140"/>
                      </StackPanel>
                   </WrapPanel>
-                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Top" Margin="0,18,0,0">
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom" Margin="0,0,0,10">
                      <Button Command="{Binding SelectAllStudentsCommand}" Content="Select All" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold"/>
                      <Button Command="{Binding DeselectAllStudentsCommand}" Content="Deselect All" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold"/>
                   </StackPanel>
@@ -173,11 +182,11 @@
                      </ItemsControl.ItemsPanel>
                      <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                           <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" Width="300" Margin="0,0,10,10">
+                           <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Width="300" Margin="0,0,10,10">
                               <Grid ColumnDefinitions="Auto, *">
                                  <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding FullName}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding FullName}" ToolTip.Tip="{Binding FullName}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextTrimming="CharacterEllipsis"/>
                                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
                                        <TextBlock Text="{Binding StudentID}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" FontSize="12"/>
                                        <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}" FontSize="12"/>
@@ -190,7 +199,7 @@
                                        <TextBlock Text="•" Foreground="{DynamicResource BorderBrush}" FontSize="11"/>
                                        <TextBlock Text="{Binding DbModel.SectionName}" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
                                     </StackPanel>
-                                    <Border Background="{DynamicResource AppBackground}" CornerRadius="4" Padding="4,2" HorizontalAlignment="Left" Margin="0,4,0,0">
+                                    <Border Background="{DynamicResource InputBgBrush}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Margin="0,4,0,0">
                                        <TextBlock Text="{Binding DbModel.EnrollmentStatus}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     </Border>
                                  </StackPanel>
@@ -212,37 +221,37 @@
 
       <!-- 2. ADD ASSESSMENT MODAL -->
       <Border IsVisible="{Binding IsAddingAssessment}" Background="#B3000000" ZIndex="90">
-         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="30" Margin="40" MaxWidth="920" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Margin="40" MaxWidth="920" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <Grid RowDefinitions="Auto, *, Auto">
-               <TextBlock Grid.Row="0" Text="Create New Assessment Column" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
+               <TextBlock Grid.Row="0" Text="Assessment Column Details" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
                
                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="300" Margin="0,0,0,20">
                   <WrapPanel Orientation="Horizontal">
                      <StackPanel Margin="0,0,15,15" MinWidth="200">
-                        <TextBlock Text="Title*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <TextBox Text="{Binding NewAssessmentTitle}" PlaceholderText="e.g. Quiz 1" Background="{DynamicResource AppBackground}"/>
+                        <TextBlock Text="Title*" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding NewAssessmentTitle}" PlaceholderText="e.g. Quiz 1"/>
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15" MinWidth="200">
-                        <TextBlock Text="Grading Category*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding AvailableCategories}" SelectedItem="{Binding SelectedCategory}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch" PlaceholderText="Select category...">
+                        <TextBlock Text="Grading Category*" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AvailableCategories}" SelectedItem="{Binding SelectedCategory}" HorizontalAlignment="Stretch" PlaceholderText="Select category...">
                            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Name}"/></DataTemplate></ComboBox.ItemTemplate>
                         </ComboBox>
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15" MinWidth="150">
-                        <TextBlock Text="Grading Period*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding GradingPeriods}" SelectedItem="{Binding NewAssessmentPeriod}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Grading Period*" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding GradingPeriods}" SelectedItem="{Binding NewAssessmentPeriod}" HorizontalAlignment="Stretch"/>
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15" MinWidth="120">
-                        <TextBlock Text="Max Score*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <NumericUpDown Value="{Binding NewAssessmentMaxScore, Converter={StaticResource SafeDoubleConverter}}" Minimum="1" Maximum="1000" Background="{DynamicResource AppBackground}"/>
+                        <TextBlock Text="Max Score*" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <NumericUpDown Value="{Binding NewAssessmentMaxScore, Converter={StaticResource SafeDoubleConverter}}" ShowButtonSpinner="False" Minimum="1" Maximum="1000"/>
                      </StackPanel>
-                     <StackPanel Margin="0,0,15,15" MinWidth="130">
-                        <TextBlock Text="Format*" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding AssessmentTypeOptions}" SelectedItem="{Binding NewAssessmentType}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                     <StackPanel Margin="0,0,15,15" MinWidth="140">
+                        <TextBlock Text="Format*" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <ComboBox ItemsSource="{Binding AssessmentTypeOptions}" SelectedItem="{Binding NewAssessmentType}" HorizontalAlignment="Stretch"/>
                      </StackPanel>
                      <StackPanel Margin="0,0,15,15" MinWidth="150">
-                        <TextBlock Text="Date Given" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
-                        <CalendarDatePicker SelectedDate="{Binding NewAssessmentDate}" Background="{DynamicResource AppBackground}" HorizontalAlignment="Stretch"/>
+                        <TextBlock Text="Date Given" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,5"/>
+                        <CalendarDatePicker SelectedDate="{Binding NewAssessmentDate}" HorizontalAlignment="Stretch"/>
                      </StackPanel>
                   </WrapPanel>
                </ScrollViewer>
@@ -257,18 +266,15 @@
 
       <!-- 3. ACTION MODALS -->
       <Border IsVisible="{Binding IsTransferStudentModalOpen}" Background="#B3000000" ZIndex="100">
-         <Border DataContext="{Binding TransferStudentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border DataContext="{Binding TransferStudentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel>
                <TextBlock Text="Transfer Student" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
-               <!-- CHANGED: Now binds to the local ModalMessage property -->
                <TextBlock Text="{Binding ModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,20"/>
                <TextBlock Text="Select Destination Class:" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,10"/>
                
                <ComboBox ItemsSource="{Binding AvailableTransferClasses}"
                         SelectedItem="{Binding SelectedTransferClass}"
                         HorizontalAlignment="Stretch"
-                        Background="{DynamicResource AppBackground}"
-                        BorderBrush="{DynamicResource BorderBrush}"
                         CornerRadius="8"
                         MinHeight="44"
                         Padding="12,8"
@@ -302,7 +308,6 @@
                      </DataTemplate>
                   </ComboBox.ItemTemplate>
 
-                  <!-- CLOSED BOX -->
                   <ComboBox.SelectionBoxItemTemplate>
                      <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto">
@@ -320,52 +325,45 @@
                         </Grid>
                      </DataTemplate>
                   </ComboBox.SelectionBoxItemTemplate>
-                  <ComboBox.Styles>
-                     <Style Selector="ComboBoxItem">
-                        <Setter Property="Padding" Value="12,8"/>
-                        <Setter Property="Margin" Value="4,2"/>
-                        <Setter Property="CornerRadius" Value="6"/>
-                     </Style>
-                  </ComboBox.Styles>
                </ComboBox>
                
                <Grid ColumnDefinitions="*, Auto, Auto">
                   <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                  <Button Grid.Column="2" Command="{Binding ConfirmTransferCommand}" Content="Transfer Student" Background="#3B82F6" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmTransferCommand}" Content="Transfer Student" Background="{DynamicResource InfoBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                </Grid>
             </StackPanel>
          </Border>
       </Border>
 
       <Border IsVisible="{Binding IsRemoveStudentModalOpen}" Background="#B3000000" ZIndex="100">
-         <Border DataContext="{Binding RemoveStudentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border DataContext="{Binding RemoveStudentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel>
                <TextBlock Text="Unenroll Student?" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
                <TextBlock Text="{Binding ModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
                
                <Grid ColumnDefinitions="*, Auto, Auto">
                   <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                  <Button Grid.Column="2" Command="{Binding ConfirmRemoveCommand}" Content="Remove Student" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmRemoveCommand}" Content="Remove Student" Background="{DynamicResource DangerBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                </Grid>
             </StackPanel>
          </Border>
       </Border>
 
       <Border IsVisible="{Binding IsDeleteAssessmentModalOpen}" Background="#B3000000" ZIndex="100">
-         <Border DataContext="{Binding DeleteAssessmentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border DataContext="{Binding DeleteAssessmentModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel>
                <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
                <TextBlock Text="{Binding Message}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
                <Grid ColumnDefinitions="*, Auto, Auto">
                   <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                  <Button Grid.Column="2" Command="{Binding ConfirmCommand}" Content="Delete Column" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                  <Button Grid.Column="2" Command="{Binding ConfirmCommand}" Content="Delete Column" Background="{DynamicResource DangerBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                </Grid>
             </StackPanel>
          </Border>
       </Border>
 
       <Border IsVisible="{Binding IsProcessing}" Background="#B3000000" ZIndex="999">
-         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+         <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
             <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
                <ProgressBar IsIndeterminate="True" Width="150" Height="6" CornerRadius="3" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackground}"/>
                <TextBlock Text="Processing Action..." FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>

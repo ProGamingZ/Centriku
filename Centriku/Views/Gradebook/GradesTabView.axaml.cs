@@ -57,14 +57,13 @@ namespace Centriku.Views.Gradebook
          var grid = this.FindControl<DataGrid>("RosterGrid");
          if (grid == null) return;
 
-         // Temporarily unbind the data to prevent Avalonia from crashing while redrawing columns!
          var backupData = grid.ItemsSource;
          grid.ItemsSource = null;
 
          try
          {
-            // 1. Find the fixed columns safely
-            var colCheckbox = grid.Columns.FirstOrDefault(c => c.Width == new DataGridLength(80, DataGridLengthUnitType.Pixel)); 
+            // 1. Find the fixed columns safely (independent of pixel width)
+            var colCheckbox = grid.Columns.FirstOrDefault(c => !c.CanUserSort && string.IsNullOrEmpty(c.SortMemberPath)); 
             var colLRN = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentID");
             var colFirstName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.FirstName");
             var colLastName = grid.Columns.FirstOrDefault(c => c.SortMemberPath == "StudentInfo.LastName");
@@ -81,9 +80,15 @@ namespace Centriku.Views.Gradebook
                colFinalGrade.Header = vm.DynamicFinalColumnName;
             }
 
-            // 3. Tell the grid to keep ONLY our 6 fixed columns
+            // 3. Dynamically calculate FrozenColumnCount so hidden identity columns never freeze quiz columns!
+            int frozenCount = 1; // Checkbox column
+            if (vm.ShowStudentId) frozenCount++;
+            if (vm.ShowLastName) frozenCount++;
+            if (vm.ShowFirstName) frozenCount++;
+            grid.FrozenColumnCount = frozenCount;
+
+            // 4. Keep ONLY our 5 fixed static columns
             var staticColumns = new System.Collections.Generic.List<Avalonia.Controls.DataGridColumn>();
-            
             if (colCheckbox != null) staticColumns.Add(colCheckbox); 
             if (colLRN != null) staticColumns.Add(colLRN);
             if (colFirstName != null) staticColumns.Add(colFirstName);
@@ -91,20 +96,18 @@ namespace Centriku.Views.Gradebook
             if (colFinalGrade != null) staticColumns.Add(colFinalGrade);
 
             var columnsToRemove = grid.Columns.Where(c => !staticColumns.Contains(c)).ToList();
-
             foreach (var col in columnsToRemove)
             {
                grid.Columns.Remove(col);
             }
 
-            // 4. Insert new dynamic columns right before the Final Grade column
+            // 5. Insert new dynamic columns right before the Final Grade column
             int insertIndex = colFinalGrade != null ? grid.Columns.IndexOf(colFinalGrade) : grid.Columns.Count - 1;
             if (insertIndex < 0) insertIndex = grid.Columns.Count;
             
-            // 3A. MODE: SEMESTER AVERAGE 
+            // MODE A: SEMESTER AVERAGE 
             if (vm.IsSemesterAverageView)
             {
-               // Draw Midterm and Final columns
                var midColumn = new DataGridTemplateColumn { Header = "Midterm", IsVisible = vm.ShowMidtermGrade, CanUserSort = true, SortMemberPath = "MidtermGradeNumeric", IsReadOnly = true, CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) => { 
                var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
                tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding("MidtermGradeDisplay"));
@@ -122,10 +125,10 @@ namespace Centriku.Views.Gradebook
                return; 
             }
 
-            // 3B. MODE: MIDTERM or FINAL
+            // MODE B: MIDTERM or FINAL
             foreach (var category in vm.CategoryFilters)
             {
-               if (!category.IsCategoryVisible) continue; // Skip hidden categories
+               if (!category.IsCategoryVisible) continue;
 
                var dbCategory = vm.AvailableCategories.FirstOrDefault(c =>
                    string.Equals((c.Name ?? string.Empty).Trim(), (category.CategoryName ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase));
@@ -138,25 +141,34 @@ namespace Centriku.Views.Gradebook
                   var assessment = filter.DbModel;
                   if (!string.Equals((assessment.GradingPeriod ?? string.Empty).Trim(), (vm.SelectedTermView ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase)) continue;
 
-                  var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 5) };
-                  headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = assessment.Title, FontWeight = Avalonia.Media.FontWeight.Bold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
-                  headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"[{assessment.Category}]", FontSize = 11, Foreground = Avalonia.Media.Brushes.DarkCyan, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
-                  headerPanel.Children.Add(new Avalonia.Controls.TextBlock { Text = $"Max: {assessment.MaxScore}", FontSize = 11, Foreground = Avalonia.Media.Brushes.Gray, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center });
-
-                  var buttonPanel = new Avalonia.Controls.StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 5, 0, 0) };
+                  var headerPanel = new Avalonia.Controls.StackPanel { Spacing = 2, Margin = new Avalonia.Thickness(0, 4) };
                   
-                  var editIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+                  var titleTb = new Avalonia.Controls.TextBlock { Text = assessment.Title, FontWeight = Avalonia.Media.FontWeight.Bold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+                  titleTb[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMainBrush");
+                  headerPanel.Children.Add(titleTb);
+
+                  var catTb = new Avalonia.Controls.TextBlock { Text = $"[{assessment.Category}]", FontSize = 11, FontWeight = Avalonia.Media.FontWeight.SemiBold, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+                  catTb[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("InfoBrush");
+                  headerPanel.Children.Add(catTb);
+
+                  var maxTb = new Avalonia.Controls.TextBlock { Text = $"Max: {assessment.MaxScore}", FontSize = 11, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center };
+                  maxTb[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMutedBrush");
+                  headerPanel.Children.Add(maxTb);
+
+                  var buttonPanel = new Avalonia.Controls.StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, Margin = new Avalonia.Thickness(0, 4, 0, 0) };
+                  
+                  var editIcon = new Avalonia.Controls.TextBlock { FontSize = 15 };
                   editIcon.Classes.Add("Icon");
                   editIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconEdit");
                   editIcon[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextMainBrush");
 
-                  var delIcon = new Avalonia.Controls.TextBlock { FontSize = 16 };
+                  var delIcon = new Avalonia.Controls.TextBlock { FontSize = 15 };
                   delIcon.Classes.Add("Icon");
                   delIcon[!Avalonia.Controls.TextBlock.TextProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("IconDelete");
-                  delIcon.Foreground = Avalonia.Media.Brush.Parse("#EF4444");
+                  delIcon[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("DangerBrush");
 
-                  var editBtn = new Avalonia.Controls.Button { Content = editIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
-                  var delBtn = new Avalonia.Controls.Button { Content = delIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(5) };
+                  var editBtn = new Avalonia.Controls.Button { Content = editIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.EditAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(4) };
+                  var delBtn = new Avalonia.Controls.Button { Content = delIcon, Background = Avalonia.Media.Brushes.Transparent, Command = vm.DeleteAssessmentCommand, CommandParameter = assessment, Padding = new Avalonia.Thickness(4) };
                   
                   buttonPanel.Children.Add(editBtn);
                   buttonPanel.Children.Add(delBtn);
@@ -196,7 +208,6 @@ namespace Centriku.Views.Gradebook
                   insertIndex++;
                }
 
-               // Append the TS and WS Columns right after all the quizzes for this category are drawn
                var periodAssessments = vm.ClassAssessments
                    .Where(a => string.Equals((a.Category ?? string.Empty).Trim(), (category.CategoryName ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase)
                        && string.Equals((a.GradingPeriod ?? string.Empty).Trim(), (vm.SelectedTermView ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase))
@@ -204,32 +215,35 @@ namespace Centriku.Views.Gradebook
                    
                if (periodAssessments.Any())
                {
-                  // Ask for the exact semantic key (e.g. "classstanding")
                   string rawKey = $"{vm.SelectedTermView}_{category.CategoryName}";
                   string safeKey = GradebookViewModel.GenerateSafeKey(rawKey);
 
-                  // Create TS Column
-                  var tsHeader = new Avalonia.Controls.TextBlock { Text = "TS", FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.MediumPurple };
+                  // Create TS Column (Bound to centralized TsColumnBrush)
+                  var tsHeader = new Avalonia.Controls.TextBlock { Text = "TS", FontWeight = Avalonia.Media.FontWeight.Bold };
+                  tsHeader[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TsColumnBrush");
                   Avalonia.Controls.ToolTip.SetTip(tsHeader, $"Transmuted Score for {category.CategoryName}");
                   
                   var tsColumn = new DataGridTemplateColumn { Header = tsHeader, IsReadOnly = true, CanUserSort = false, Width = DataGridLength.Auto };
                   tsColumn.CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                   {
-                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.SemiBold, Foreground = Avalonia.Media.Brushes.MediumPurple };
+                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.SemiBold };
+                     tb[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TsColumnBrush");
                      tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].TsDisplay"));
                      tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].TsTooltip"));
                      return tb;
                   });
                   grid.Columns.Insert(insertIndex++, tsColumn);
 
-                  // Create WS Column
-                  var wsHeader = new Avalonia.Controls.TextBlock { Text = "WS", FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.DarkOrange };
+                  // Create WS Column (Bound to centralized WsColumnBrush)
+                  var wsHeader = new Avalonia.Controls.TextBlock { Text = "WS", FontWeight = Avalonia.Media.FontWeight.Bold };
+                  wsHeader[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("WsColumnBrush");
                   Avalonia.Controls.ToolTip.SetTip(wsHeader, $"Weighted Score for {category.CategoryName}");
 
                   var wsColumn = new DataGridTemplateColumn { Header = wsHeader, IsReadOnly = true, CanUserSort = false, Width = DataGridLength.Auto };
                   wsColumn.CellTemplate = new Avalonia.Controls.Templates.FuncDataTemplate<object>((_, __) =>
                   {
-                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.DarkOrange };
+                     var tb = new Avalonia.Controls.TextBlock { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, FontWeight = Avalonia.Media.FontWeight.Bold };
+                     tb[!Avalonia.Controls.TextBlock.ForegroundProperty] = new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("WsColumnBrush");
                      tb.Bind(Avalonia.Controls.TextBlock.TextProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].WsDisplay"));
                      tb.Bind(Avalonia.Controls.ToolTip.TipProperty, new Avalonia.Data.Binding($"CategoryGrades[{safeKey}].WsTooltip"));
                      return tb;
@@ -240,7 +254,6 @@ namespace Centriku.Views.Gradebook
          }
          finally
          {
-            // Safely restore the data binding so Avalonia can measure and draw the cells without crashing!
             grid.ItemsSource = backupData;
          }
       }    
