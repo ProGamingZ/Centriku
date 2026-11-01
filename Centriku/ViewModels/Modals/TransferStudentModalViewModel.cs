@@ -52,8 +52,11 @@ namespace Centriku.ViewModels.Modals
             {
                 if (SelectedTransferClass == null) return;
                 var db = _dbService.GetConnection();
-                int targetClassId = SelectedTransferClass.ClassID;
 
+                int targetClassId = SelectedTransferClass.ClassID;
+                await db.CreateTableAsync<Score>();
+                await db.CreateTableAsync<AttendanceRecord>();
+                await db.CreateTableAsync<AssessmentGroupMember>();
                 var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == _classId).ToListAsync();
                 var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToHashSet();
                 var studentIds = _studentsToTransfer.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();

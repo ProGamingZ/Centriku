@@ -14,7 +14,8 @@ namespace Centriku.Tests.ViewModels.Modals
             var db = fakeDb.GetConnection();
             await db.CreateTablesAsync(SQLite.CreateFlags.None,
                 typeof(TeacherClass), typeof(Student), typeof(ClassRoster),
-                typeof(Assessment), typeof(AssessmentGroupMember));
+                typeof(Assessment), typeof(AssessmentGroupMember),
+                typeof(Score), typeof(AttendanceRecord));
         }
 
         [Fact]

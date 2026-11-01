@@ -40,6 +40,9 @@ namespace Centriku.ViewModels.Modals
             try 
             {
                 var db = _dbService.GetConnection();
+                await db.CreateTableAsync<Score>();
+                await db.CreateTableAsync<AttendanceRecord>();
+                await db.CreateTableAsync<AssessmentGroupMember>();
                 var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == _classId).ToListAsync();
                 var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToHashSet();
                 var studentIds = _studentsToRemove.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
