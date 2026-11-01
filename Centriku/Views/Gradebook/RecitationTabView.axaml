@@ -8,7 +8,7 @@
     <Grid>
         <!-- Responsive Outer ScrollViewer preventing layout clipping on smaller screens -->
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Grid ColumnDefinitions="260, *, 260" Margin="40,30,40,40" MinWidth="950" MinHeight="600">
+            <Grid ColumnDefinitions="260, *, 260" Margin="24,20,24,24" MinWidth="950" MinHeight="600">
                 
                 <!-- LEFT COLUMN: Remaining Students -->
                 <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" MinHeight="450" MaxHeight="650" VerticalAlignment="Top">
@@ -40,7 +40,7 @@
                                     </RotateTransform>
                                 </Canvas.RenderTransform>
                             </Canvas>
-                            <Path Data="M 0,0 L 30,15 L 30,-15 Z" Fill="#EF4444" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Path Data="M 0,0 L 30,15 L 30,-15 Z" Fill="{DynamicResource DangerBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         </Grid>
                     </Viewbox>
 
@@ -90,7 +90,7 @@
                             <Border IsVisible="{Binding IsAnswerRevealed}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                                 <StackPanel>
                                     <TextBlock Text="ANSWER:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                    <TextBlock Text="{Binding AnswerText}" FontSize="20" FontWeight="Bold" Foreground="#22C55E" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding AnswerText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -145,7 +145,7 @@
                                                 <!-- Text (Read Mode) -->
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}" Margin="0,0,15,0">
                                                     <TextBlock Text="{Binding QuestionText}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding AnswerText}" Foreground="#22C55E" FontSize="12" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{Binding AnswerText}" Foreground="{DynamicResource SuccessBrush}" FontSize="12" TextWrapping="Wrap"/>
                                                 </StackPanel>
 
                                                 <!-- Form (Edit Mode) -->
@@ -165,7 +165,7 @@
                                                     
                                                     <!-- Delete Button -->
                                                     <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Delete Question">
-                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="20" Foreground="#EF4444"/>
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="20" Foreground="{DynamicResource DangerBrush}"/>
                                                     </Button>
                                                 </StackPanel>
 

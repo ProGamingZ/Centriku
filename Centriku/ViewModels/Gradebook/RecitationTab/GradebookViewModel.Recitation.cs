@@ -45,9 +45,7 @@ namespace Centriku.ViewModels
         public event Action<int>? OnSpinWheelRequested;
         public event Action? OnWheelResetRequested;
 
-        // ==========================================
         // INITIALIZATION & LOADING
-        // ==========================================
         private async Task LoadRecitationData()
         {
             var db = _dbService.GetConnection();
@@ -89,6 +87,7 @@ namespace Centriku.ViewModels
         // Fills the "Deck" of active questions based on user settings
         private void BuildAvailableQuestionsPool()
         {
+            TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
             var activeQuestions = QuestionBank.Where(q => q.IsIncluded).Select(q => q.DbModel).ToList();
             
             if (ShuffleQuestions)
@@ -233,7 +232,7 @@ namespace Centriku.ViewModels
                 // High-speed transaction: Updates all rows in one massive hit instantly!
                 if (roster.Count != 0)
                 {
-                    await db.UpdateAllAsync(roster, runInTransaction: true);
+                    await db.UpdateAllAsync(roster, runInTransaction: false);
                 }
 
                 await LoadRecitationData();

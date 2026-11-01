@@ -66,14 +66,17 @@ namespace Centriku.ViewModels
                 await LoadGroupsForSelectedAssessmentAsync();
             }
         }
-
+        
+        public bool HasNoGroups => CurrentAssessmentGroups == null || CurrentAssessmentGroups.Count == 0;
         public async Task LoadGroupsForSelectedAssessmentAsync()
         {
             try 
             {
+                
                 if (SelectedGroupAssessment == null)
                 {
                     CurrentAssessmentGroups.Clear();
+                    OnPropertyChanged(nameof(HasNoGroups));
                     UnassignedStudents.Clear();
                     return;
                 }
@@ -117,6 +120,7 @@ namespace Centriku.ViewModels
                 }
 
                 CurrentAssessmentGroups = new ObservableCollection<GroupCardViewModel>(groupCards);
+                OnPropertyChanged(nameof(HasNoGroups));
             }
             catch (Exception ex)
             {
@@ -225,38 +229,50 @@ namespace Centriku.ViewModels
         public async Task AddSoloGroupAsync(GroupCandidateStudentViewModel candidate)
         {
             if (SelectedGroupAssessment == null || candidate == null) return;
-            var db = _dbService.GetConnection();
 
-            // NEW: Ensure unique group name for solo students with the same last name
-            string baseName = $"Solo: {candidate.Student.LastName}";
-            string newGroupName = baseName;
-            int counter = 1;
-            while (CurrentAssessmentGroups.Any(g => string.Equals(g.GroupName, newGroupName, StringComparison.OrdinalIgnoreCase)))
+            await _groupDbLock.WaitAsync();
+            try
             {
-                newGroupName = $"{baseName} ({counter})";
-                counter++;
+                var db = _dbService.GetConnection();
+
+                string baseName = $"Solo: {candidate.Student.LastName}";
+                string newGroupName = baseName;
+                int counter = 1;
+                while (CurrentAssessmentGroups.Any(g => string.Equals(g.GroupName, newGroupName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    newGroupName = $"{baseName} ({counter})";
+                    counter++;
+                }
+
+                var newGroup = new AssessmentGroup
+                {
+                    AssessmentID = SelectedGroupAssessment.AssessmentID,
+                    ClassID = ClassId,
+                    GroupName = newGroupName,
+                    GroupScore = 0
+                };
+                await db.InsertAsync(newGroup);
+
+                var member = new AssessmentGroupMember
+                {
+                    GroupID = newGroup.GroupID,
+                    AssessmentID = SelectedGroupAssessment.AssessmentID,
+                    StudentID = candidate.Student.StudentID!,
+                    IndividualScore = 0
+                };
+                await db.InsertAsync(member);
+
+                await LoadGroupsForSelectedAssessmentAsync();
+                ShowToastMessage?.Invoke($"Created 1-person group for {candidate.Student.LastName}.");
             }
-
-            var newGroup = new AssessmentGroup
+            catch (Exception ex)
             {
-                AssessmentID = SelectedGroupAssessment.AssessmentID,
-                ClassID = ClassId,
-                GroupName = newGroupName,
-                GroupScore = 0
-            };
-            await db.InsertAsync(newGroup);
-
-            var member = new AssessmentGroupMember
+                ShowToastMessage?.Invoke($"Error creating solo group: {ex.Message}");
+            }
+            finally
             {
-                GroupID = newGroup.GroupID,
-                AssessmentID = SelectedGroupAssessment.AssessmentID,
-                StudentID = candidate.Student.StudentID!,
-                IndividualScore = 0
-            };
-            await db.InsertAsync(member);
-
-            await LoadGroupsForSelectedAssessmentAsync();
-            ShowToastMessage?.Invoke($"Created 1-person group for {candidate.Student.LastName}.");
+                _groupDbLock.Release();
+            }
         }
 
         [RelayCommand]
@@ -520,12 +536,14 @@ namespace Centriku.ViewModels
             SelectedCopyFromAssessment = CopyFromAssessments.FirstOrDefault();
             IsCopyGroupsModalOpen = true;
         }
+        
         [RelayCommand]
         public async Task ConfirmCopyGroupsAsync()
         {
             if (SelectedGroupAssessment == null || SelectedCopyFromAssessment == null) return;
             IsProcessing = true;
 
+            await _groupDbLock.WaitAsync();
             try 
             {
                 var db = _dbService.GetConnection();
@@ -546,34 +564,41 @@ namespace Centriku.ViewModels
                 var alreadyAssignedStudentIds = destMembers.Select(m => m.StudentID).ToHashSet();
 
                 int groupsCopied = 0;
+                var membersToInsert = new List<AssessmentGroupMember>();
 
-                // BULK TRANSACTION: Solves the N+1 Insert problem for copying groups
-                await db.RunInTransactionAsync(tran => 
+                foreach (var srcGroup in sourceGroups)
                 {
-                    foreach (var srcGroup in sourceGroups)
+                    var validMembersToCopy = sourceMembers.Where(m => m.GroupID == srcGroup.GroupID && !alreadyAssignedStudentIds.Contains(m.StudentID)).ToList();
+                    if (!validMembersToCopy.Any()) continue;
+
+                    string newGroupName = srcGroup.GroupName ?? "Unnamed Group";
+                    int copyCounter = 1;
+                    while (existingDestGroupNames.Contains(newGroupName.ToLower()))
                     {
-                        var validMembersToCopy = sourceMembers.Where(m => m.GroupID == srcGroup.GroupID && !alreadyAssignedStudentIds.Contains(m.StudentID)).ToList();
-                        if (!validMembersToCopy.Any()) continue;
-
-                        string newGroupName = srcGroup.GroupName ?? "Unnamed Group";
-                        int copyCounter = 1;
-                        while (existingDestGroupNames.Contains(newGroupName.ToLower()))
-                        {
-                            newGroupName = $"{srcGroup.GroupName} ({copyCounter})";
-                            copyCounter++;
-                        }
-                        existingDestGroupNames.Add(newGroupName.ToLower());
-
-                        var newGroup = new AssessmentGroup { AssessmentID = SelectedGroupAssessment.AssessmentID, ClassID = ClassId, GroupName = newGroupName, GroupScore = 0 };
-                        tran.Insert(newGroup); // Gets ID instantly
-                        groupsCopied++;
-
-                        foreach(var m in validMembersToCopy)
-                        {
-                            tran.Insert(new AssessmentGroupMember { GroupID = newGroup.GroupID, AssessmentID = SelectedGroupAssessment.AssessmentID, StudentID = m.StudentID, IndividualScore = 0 });
-                        }
+                        newGroupName = $"{srcGroup.GroupName} ({copyCounter})";
+                        copyCounter++;
                     }
-                });
+                    existingDestGroupNames.Add(newGroupName.ToLower());
+
+                    var newGroup = new AssessmentGroup { AssessmentID = SelectedGroupAssessment.AssessmentID, ClassID = ClassId, GroupName = newGroupName, GroupScore = 0 };
+                    await db.InsertAsync(newGroup);
+                    groupsCopied++;
+
+                    foreach (var m in validMembersToCopy)
+                    {
+                        membersToInsert.Add(new AssessmentGroupMember
+                        {
+                            GroupID = newGroup.GroupID,
+                            AssessmentID = SelectedGroupAssessment.AssessmentID,
+                            StudentID = m.StudentID,
+                            IndividualScore = 0,
+                            IsLeader = m.IsLeader
+                        });
+                    }
+                }
+
+                if (membersToInsert.Count > 0)
+                    await db.InsertAllAsync(membersToInsert, runInTransaction: false);
 
                 IsCopyGroupsModalOpen = false;
                 await LoadGroupsForSelectedAssessmentAsync();
@@ -582,7 +607,15 @@ namespace Centriku.ViewModels
                     ? "No groups copied. All students from the source are already assigned to groups here." 
                     : $"Successfully copied {groupsCopied} groups.");
             }
-            finally { IsProcessing = false; }
+            catch (Exception ex)
+            {
+                ShowToastMessage?.Invoke($"Error copying groups: {ex.Message}");
+            }
+            finally
+            {
+                _groupDbLock.Release();
+                IsProcessing = false;
+            }
         }
         [RelayCommand]
         public void CancelCopyGroups() => IsCopyGroupsModalOpen = false;

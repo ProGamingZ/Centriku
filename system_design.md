@@ -142,7 +142,7 @@ Centriku uses `sqlite-net-pcl` with explicit schema migrations managed by `Datab
    * Permanently deleting a `Student`, `TeacherClass`, or `Assessment` cascades deletions to all dependent child records.
    * `AttendanceRecord` rows with `StudentID == "GHOST_DATE"` are protected from orphan purges so empty roll-call date columns persist.
 7. **Non-Disruptive Hot Backups:** Database backups use `VACUUM INTO 'path'` so backups execute safely while the application connection remains live.
-
+8. **Per-Cell Async Persistence Guard:** `ScoreCellViewModel` and `AttendanceCellViewModel` serialize rapid keystroke updates through a per-cell `SemaphoreSlim(1, 1)` so initial `ScoreID == 0` / `RecordID == 0` insertions complete and assign primary keys before subsequent keystrokes trigger `UpdateAsync`.
 ---
 
 ## 5. Unresolved Business & Domain Questions

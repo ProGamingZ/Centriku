@@ -24,6 +24,9 @@
 | `DangerBrush` / `DangerBgBrush` | `--status-danger` | `#F43F5E` / `#22F43F5E` | `#E11D48` / `#1FE11D48` | Critical/FDA failures, Delete/Unenroll actions |
 | `PrimaryBgBrush` | `--accent-primary-bg` | `#227C3AED` | `#1F6D28D9` | Tinted primary badges (e.g., Student Count pill on Class Cards) |
 | `InfoBrush` / `InfoBgBrush` | `--status-info` | `#3B82F6` / `#223B82F6` | `#2563EB` / `#1F2563EB` | Transfer actions and informational category badges |
+| `TsColumnBrush` | `--table-col-ts` | `#A78BFA` | `#7C3AED` | Transmuted Score (`TS`) calculated column header and cells |
+| `WsColumnBrush` | `--table-col-ws` | `#FBBF24` | `#D97706` | Weighted Score (`WS`) calculated column header and cells |
+
 
 ### 1.2 Typography Scale
 * **Font Family:** `Inter` (UI Body/Headings), `FluentSystemIcons-Regular` (Icons), `Consolas, Courier New, monospace` (Developer Diagnostics).
@@ -79,6 +82,7 @@
 * **Column Locking:** Set `CanUserResizeColumns="False"` and `CanUserReorderColumns="False"` on proportional star tables. Reserve `FrozenColumnCount="4"` strictly for wide horizontal-scrolling sheets (`GradesTabView`, `AttendanceTabView`).
 * **Dynamic Table Counter:** Every `DataGrid` view (`MasterRosterTab`, `ArchivesTab`, `BulkImportTab`) must display a right-aligned `SemiBold` counter (`DynamicStudentCounter`, `DynamicArchiveCounter`, `DynamicImportCounter`) using `Foreground="{DynamicResource TextMutedBrush}"` directly above the top-right corner of the table.
 * **Inline Cell TextBox Reset:** Single-line `TextBox` controls must globally set `ScrollViewer.VerticalScrollBarVisibility="Disabled"` and `ScrollViewer.HorizontalScrollBarVisibility="Hidden"` in `App.axaml` so inline editing inside `DataGridTextColumn` or `DataGridTemplateColumn` never renders an internal scrollbar thumb inside the cell.
+* **Dynamic FrozenColumnCount:** Horizontal-scrolling sheets (`GradesTabView`, `AttendanceTabView`) must dynamically compute `grid.FrozenColumnCount` in code-behind based on the count of currently visible static identity/summary columns so hiding columns in `View Options` never freezes dynamic assessment or date columns.
 
 ### 3.4 Status Badges & Toast Notifications
 * **Badges:** Use translucent background tokens (`SuccessBgBrush`, `WarningBgBrush`, `DangerBgBrush`) with a `1px` matching border and bold semantic text (`FontSize="11"`, `CornerRadius="6"`, `Padding="10,4"`).

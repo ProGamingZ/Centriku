@@ -138,11 +138,13 @@ namespace Centriku.Views.Gradebook
                 double textRad = (textAngle - 90) * Math.PI / 180.0;
                 double textRadius = radius * 0.55; 
 
+                var student = _vm.RemainingStudents[i].StudentInfo;
+                string lastInitial = !string.IsNullOrWhiteSpace(student.LastName) ? $" {student.LastName[0]}." : "";
                 var tb = new TextBlock 
                 { 
-                    Text = _vm.RemainingStudents[i].StudentInfo.FirstName, 
+                    Text = $"{student.FirstName}{lastInitial}", 
                     FontWeight = FontWeight.Bold, 
-                    FontSize = count > 15 ? 10 : 14, 
+                    FontSize = count > 15 ? 10 : 13, 
                     TextAlignment = TextAlignment.Right, 
                     Width = 140 
                 };
