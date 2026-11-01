@@ -14,6 +14,8 @@ namespace Centriku.ViewModels
     {
         private readonly IDatabaseService _dbService;
         private readonly System.Action<ViewModelBase> _navigateAction;
+        private bool _isUpdatingFilters = false;
+
         [ObservableProperty] public partial ObservableCollection<AttentionAlertViewModel> AttentionAlerts { get; set; } = new();
         private List<Student> _allStudents = [];
 
@@ -28,23 +30,34 @@ namespace Centriku.ViewModels
         public bool HasNoCriticalAlerts { get; set; } = true;
         partial void OnNeedsAttentionChanged(int value) => OnPropertyChanged(nameof(HasNoAlerts));
         public bool HasNoAlerts => NeedsAttention == 0;
+
         [ObservableProperty] public partial ObservableCollection<DashboardClassCardViewModel> ClassCards { get; set; } = new();
+        public bool HasNoClasses => ClassCards == null || ClassCards.Count == 0;
+        partial void OnClassCardsChanged(ObservableCollection<DashboardClassCardViewModel> value) => OnPropertyChanged(nameof(HasNoClasses));
 
         // GLOBAL FILTER PROPERTIES 
         [ObservableProperty] public partial ObservableCollection<string> AvailableYears { get; set; } = new();
         [ObservableProperty] public partial string SelectedYear { get; set; } = "All Years";
-        partial void OnSelectedYearChanged(string value) => _ = CalculateDashboardMetricsAsync();
+        partial void OnSelectedYearChanged(string value)
+        {
+            if (!_isUpdatingFilters) _ = CalculateDashboardMetricsAsync();
+        }
 
         [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = new();
         [ObservableProperty] public partial string SelectedTerm { get; set; } = "All Terms";
-        partial void OnSelectedTermChanged(string value) => _ = CalculateDashboardMetricsAsync();
+        partial void OnSelectedTermChanged(string value)
+        {
+            if (!_isUpdatingFilters) _ = CalculateDashboardMetricsAsync();
+        }
 
-        // NEW: PROGRAM FILTER
         [ObservableProperty] public partial ObservableCollection<string> AvailablePrograms { get; set; } = new();
         [ObservableProperty] public partial string SelectedProgram { get; set; } = "All Programs";
-        partial void OnSelectedProgramChanged(string value) => _ = CalculateDashboardMetricsAsync();
+        partial void OnSelectedProgramChanged(string value)
+        {
+            if (!_isUpdatingFilters) _ = CalculateDashboardMetricsAsync();
+        }
 
-        // IN-MEMORY CACHE (Prevents database lag!) 
+        // IN-MEMORY CACHE
         private List<TeacherClass> _allClasses = [];
         private List<ClassRoster> _allRosters = [];
         private List<GradingTemplate> _allTemplates = [];
@@ -57,7 +70,7 @@ namespace Centriku.ViewModels
         public IRelayCommand<DashboardClassCardViewModel> OpenAttendanceCommand { get; }
         public IRelayCommand<AttentionAlertViewModel> OpenStudentAlertCommand { get; } 
 
-        public DashboardViewModel(IDatabaseService dbService,System.Action<ViewModelBase> navigateAction)
+        public DashboardViewModel(IDatabaseService dbService, System.Action<ViewModelBase> navigateAction)
         {
             _dbService = dbService;
             _navigateAction = navigateAction;
@@ -70,8 +83,16 @@ namespace Centriku.ViewModels
         {
             var db = _dbService.GetConnection();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
-            _allStudents = await db.Table<Student>().ToListAsync();
-            _allRosters = await db.Table<ClassRoster>().ToListAsync();
+            
+            var rawStudents = await db.Table<Student>().ToListAsync();
+            _allStudents = rawStudents.Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped").ToList();
+            var activeStudentIds = _allStudents.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
+
+            var rawRosters = await db.Table<ClassRoster>().ToListAsync();
+            _allRosters = activeStudentIds.Count > 0
+                ? rawRosters.Where(r => r.StudentID != null && activeStudentIds.Contains(r.StudentID)).ToList()
+                : rawRosters;
+
             _allTemplates = await db.Table<GradingTemplate>().ToListAsync();
             _allAssessments = await db.Table<Assessment>().ToListAsync();
             _allScores = await db.Table<Score>().ToListAsync();
@@ -80,70 +101,69 @@ namespace Centriku.ViewModels
 
             var activeDbClasses = _allClasses.Where(c => c.IsActive).ToList();
             
-            // 1. YEAR DROPDOWN
-            var years = activeDbClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
-            var prevYear = SelectedYear;
-            AvailableYears.Clear(); 
-            AvailableYears.Add("All Years");
-            foreach (var y in years) AvailableYears.Add(y!);
-            SelectedYear = string.Empty; // Force UI Detach
-            SelectedYear = AvailableYears.Contains(prevYear) ? prevYear : "All Years"; // Force UI Attach
+            _isUpdatingFilters = true;
+            try
+            {
+                // 1. YEAR DROPDOWN
+                var years = activeDbClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
+                var prevYear = SelectedYear;
+                AvailableYears.Clear(); 
+                AvailableYears.Add("All Years");
+                foreach (var y in years) AvailableYears.Add(y!);
+                SelectedYear = AvailableYears.Contains(prevYear) ? prevYear : "All Years";
 
-            // 2. TERM DROPDOWN
-            var terms = activeDbClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
-            var prevTerm = SelectedTerm;
-            AvailableTerms.Clear(); 
-            AvailableTerms.Add("All Terms");
-            foreach (var t in terms) AvailableTerms.Add(t!);
-            SelectedTerm = string.Empty; 
-            SelectedTerm = AvailableTerms.Contains(prevTerm) ? prevTerm : "All Terms";
+                // 2. TERM DROPDOWN
+                var terms = activeDbClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
+                var prevTerm = SelectedTerm;
+                AvailableTerms.Clear(); 
+                AvailableTerms.Add("All Terms");
+                foreach (var t in terms) AvailableTerms.Add(t!);
+                SelectedTerm = AvailableTerms.Contains(prevTerm) ? prevTerm : "All Terms";
 
-            // 3. PROGRAM DROPDOWN
-            var programs = activeDbClasses.Select(c => c.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
-            var prevProgram = SelectedProgram;
-            AvailablePrograms.Clear(); 
-            AvailablePrograms.Add("All Programs");
-            foreach (var p in programs) AvailablePrograms.Add(p!);
-            SelectedProgram = string.Empty;
-            SelectedProgram = AvailablePrograms.Contains(prevProgram) ? prevProgram : "All Programs";
+                // 3. PROGRAM DROPDOWN
+                var programs = activeDbClasses.Select(c => c.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
+                var prevProgram = SelectedProgram;
+                AvailablePrograms.Clear(); 
+                AvailablePrograms.Add("All Programs");
+                foreach (var p in programs) AvailablePrograms.Add(p!);
+                SelectedProgram = AvailablePrograms.Contains(prevProgram) ? prevProgram : "All Programs";
+            }
+            finally
+            {
+                _isUpdatingFilters = false;
+            }
 
             await CalculateDashboardMetricsAsync();
         }
 
-        private async Task CalculateDashboardMetricsAsync()
+        private Task CalculateDashboardMetricsAsync()
         {
-            await Task.Delay(20);
-
-            // 1. FILTER CLASSES
+            // 1. FILTER CLASSES (Synchronous in-memory evaluation prevents async race conditions)
             var filteredClasses = _allClasses.Where(c => c.IsActive).AsEnumerable();
-            if (SelectedYear != "All Years") filteredClasses = filteredClasses.Where(c => c.AcademicYear == SelectedYear);
-            if (SelectedTerm != "All Terms") filteredClasses = filteredClasses.Where(c => c.Term == SelectedTerm);
-            if (SelectedProgram != "All Programs") filteredClasses = filteredClasses.Where(c => c.Program == SelectedProgram);
+            if (!string.IsNullOrEmpty(SelectedYear) && SelectedYear != "All Years") filteredClasses = filteredClasses.Where(c => c.AcademicYear == SelectedYear);
+            if (!string.IsNullOrEmpty(SelectedTerm) && SelectedTerm != "All Terms") filteredClasses = filteredClasses.Where(c => c.Term == SelectedTerm);
+            if (!string.IsNullOrEmpty(SelectedProgram) && SelectedProgram != "All Programs") filteredClasses = filteredClasses.Where(c => c.Program == SelectedProgram);
 
             var activeClassList = filteredClasses.ToList();
-            var activeClassIds = activeClassList.Select(c => c.ClassID).ToList();
+            var activeClassIds = activeClassList.Select(c => c.ClassID).ToHashSet();
 
             // 2. CALCULATE METRICS
             ActiveClasses = activeClassList.Count;
             
-            // Calculate inactive classes (respecting the current Year/Term filters)
             var inactiveList = _allClasses.Where(c => !c.IsActive).AsEnumerable();
-            if (SelectedYear != "All Years") inactiveList = inactiveList.Where(c => c.AcademicYear == SelectedYear);
-            if (SelectedTerm != "All Terms") inactiveList = inactiveList.Where(c => c.Term == SelectedTerm);
-            if (SelectedProgram != "All Programs") inactiveList = inactiveList.Where(c => c.Program == SelectedProgram);
+            if (!string.IsNullOrEmpty(SelectedYear) && SelectedYear != "All Years") inactiveList = inactiveList.Where(c => c.AcademicYear == SelectedYear);
+            if (!string.IsNullOrEmpty(SelectedTerm) && SelectedTerm != "All Terms") inactiveList = inactiveList.Where(c => c.Term == SelectedTerm);
+            if (!string.IsNullOrEmpty(SelectedProgram) && SelectedProgram != "All Programs") inactiveList = inactiveList.Where(c => c.Program == SelectedProgram);
             InactiveClasses = inactiveList.Count();
 
-            // Total Enrolled (Unique students currently taking active classes)
             var activeRosters = _allRosters.Where(r => activeClassIds.Contains(r.ClassID)).ToList();
             TotalStudents = activeRosters.Select(r => r.StudentID).Distinct().Count();
-            
-            // Total System Students (Everyone in the database directory)
             TotalSystemStudents = _allStudents.Count;
 
             // 3. COMBINED ENGINE: Calculate Alerts & Build Cards
             var newCards = new ObservableCollection<DashboardClassCardViewModel>();
             var newAlerts = new List<AttentionAlertViewModel>();
-            var newCriticalAlerts = new List<AttentionAlertViewModel>(); // NEW: Separate bucket for failures
+            var newCriticalAlerts = new List<AttentionAlertViewModel>();
             int riskCounter = 0;
             int failedCounter = 0;
             
@@ -153,7 +173,7 @@ namespace Centriku.ViewModels
                 var classCategories = _allCategories.Where(c => c.TemplateID == teacherClass.GradingTemplateID).ToList();
 
                 var allClassAssessments = _allAssessments.Where(a => a.ClassID == teacherClass.ClassID).ToList();
-                var allClassAssessmentIds = allClassAssessments.Select(a => a.AssessmentID).ToList();
+                var allClassAssessmentIds = allClassAssessments.Select(a => a.AssessmentID).ToHashSet();
                 var classScores = _allScores.Where(s => allClassAssessmentIds.Contains(s.AssessmentID)).ToList();
                 var classAttendance = _allAttendance.Where(a => a.ClassID == teacherClass.ClassID).ToList();
                 
@@ -173,22 +193,36 @@ namespace Centriku.ViewModels
                     bool isFdaCritical = false; 
                     bool isFdaAtRisk = false; 
 
-                    // --- 1. FDA CHECK (40% Proximity Rule) ---
+                    // --- 1. FDA CHECK (40% Proximity Rule — Supports Equivalent & Independent Directly) ---
                     if (teacherClass.IsFdaEnabled)
                     {
                         double totalA = studentAtt.Where(a => a.Status == "A").Sum(a => a.SessionHours);
                         double totalL = studentAtt.Where(a => a.Status == "L").Sum(a => a.SessionHours);
                         
-                        double equivalentAbsences = teacherClass.FdaRuleType == "Equivalent" 
-                            ? totalA + (totalL * teacherClass.FdaLatePenaltyRatio) 
-                            : Math.Max(totalA, totalL * (teacherClass.FdaMaxAbsenceHours / Math.Max(1, teacherClass.FdaMaxLateHours))); 
-
-                        if (equivalentAbsences >= teacherClass.FdaMaxAbsenceHours) isFdaCritical = true; 
-                        else
+                        if (teacherClass.FdaRuleType == "Independent")
                         {
-                            double hoursRemaining = teacherClass.FdaMaxAbsenceHours - equivalentAbsences;
-                            double safeThreshold = teacherClass.FdaMaxAbsenceHours * 0.40;
-                            if (hoursRemaining <= safeThreshold) isFdaAtRisk = true;
+                            if (totalA >= teacherClass.FdaMaxAbsenceHours || totalL >= teacherClass.FdaMaxLateHours)
+                            {
+                                isFdaCritical = true;
+                            }
+                            else
+                            {
+                                bool nearAbsenceLimit = (teacherClass.FdaMaxAbsenceHours - totalA) <= (teacherClass.FdaMaxAbsenceHours * 0.40);
+                                bool nearLateLimit = teacherClass.FdaMaxLateHours > 0 && (teacherClass.FdaMaxLateHours - totalL) <= (teacherClass.FdaMaxLateHours * 0.40);
+                                if (nearAbsenceLimit || nearLateLimit) isFdaAtRisk = true;
+                            }
+                        }
+                        else // "Equivalent"
+                        {
+                            double equivalentAbsences = totalA + (totalL * teacherClass.FdaLatePenaltyRatio);
+                            if (equivalentAbsences >= teacherClass.FdaMaxAbsenceHours)
+                            {
+                                isFdaCritical = true;
+                            }
+                            else if ((teacherClass.FdaMaxAbsenceHours - equivalentAbsences) <= (teacherClass.FdaMaxAbsenceHours * 0.40))
+                            {
+                                isFdaAtRisk = true;
+                            }
                         }
                     }
 
@@ -198,19 +232,17 @@ namespace Centriku.ViewModels
                     double midtermGrade = 0;
                     double finalGrade = 0;
 
-                    var midAssessments = allClassAssessments.Where(a => a.GradingPeriod == "Midterm").ToList();
-                    var finAssessments = allClassAssessments.Where(a => a.GradingPeriod == "Final").ToList();
+                    var midAssessments = allClassAssessments.Where(a => string.Equals((a.GradingPeriod ?? "").Trim(), "Midterm", StringComparison.OrdinalIgnoreCase)).ToList();
+                    var finAssessments = allClassAssessments.Where(a => string.Equals((a.GradingPeriod ?? "").Trim(), "Final", StringComparison.OrdinalIgnoreCase)).ToList();
 
-                    // Check Midterm: Do all categories exist AND does the student have saved scores for ALL of them?
-                    if (midAssessments.Any() && classCategories.All(c => midAssessments.Any(a => a.Category == c.Name)) && 
+                    if (midAssessments.Any() && classCategories.All(c => midAssessments.Any(a => string.Equals((a.Category ?? "").Trim(), (c.Name ?? "").Trim(), StringComparison.OrdinalIgnoreCase))) && 
                         midAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID)))
                     {
                         isMidtermComplete = true;
                         midtermGrade = GradeCalculationService.EvaluateFinalGrade(classCategories, midAssessments, studentScores, template ?? new GradingTemplate(), teacherClass, studentAtt).TermNumericGrade;
                     }
 
-                    // Check Final: Do all categories exist AND does the student have saved scores for ALL of them?
-                    if (finAssessments.Any() && classCategories.All(c => finAssessments.Any(a => a.Category == c.Name)) && 
+                    if (finAssessments.Any() && classCategories.All(c => finAssessments.Any(a => string.Equals((a.Category ?? "").Trim(), (c.Name ?? "").Trim(), StringComparison.OrdinalIgnoreCase))) && 
                         finAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID)))
                     {
                         isFinalComplete = true;
@@ -230,12 +262,12 @@ namespace Centriku.ViewModels
                         if (semAvg < (template?.PassingGrade ?? 75.0))
                         {
                             isFailed = true;
-                            isAtRisk = false; // Upgrade warning to critical
+                            isAtRisk = false;
                             failureReason = "Failed: Semester Average Below Passing";
                         }
                         else if (!isFdaCritical)
                         {
-                            isPassed = true; // Passed successfully!
+                            isPassed = true;
                         }
                     }
                     else if (isMidtermComplete && !isFinalComplete)
@@ -256,19 +288,36 @@ namespace Centriku.ViewModels
                     {
                         failedCount++;
                         failedCounter++;
-                        newCriticalAlerts.Add(new AttentionAlertViewModel { ClassId = teacherClass.ClassID, StudentId = studentId, StudentName = studentName, ClassName = classString, AbsencesText = failureReason, IsCritical = true });
+                        newCriticalAlerts.Add(new AttentionAlertViewModel
+                        {
+                            ClassId = teacherClass.ClassID,
+                            SubjectName = teacherClass.SubjectName ?? string.Empty,
+                            StudentId = studentId,
+                            StudentName = studentName,
+                            ClassName = classString,
+                            AbsencesText = failureReason,
+                            IsCritical = true
+                        });
                     }
                     else if (isAtRisk)
                     {
                         atRiskCount++;
                         riskCounter++;
-                        newAlerts.Add(new AttentionAlertViewModel { ClassId = teacherClass.ClassID, StudentId = studentId, StudentName = studentName, ClassName = classString, AbsencesText = warningReason, IsCritical = false });
+                        newAlerts.Add(new AttentionAlertViewModel
+                        {
+                            ClassId = teacherClass.ClassID,
+                            SubjectName = teacherClass.SubjectName ?? string.Empty,
+                            StudentId = studentId,
+                            StudentName = studentName,
+                            ClassName = classString,
+                            AbsencesText = warningReason,
+                            IsCritical = false
+                        });
                     }
                     else if (isPassed)
                     {
                         passedCount++; 
                     }
-                    // NOTE: If they haven't finished midterms yet and have no FDA warnings, they simply remain in 'totalCount' (In Progress).
                 }
 
                 newCards.Add(new DashboardClassCardViewModel(teacherClass, totalCount, passedCount, atRiskCount, failedCount));
@@ -279,11 +328,12 @@ namespace Centriku.ViewModels
             ClassCards = newCards; 
             AttentionAlerts = new ObservableCollection<AttentionAlertViewModel>(newAlerts);
             
-            // Property for Criticals
             CriticalAlerts = new ObservableCollection<AttentionAlertViewModel>(newCriticalAlerts); 
             HasNoCriticalAlerts = CriticalAlerts.Count == 0;
             OnPropertyChanged(nameof(CriticalAlerts));
             OnPropertyChanged(nameof(HasNoCriticalAlerts));
+
+            return Task.CompletedTask;
         }
 
         private void OpenGradebook(DashboardClassCardViewModel selectedClass)
@@ -310,8 +360,9 @@ namespace Centriku.ViewModels
         {
             if (alert != null)
             {
+                string title = !string.IsNullOrWhiteSpace(alert.SubjectName) ? alert.SubjectName : alert.ClassName;
                 var gradebookVM = new GradebookViewModel(_dbService);
-                gradebookVM.Initialize(alert.ClassId, alert.ClassName, 0, alert.StudentId);
+                gradebookVM.Initialize(alert.ClassId, title, 0, alert.StudentId);
                 _navigateAction(gradebookVM);
             }
         }
@@ -337,18 +388,12 @@ namespace Centriku.ViewModels
 
     public partial class AttentionAlertViewModel : ObservableObject
     {
-        public int ClassId { get; set; } 
+        public int ClassId { get; set;}
+        public string SubjectName { get; set; } = string.Empty;
         public string StudentId { get; set; } = string.Empty; 
         public string StudentName { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
         public string AbsencesText { get; set; } = string.Empty;
         public bool IsCritical { get; set; } = false;
-    }
-
-    public partial class TermGradeItem : ObservableObject
-    {
-        public string TermLabel { get; set; } = string.Empty;
-        public string GradeDisplay { get; set; } = "--";
-        public bool IsFailing { get; set; } = false; 
     }
 }

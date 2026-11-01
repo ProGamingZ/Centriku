@@ -63,36 +63,57 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial string NewStudentSectionName { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewStudentEnrollmentStatus { get; set; } = "Regular";
 
+        private readonly System.Threading.SemaphoreSlim _loadStudentsLock = new(1, 1);
         public async Task LoadStudentsAsync()
         {
-            var db = _dbService.GetConnection();
-            await db.CreateTableAsync<Centriku.Models.Student>();
-            var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
-            _allStudents = rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
-            _allArchivedStudents = rawStudents.Where(s => s.IsArchived).Select(s => new StudentRowViewModel(s)).ToList();
+            await _loadStudentsLock.WaitAsync();
+            try
+            {
+                var db = _dbService.GetConnection();
+                await db.CreateTableAsync<Centriku.Models.Student>();
+                var rawStudents = await db.Table<Centriku.Models.Student>().ToListAsync();
 
-            var years = _allStudents.Select(s => s.GradeYearLevel).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderBy(y => y).ToList();
-            AvailableYears.Clear(); AvailableYears.Add("All Years");
-            foreach (var y in years) AvailableYears.Add(y!);
-            if (!AvailableYears.Contains(SelectedYearFilter)) SelectedYearFilter = "All Years";
+                // Preserve IsSelected state if rows were already checked prior to reload
+                var selectedActiveIds = _allStudents.Where(s => s.IsSelected).Select(s => s.StudentID).ToHashSet();
+                var selectedArchiveIds = _allArchivedStudents.Where(s => s.IsSelected).Select(s => s.StudentID).ToHashSet();
 
-            var programs = _allStudents.Select(s => s.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
-            AvailablePrograms.Clear(); AvailablePrograms.Add("All Programs");
-            foreach (var p in programs) AvailablePrograms.Add(p!);
-            if (!AvailablePrograms.Contains(SelectedProgramFilter)) SelectedProgramFilter = "All Programs";
+                _allStudents = rawStudents.Where(s => !s.IsArchived).Select(s => new StudentRowViewModel(s)
+                {
+                    IsSelected = s.StudentID != null && selectedActiveIds.Contains(s.StudentID)
+                }).ToList();
 
-            var sections = _allStudents.Select(s => s.SectionName).Where(sec => !string.IsNullOrWhiteSpace(sec)).Distinct().OrderBy(sec => sec).ToList();
-            AvailableSections.Clear(); AvailableSections.Add("All Sections");
-            foreach (var s in sections) AvailableSections.Add(s!);
-            if (!AvailableSections.Contains(SelectedSectionFilter)) SelectedSectionFilter = "All Sections";
+                _allArchivedStudents = rawStudents.Where(s => s.IsArchived).Select(s => new StudentRowViewModel(s)
+                {
+                    IsSelected = s.StudentID != null && selectedArchiveIds.Contains(s.StudentID)
+                }).ToList();
 
-            var statuses = _allStudents.Select(s => s.EnrollmentStatus).Where(es => !string.IsNullOrWhiteSpace(es)).Distinct().OrderBy(es => es).ToList();
-            AvailableStatuses.Clear(); AvailableStatuses.Add("All Statuses");
-            foreach (var st in statuses) AvailableStatuses.Add(st!);
-            if (!AvailableStatuses.Contains(SelectedStatusFilter)) SelectedStatusFilter = "All Statuses";
+                var years = _allStudents.Select(s => s.GradeYearLevel).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderBy(y => y).ToList();
+                AvailableYears.Clear(); AvailableYears.Add("All Years");
+                foreach (var y in years) AvailableYears.Add(y!);
+                if (!AvailableYears.Contains(SelectedYearFilter)) SelectedYearFilter = "All Years";
 
-            UpdateDisplayedStudents();
-            UpdateDisplayedArchivedStudents();
+                var programs = _allStudents.Select(s => s.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
+                AvailablePrograms.Clear(); AvailablePrograms.Add("All Programs");
+                foreach (var p in programs) AvailablePrograms.Add(p!);
+                if (!AvailablePrograms.Contains(SelectedProgramFilter)) SelectedProgramFilter = "All Programs";
+
+                var sections = _allStudents.Select(s => s.SectionName).Where(sec => !string.IsNullOrWhiteSpace(sec)).Distinct().OrderBy(sec => sec).ToList();
+                AvailableSections.Clear(); AvailableSections.Add("All Sections");
+                foreach (var s in sections) AvailableSections.Add(s!);
+                if (!AvailableSections.Contains(SelectedSectionFilter)) SelectedSectionFilter = "All Sections";
+
+                var statuses = _allStudents.Select(s => s.EnrollmentStatus).Where(es => !string.IsNullOrWhiteSpace(es)).Distinct().OrderBy(es => es).ToList();
+                AvailableStatuses.Clear(); AvailableStatuses.Add("All Statuses");
+                foreach (var st in statuses) AvailableStatuses.Add(st!);
+                if (!AvailableStatuses.Contains(SelectedStatusFilter)) SelectedStatusFilter = "All Statuses";
+
+                UpdateDisplayedStudents();
+                UpdateDisplayedArchivedStudents();
+            }
+            finally
+            {
+                _loadStudentsLock.Release();
+            }
         }
 
         private async Task SaveStudentAsync()

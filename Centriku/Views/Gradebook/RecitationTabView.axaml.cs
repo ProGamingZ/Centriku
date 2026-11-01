@@ -160,17 +160,27 @@ namespace Centriku.Views.Gradebook
             }
         }
 
+        private Avalonia.Animation.Transitions? _spinTransitions;
+
         private async void OnSpinWheelRequested(int winnerIndex)
         {
             if (_vm == null || _vm.RemainingStudents.Count == 0) return;
 
+            // Restore the 3-second spin transition if it was cleared during a previous reset
+            if (_wheelTransform.Transitions != null && _wheelTransform.Transitions.Count > 0)
+            {
+                _spinTransitions = _wheelTransform.Transitions;
+            }
+            else if (_spinTransitions != null)
+            {
+                _wheelTransform.Transitions = _spinTransitions;
+            }
+
             int count = _vm.RemainingStudents.Count;
             double anglePerSlice = 360.0 / count;
 
-            // Math to force the chosen slice to perfectly align with the Right Pointer (Angle 90)
             double targetAngle = 450 - (winnerIndex * anglePerSlice + anglePerSlice / 2);
 
-            // Add 3600 degrees (10 full rapid spins!) 
             _currentAngle += 3600; 
             double baseAngle = _currentAngle - (_currentAngle % 360);
             _currentAngle = baseAngle + targetAngle;
@@ -183,10 +193,18 @@ namespace Centriku.Views.Gradebook
 
         private void OnWheelResetRequested()
         {
+            // Cache the transition, detach it so Angle = 0 snaps instantaneously without spinning, and redraw
+            if (_wheelTransform != null)
+            {
+                if (_wheelTransform.Transitions != null && _wheelTransform.Transitions.Count > 0)
+                {
+                    _spinTransitions = _wheelTransform.Transitions;
+                }
+                _wheelTransform.Transitions = null;
+                _wheelTransform.Angle = 0;
+            }
+
             _currentAngle = 0;
-            _wheelTransform?.Angle = 0;
-            
-            // Force redraw instantly
             Dispatcher.UIThread.Post(DrawWheel);
         }
     }

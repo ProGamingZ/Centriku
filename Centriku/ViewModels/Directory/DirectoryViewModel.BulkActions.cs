@@ -157,10 +157,10 @@ namespace Centriku.ViewModels
                     var db = _dbService.GetConnection();
                     var targetIds = selected.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
 
-                    var rosters = (await db.Table<Centriku.Models.ClassRoster>().ToListAsync()).Where(r => targetIds.Contains(r.StudentID)).ToList();
+                    var rosters = (await db.Table<Centriku.Models.ClassRoster>().ToListAsync()).Where(r => r.StudentID != null && targetIds.Contains(r.StudentID)).ToList();
                     var scores = (await db.Table<Centriku.Models.Score>().ToListAsync()).Where(s => s.StudentID != null && targetIds.Contains(s.StudentID)).ToList();
                     var attendance = (await db.Table<Centriku.Models.AttendanceRecord>().ToListAsync()).Where(a => a.StudentID != null && targetIds.Contains(a.StudentID)).ToList();
-                    var groupMembers = (await db.Table<Centriku.Models.AssessmentGroupMember>().ToListAsync()).Where(m => targetIds.Contains(m.StudentID)).ToList();
+                    var groupMembers = (await db.Table<Centriku.Models.AssessmentGroupMember>().ToListAsync()).Where(m => m.StudentID != null && targetIds.Contains(m.StudentID)).ToList();
 
                     foreach (var r in rosters) await db.DeleteAsync(r);
                     foreach (var s in scores) await db.DeleteAsync(s);

@@ -11,11 +11,11 @@ namespace Centriku.Services
     {
         private readonly string _dbPath;
         private readonly IDatabaseService _baseDb;
+        private readonly System.Threading.SemaphoreSlim _dbLock = new(1, 1);
 
         public DatabaseManagementService(IDatabaseService dbService)
         {
             _baseDb = dbService;
-            // SINGLE SOURCE OF TRUTH: Delegates path resolution to StorageService
             _dbPath = StorageService.GetDatabasePath();
         }
 
@@ -33,23 +33,32 @@ namespace Centriku.Services
 
         public async Task<(int SchemaVersion, string RowCountsSummary)> GetSystemTelemetryAsync()
         {
-            var db = _baseDb.GetConnection();
-            var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
-            int version = settings?.DatabaseSchemaVersion ?? 1;
+            await _dbLock.WaitAsync();
+            try
+            {
+                var db = _baseDb.GetConnection();
+                var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
+                int version = settings?.DatabaseSchemaVersion ?? 1;
 
-            int students = await db.Table<Student>().CountAsync();
-            int classes = await db.Table<TeacherClass>().CountAsync();
-            int rosters = await db.Table<ClassRoster>().CountAsync();
-            int assessments = await db.Table<Assessment>().CountAsync();
-            int scores = await db.Table<Score>().CountAsync();
-            int attendance = await db.Table<AttendanceRecord>().CountAsync();
+                int students = await db.Table<Student>().CountAsync();
+                int classes = await db.Table<TeacherClass>().CountAsync();
+                int rosters = await db.Table<ClassRoster>().CountAsync();
+                int assessments = await db.Table<Assessment>().CountAsync();
+                int scores = await db.Table<Score>().CountAsync();
+                int attendance = await db.Table<AttendanceRecord>().CountAsync();
 
-            string summary = $"Students: {students} | Classes: {classes} | Rosters: {rosters} | Assessments: {assessments} | Scores: {scores} | Attendance: {attendance}";
-            return (version, summary);
+                string summary = $"Students: {students} | Classes: {classes} | Rosters: {rosters} | Assessments: {assessments} | Scores: {scores} | Attendance: {attendance}";
+                return (version, summary);
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task<string> RunIntegrityCheckAsync()
         {
+            await _dbLock.WaitAsync();
             try
             {
                 var db = _baseDb.GetConnection();
@@ -60,75 +69,97 @@ namespace Centriku.Services
             {
                 return $"Corruption detected or PRAGMA error:\n{ex.Message}";
             }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task<string> ScanOrphanedRecordsAsync()
         {
-            var db = _baseDb.GetConnection();
-            var validStudentIds = (await db.Table<Student>().ToListAsync()).Select(s => s.StudentID).ToHashSet();
-            var validClassIds = (await db.Table<TeacherClass>().ToListAsync()).Select(c => c.ClassID).ToHashSet();
-            var validAssessmentIds = (await db.Table<Assessment>().ToListAsync()).Select(a => a.AssessmentID).ToHashSet();
+            await _dbLock.WaitAsync();
+            try
+            {
+                var db = _baseDb.GetConnection();
+                var validStudentIds = (await db.Table<Student>().ToListAsync()).Select(s => s.StudentID).ToHashSet();
+                var validClassIds = (await db.Table<TeacherClass>().ToListAsync()).Select(c => c.ClassID).ToHashSet();
+                var validAssessmentIds = (await db.Table<Assessment>().ToListAsync()).Select(a => a.AssessmentID).ToHashSet();
 
-            var rosters = await db.Table<ClassRoster>().ToListAsync();
-            var scores = await db.Table<Score>().ToListAsync();
-            var attendance = await db.Table<AttendanceRecord>().ToListAsync();
+                var rosters = await db.Table<ClassRoster>().ToListAsync();
+                var scores = await db.Table<Score>().ToListAsync();
+                var attendance = await db.Table<AttendanceRecord>().ToListAsync();
 
-            var orphanRosters = rosters.Where(r => !validStudentIds.Contains(r.StudentID) || !validClassIds.Contains(r.ClassID)).ToList();
-            var orphanScores = scores.Where(s => !validStudentIds.Contains(s.StudentID) || !validAssessmentIds.Contains(s.AssessmentID)).ToList();
-            var orphanAttendance = attendance.Where(a => a.StudentID != "GHOST_DATE" && (!validStudentIds.Contains(a.StudentID!) || !validClassIds.Contains(a.ClassID))).ToList();
+                var orphanRosters = rosters.Where(r => !validStudentIds.Contains(r.StudentID) || !validClassIds.Contains(r.ClassID)).ToList();
+                var orphanScores = scores.Where(s => !validStudentIds.Contains(s.StudentID) || !validAssessmentIds.Contains(s.AssessmentID)).ToList();
+                var orphanAttendance = attendance.Where(a => a.StudentID != "GHOST_DATE" && (!validStudentIds.Contains(a.StudentID!) || !validClassIds.Contains(a.ClassID))).ToList();
 
-            var sb = new StringBuilder();
-            sb.AppendLine($"[RELATIONAL AUDIT COMPLETE - {DateTime.Now:HH:mm:ss}]");
-            sb.AppendLine($"• Orphaned Roster Enrollments: {orphanRosters.Count}");
-            if (orphanRosters.Count > 0)
-                sb.AppendLine($"  -> Ghost Student IDs in Rosters: {string.Join(", ", orphanRosters.Select(r => r.StudentID).Distinct())}");
+                var sb = new StringBuilder();
+                sb.AppendLine($"[RELATIONAL AUDIT COMPLETE - {DateTime.Now:HH:mm:ss}]");
+                sb.AppendLine($"• Orphaned Roster Enrollments: {orphanRosters.Count}");
+                if (orphanRosters.Count > 0)
+                    sb.AppendLine($"  -> Ghost Student IDs in Rosters: {string.Join(", ", orphanRosters.Select(r => r.StudentID).Distinct())}");
 
-            sb.AppendLine($"• Orphaned Score Records: {orphanScores.Count}");
-            sb.AppendLine($"• Orphaned Attendance Records: {orphanAttendance.Count}");
+                sb.AppendLine($"• Orphaned Score Records: {orphanScores.Count}");
+                sb.AppendLine($"• Orphaned Attendance Records: {orphanAttendance.Count}");
 
-            int total = orphanRosters.Count + orphanScores.Count + orphanAttendance.Count;
-            sb.AppendLine(total == 0
-                ? "\nStatus: 100% Clean. All foreign keys match valid records."
-                : $"\nStatus: Found {total} ghost record(s). Click 'Purge Ghost Records' to clean.");
+                int total = orphanRosters.Count + orphanScores.Count + orphanAttendance.Count;
+                sb.AppendLine(total == 0
+                    ? "\nStatus: 100% Clean. All foreign keys match valid records."
+                    : $"\nStatus: Found {total} ghost record(s). Click 'Purge Ghost Records' to clean.");
 
-            return sb.ToString();
+                return sb.ToString();
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task<int> PurgeOrphanedRecordsAsync()
         {
-            var db = _baseDb.GetConnection();
-            var validStudentIds = (await db.Table<Student>().ToListAsync()).Select(s => s.StudentID).ToHashSet();
-            var validClassIds = (await db.Table<TeacherClass>().ToListAsync()).Select(c => c.ClassID).ToHashSet();
-            var validAssessmentIds = (await db.Table<Assessment>().ToListAsync()).Select(a => a.AssessmentID).ToHashSet();
-
-            var rosters = await db.Table<ClassRoster>().ToListAsync();
-            var scores = await db.Table<Score>().ToListAsync();
-            var attendance = await db.Table<AttendanceRecord>().ToListAsync();
-
-            var orphanRosters = rosters.Where(r => !validStudentIds.Contains(r.StudentID) || !validClassIds.Contains(r.ClassID)).ToList();
-            var orphanScores = scores.Where(s => !validStudentIds.Contains(s.StudentID) || !validAssessmentIds.Contains(s.AssessmentID)).ToList();
-            var orphanAttendance = attendance.Where(a => a.StudentID != "GHOST_DATE" && (!validStudentIds.Contains(a.StudentID!) || !validClassIds.Contains(a.ClassID))).ToList();
-
-            int totalPurged = orphanRosters.Count + orphanScores.Count + orphanAttendance.Count;
-
-            if (totalPurged > 0)
+            await _dbLock.WaitAsync();
+            try
             {
-                await db.RunInTransactionAsync(tran =>
-                {
-                    foreach (var r in orphanRosters) tran.Delete(r);
-                    foreach (var s in orphanScores) tran.Delete(s);
-                    foreach (var a in orphanAttendance) tran.Delete(a);
-                });
-            }
+                var db = _baseDb.GetConnection();
+                var validStudentIds = (await db.Table<Student>().ToListAsync()).Select(s => s.StudentID).ToHashSet();
+                var validClassIds = (await db.Table<TeacherClass>().ToListAsync()).Select(c => c.ClassID).ToHashSet();
+                var validAssessmentIds = (await db.Table<Assessment>().ToListAsync()).Select(a => a.AssessmentID).ToHashSet();
 
-            await VacuumDatabaseAsync();
-            return totalPurged;
+                var rosters = await db.Table<ClassRoster>().ToListAsync();
+                var scores = await db.Table<Score>().ToListAsync();
+                var attendance = await db.Table<AttendanceRecord>().ToListAsync();
+
+                var orphanRosters = rosters.Where(r => !validStudentIds.Contains(r.StudentID) || !validClassIds.Contains(r.ClassID)).ToList();
+                var orphanScores = scores.Where(s => !validStudentIds.Contains(s.StudentID) || !validAssessmentIds.Contains(s.AssessmentID)).ToList();
+                var orphanAttendance = attendance.Where(a => a.StudentID != "GHOST_DATE" && (!validStudentIds.Contains(a.StudentID!) || !validClassIds.Contains(a.ClassID))).ToList();
+
+                int totalPurged = orphanRosters.Count + orphanScores.Count + orphanAttendance.Count;
+
+                foreach (var r in orphanRosters) await db.DeleteAsync(r);
+                foreach (var s in orphanScores) await db.DeleteAsync(s);
+                foreach (var a in orphanAttendance) await db.DeleteAsync(a);
+
+                await db.ExecuteAsync("VACUUM;");
+                return totalPurged;
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task VacuumDatabaseAsync()
         {
-            var db = _baseDb.GetConnection();
-            await db.ExecuteAsync("VACUUM;");
+            await _dbLock.WaitAsync();
+            try
+            {
+                var db = _baseDb.GetConnection();
+                await db.ExecuteAsync("VACUUM;");
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
         }
 
         public async Task CopyDatabaseToAsync(string destinationPath)
