@@ -22,6 +22,8 @@
 | `SuccessBrush` / `SuccessBgBrush` | `--status-success` | `#10B981` / `#2210B981` | `#059669` / `#1F059669` | Passing grades, Restore actions, Healthy status |
 | `WarningBrush` / `WarningBgBrush` | `--status-warning` | `#F59E0B` / `#22F59E0B` | `#D97706` / `#1FD97706` | At-Risk alerts, Archive actions, Duplicate warnings |
 | `DangerBrush` / `DangerBgBrush` | `--status-danger` | `#F43F5E` / `#22F43F5E` | `#E11D48` / `#1FE11D48` | Critical/FDA failures, Delete/Unenroll actions |
+| `PrimaryBgBrush` | `--accent-primary-bg` | `#227C3AED` | `#1F6D28D9` | Tinted primary badges (e.g., Student Count pill on Class Cards) |
+| `InfoBrush` / `InfoBgBrush` | `--status-info` | `#3B82F6` / `#223B82F6` | `#2563EB` / `#1F2563EB` | Transfer actions and informational category badges |
 
 ### 1.2 Typography Scale
 * **Font Family:** `Inter` (UI Body/Headings), `FluentSystemIcons-Regular` (Icons), `Consolas, Courier New, monospace` (Developer Diagnostics).

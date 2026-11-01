@@ -7,41 +7,45 @@
     <Grid>
         <Grid RowDefinitions="Auto, *">     
             
-            <StackPanel Grid.Row="0" Margin="24,24,24,20">
+            <StackPanel Grid.Row="0" Margin="24,20,24,15">
                 <TextBlock Text="Grading Policies" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                <TextBlock Text="Build and manage your custom grading rubrics." 
-                        Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
-                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,0"/>
+                <TextBlock Text="Build and manage your custom grading rubrics and transmutation rules." 
+                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,5,0,0" FontSize="14"/>
+                <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,18,0,0"/>
             </StackPanel>
 
-            <!-- Master-Detail Layout -->
-            <Grid Grid.Row="1" ColumnDefinitions="350, *" Margin="24,24,24,20">
+            <!-- Responsive Master-Detail Layout -->
+            <Grid Grid.Row="1" ColumnDefinitions="360, *" Margin="24,0,24,24">
                 
                 <!-- LEFT SIDEBAR: Saved Templates -->
-                <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,25,0">
+                <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,20,0">
                     <Grid RowDefinitions="Auto, *">
                         <StackPanel Grid.Row="0">
-                            <Button Command="{Binding ResetFormCommand}" Content="Create New Template" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="15" Margin="0,0,0,20"/>
-                            <TextBlock Text="Your Saved Templates" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                            <Button Command="{Binding ResetFormCommand}" Content="+ Create New Template" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="15,12" Margin="0,0,0,20"/>
+                            <TextBlock Text="Saved Templates" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,12"/>
                         </StackPanel>
                         
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding SavedTemplates}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                                        <Border Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,10">
                                             <Grid ColumnDefinitions="*, Auto">
-                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
-                                                    <TextBlock Text="{Binding TemplateName}" Foreground="{DynamicResource TextMainBrush}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding PassingGrade, StringFormat='Passing Grade: {0}%'}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0" Spacing="3">
+                                                    <TextBlock Text="{Binding TemplateName}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" FontSize="14" TextWrapping="Wrap"/>
+                                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                                        <TextBlock Text="{Binding PassingGrade, StringFormat='Passing: {0}%'}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                                        <TextBlock Text="•" Foreground="{DynamicResource BorderStrongBrush}" FontSize="12"/>
+                                                        <TextBlock Text="{Binding NrfgBaseValue, StringFormat='Base: {0}'}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" FontSize="12"/>
+                                                    </StackPanel>
                                                 </StackPanel>
                                                 
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                                                    <Button Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).EditTemplateCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Edit Template">
+                                                    <Button Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).EditTemplateCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="6" ToolTip.Tip="Edit Template">
                                                         <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" Foreground="{DynamicResource TextMutedBrush}" FontSize="18"/>
                                                     </Button>
-                                                    <Button Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).InitiateDeleteCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Delete Template">
-                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="#EF4444" FontSize="18"/>
+                                                    <Button Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).InitiateDeleteCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="6" ToolTip.Tip="Delete Template">
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" Foreground="{DynamicResource DangerBrush}" FontSize="18"/>
                                                     </Button>
                                                 </StackPanel>
                                             </Grid>
@@ -53,56 +57,62 @@
                     </Grid>
                 </Border>
 
-                <!-- RIGHT SIDE: Editor Canvas -->
+                <!-- RIGHT SIDE: Editor Canvas (Stretches across available workspace) -->
                 <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="25" MaxWidth="800" HorizontalAlignment="Left">
+                    <StackPanel Spacing="20" HorizontalAlignment="Stretch" Margin="0,0,8,0">
                         
                         <!-- Dynamic Editor Header -->
-                        <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="20">
+                        <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="20,16">
                             <TextBlock Text="{Binding EditorTitleText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
                         </Border>
 
                         <!-- Template Details -->
-                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
-                            <StackPanel>
-                                <TextBlock Text="Template Details" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
+                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="24">
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="Template Details" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                <Border Height="1" Background="{DynamicResource BorderBrush}"/>
                                 
                                 <Grid ColumnDefinitions="2*, 1*, 1*">
                                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                                        <TextBlock Text="Template Name" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
-                                        <TextBox Text="{Binding TemplateName}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
+                                        <TextBlock Text="Template Name" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                        <TextBox Text="{Binding TemplateName}"/>
                                     </StackPanel>
                                     
                                     <StackPanel Grid.Column="1" Margin="0,0,15,0">
-                                        <TextBlock Text="Passing Grade (%)" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
-                                        <NumericUpDown Value="{Binding PassingGrade}" Minimum="1" Maximum="100" ShowButtonSpinner="False" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
+                                        <TextBlock Text="Passing Grade (%)" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                        <NumericUpDown Value="{Binding PassingGrade}" Minimum="1" Maximum="100" ShowButtonSpinner="False"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Formula Base Value" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,0,5"/>
-                                        <NumericUpDown Value="{Binding NrfgBaseValue}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" ToolTip.Tip="The lowest possible percentage a student can receive (e.g., Base 50)"/>
+                                        <TextBlock Text="Formula Base Value" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                                        <NumericUpDown Value="{Binding NrfgBaseValue}" Minimum="0" Maximum="100" ShowButtonSpinner="False" ToolTip.Tip="The lowest possible transmuted grade a student can receive (e.g., Base 50 or Base 60)"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Grading Categories -->
-                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
-                            <StackPanel>
-                                <TextBlock Text="Grading Categories &amp; Weights" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,20"/>
+                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="24">
+                            <StackPanel Spacing="14">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Grading Categories &amp; Weights" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <TextBlock Text="Note: For official NwSSU Excel exports, Slot 1 maps to Class Standing (max 10), Slot 2 to Major Course Output (max 5), and Slot 3 to Major Exam (max 1)." FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Border Height="1" Background="{DynamicResource BorderBrush}"/>
 
-                                <Grid ColumnDefinitions="*, 130, 80" Margin="0,0,0,15">
-                                    <TextBlock Grid.Column="0" Text="CATEGORY NAME" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="12"/>
-                                    <TextBlock Grid.Column="1" Text="WEIGHT (%)" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="12"/>
+                                <Grid ColumnDefinitions="*, 140, 90" Margin="0,4,0,4">
+                                    <TextBlock Grid.Column="0" Text="CATEGORY NAME" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="11"/>
+                                    <TextBlock Grid.Column="1" Text="WEIGHT (%)" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="11"/>
+                                    <TextBlock Grid.Column="2" Text="ACTION" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
                                 </Grid>
 
                                 <ItemsControl ItemsSource="{Binding Categories}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid ColumnDefinitions="*, 130, 80" Margin="0,0,0,15">
-                                                <TextBox Grid.Column="0" Text="{Binding Name}" Margin="0,0,15,0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
-                                                <NumericUpDown Grid.Column="1" Value="{Binding Weight}" Minimum="0" Maximum="100" Margin="0,0,15,0" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}"/>
-                                                <Button Grid.Column="2" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).RemoveCategoryCommand}" CommandParameter="{Binding}" Content="Remove" Foreground="#EF4444" Background="Transparent" HorizontalAlignment="Left"/>
+                                            <Grid ColumnDefinitions="*, 140, 90" Margin="0,0,0,12">
+                                                <TextBox Grid.Column="0" Text="{Binding Name}" Margin="0,0,15,0"/>
+                                                <NumericUpDown Grid.Column="1" Value="{Binding Weight}" Minimum="0" Maximum="100" ShowButtonSpinner="False" Margin="0,0,15,0"/>
+                                                <Button Grid.Column="2" Command="{Binding #RootControl.((vm:PoliciesViewModel)DataContext).RemoveCategoryCommand}" CommandParameter="{Binding}" Content="Remove" Foreground="{DynamicResource DangerBrush}" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Grid>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -112,32 +122,32 @@
                                         Content="+ Add Category" 
                                         Background="Transparent" 
                                         BorderBrush="{DynamicResource PrimaryBrush}" 
-                                        BorderThickness="1" 
+                                        BorderThickness="1.5" 
                                         Foreground="{DynamicResource PrimaryBrush}" 
                                         FontWeight="Bold" 
                                         HorizontalAlignment="Stretch" 
                                         HorizontalContentAlignment="Center" 
-                                        CornerRadius="6" 
-                                        Padding="10" 
-                                        Margin="0,10,0,0"/>
+                                        CornerRadius="8" 
+                                        Padding="12" 
+                                        Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Dynamic Action Bar -->
-                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
+                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="24">
                             <Grid ColumnDefinitions="*, Auto">
                                 
                                 <!-- Live Validation Text -->
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding TotalWeight, StringFormat='Total Weight: {0}%'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                    <TextBlock IsVisible="{Binding !IsValidPolicy}" Text="Total weight must be 100% to save." Foreground="#EF4444" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
-                                    <TextBlock IsVisible="{Binding IsValidPolicy}" Text="Weights are perfectly balanced!" Foreground="#10B981" FontWeight="SemiBold" FontSize="12" Margin="0,5,0,0"/>
+                                    <TextBlock IsVisible="{Binding !IsValidPolicy}" Text="Total weight must equal 100% to save." Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock IsVisible="{Binding IsValidPolicy}" Text="Weights are perfectly balanced (100%)!" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,4,0,0"/>
                                 </StackPanel>
 
                                 <!-- Action Buttons -->
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
-                                    <Button IsVisible="{Binding IsEditing}" Command="{Binding ResetFormCommand}" Content="Cancel Edit" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" Padding="20,15"/>
-                                    <Button Command="{Binding SavePolicyCommand}" Content="{Binding SaveButtonText}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="30,15" CornerRadius="8"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                    <Button IsVisible="{Binding IsEditing}" Command="{Binding ResetFormCommand}" Content="Cancel Edit" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" Padding="18,12"/>
+                                    <Button Command="{Binding SavePolicyCommand}" Content="{Binding SaveButtonText}" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="28,12" CornerRadius="8"/>
                                 </StackPanel>
 
                             </Grid>
@@ -150,14 +160,14 @@
 
         <!-- SAFE DELETE MODAL OVERLAY -->
         <Border IsVisible="{Binding IsDeleteModalOpen}" Background="#B3000000" ZIndex="100">
-            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
                 <StackPanel>
                     <TextBlock Text="{Binding DeleteModalTitle}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
                     <TextBlock Text="{Binding DeleteModalMessage}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
                     
                     <Grid ColumnDefinitions="*, Auto, Auto">
                         <Button Grid.Column="1" Command="{Binding CancelDeleteCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
-                        <Button Grid.Column="2" IsVisible="{Binding CanConfirmDelete}" Command="{Binding ConfirmDeleteCommand}" Content="Delete Permanently" Background="#EF4444" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                        <Button Grid.Column="2" IsVisible="{Binding CanConfirmDelete}" Command="{Binding ConfirmDeleteCommand}" Content="Delete Permanently" Background="{DynamicResource DangerBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                         <Button Grid.Column="2" IsVisible="{Binding !CanConfirmDelete}" Command="{Binding CancelDeleteCommand}" Content="Understood" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
                     </Grid>
                 </StackPanel>
@@ -166,7 +176,7 @@
 
         <!-- PROCESSING SPINNER OVERLAY -->
         <Border IsVisible="{Binding IsProcessing}" Background="#B3000000" ZIndex="999">
-            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
                 <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ProgressBar IsIndeterminate="True" Width="150" Height="6" CornerRadius="3" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackground}"/>
                     <TextBlock Text="Processing Action..." FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
