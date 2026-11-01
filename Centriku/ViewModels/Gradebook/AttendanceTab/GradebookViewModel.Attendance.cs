@@ -28,14 +28,16 @@ namespace Centriku.ViewModels
          partial void OnShowTotalPChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
          partial void OnShowTotalLChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
          partial void OnShowTotalAChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
-         partial void OnShowTotalEChanged(bool value) { TriggerGridRedraw(); }
+         partial void OnShowTotalEChanged(bool value) { SaveClassSettings(); TriggerGridRedraw(); }
+
          public IRelayCommand ToggleAddRollCallCommand { get; }
          public IRelayCommand SaveRollCallCommand { get; }
-         public IRelayCommand<System.DateTime?> EditRollCallCommand { get;}
-         public IRelayCommand<System.DateTime?> DeleteRollCallCommand { get;} 
+         public IRelayCommand<System.DateTime?> EditRollCallCommand { get; }
+         public IRelayCommand<System.DateTime?> DeleteRollCallCommand { get; } 
+
          private async void SaveRollCallDay()
          {
-            if (!NewRollCallDate.HasValue) return;
+            if (!NewRollCallDate.HasValue || NewRollCallHours <= 0) return;
             IsProcessing = true;
             
             try 
@@ -56,11 +58,13 @@ namespace Centriku.ViewModels
                   foreach (var r in recordsToUpdate)
                   {
                      r.Date = targetDate;
+                     r.SessionHours = NewRollCallHours; // Persist updated session hours!
                   }
                   
-                  // BULK UPDATE
-                  await db.UpdateAllAsync(recordsToUpdate);
-                  ShowToastMessage?.Invoke($"Successfully moved roll call to {targetDate:MMM dd, yyyy}.");
+                  if (recordsToUpdate.Count > 0)
+                     await db.UpdateAllAsync(recordsToUpdate, runInTransaction: false);
+
+                  ShowToastMessage?.Invoke($"Successfully updated roll call for {targetDate:MMM dd, yyyy}.");
                }
                else
                {
@@ -70,7 +74,6 @@ namespace Centriku.ViewModels
                      return;
                   }
 
-                  // Build a list in memory
                   var newRecords = new System.Collections.Generic.List<AttendanceRecord>
                   {
                      new AttendanceRecord { ClassID = ClassId, StudentID = "GHOST_DATE", Date = targetDate, Status = "GHOST", SessionHours = NewRollCallHours }
@@ -82,23 +85,44 @@ namespace Centriku.ViewModels
                      newRecords.Add(new AttendanceRecord { ClassID = ClassId, StudentID = r.StudentID, Date = targetDate, Status = "P", SessionHours = NewRollCallHours });
                   }
 
-                  // BULK INSERT
-                  await db.InsertAllAsync(newRecords);
+                  await db.InsertAllAsync(newRecords, runInTransaction: false);
                   ShowToastMessage?.Invoke($"Successfully created roll call for {targetDate:MMM dd, yyyy}.");
                }
 
                ResetRollCallForm();
                await LoadAttendanceData(); 
             }
+            catch (Exception ex)
+            {
+               ShowToastMessage?.Invoke($"Error saving roll call: {ex.Message}");
+            }
             finally { IsProcessing = false; }
          }
-         private void EditRollCall(System.DateTime? dateParam)
+
+         private async void EditRollCall(System.DateTime? dateParam)
          {
             if (!dateParam.HasValue) return;
-            _editingRollCallDate = dateParam.Value.Date;
-            NewRollCallDate = dateParam.Value.Date;
-            IsAddingRollCall = true; // Slide the panel open!
+            var targetDate = dateParam.Value.Date;
+            _editingRollCallDate = targetDate;
+            NewRollCallDate = targetDate;
+
+            // Load the existing SessionHours for this date
+            string dateKey = targetDate.ToString("yyyy-MM-dd");
+            var firstRow = AttendanceGridRows.FirstOrDefault();
+            if (firstRow != null && firstRow.Cells.TryGetValue(dateKey, out var cellVm) && cellVm.DbModel.SessionHours > 0)
+            {
+               NewRollCallHours = cellVm.DbModel.SessionHours;
+            }
+            else
+            {
+               var db = _dbService.GetConnection();
+               var existingRecord = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).FirstOrDefaultAsync();
+               NewRollCallHours = existingRecord != null && existingRecord.SessionHours > 0 ? existingRecord.SessionHours : 1.5;
+            }
+
+            IsAddingRollCall = true;
          }
+
          [ObservableProperty] public partial bool IsDeleteRollCallModalOpen { get; set; } = false;
          [ObservableProperty] public partial string DeleteRollCallMessage { get; set; } = string.Empty;
          [ObservableProperty] public partial ConfirmDeleteModalViewModel? DeleteRollCallModal { get; set; }
@@ -108,25 +132,41 @@ namespace Centriku.ViewModels
             if (!dateParam.HasValue) return;
             var targetDate = dateParam.Value.Date;
             
-            // Inject the specific logic directly into the universal modal
             DeleteRollCallModal = new ConfirmDeleteModalViewModel(
                 "Delete Attendance Column?",
                 $"Are you sure you want to delete the attendance column for {targetDate:MMM dd, yyyy}?\n\nThis will permanently erase the attendance records of all students for this date.",
                 async () => 
                 {
-                    var db = _dbService.GetConnection();
-                    var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
-                    
-                    if (recordsToDelete.Any())
+                    await _groupDbLock.WaitAsync();
+                    try
                     {
-                        await db.RunInTransactionAsync(tran => 
+                        var db = _dbService.GetConnection();
+                        var recordsToDelete = await db.Table<AttendanceRecord>().Where(a => a.ClassID == ClassId && a.Date == targetDate).ToListAsync();
+                        
+                        foreach (var r in recordsToDelete) await db.DeleteAsync(r);
+
+                        if (SelectedAttendanceDateDisplay == targetDate.ToString("MMM dd, yyyy"))
                         {
-                            foreach (var r in recordsToDelete) tran.Delete(r);
-                        });
+                            IsAttendancePanelOpen = false;
+                            SelectedAttendanceCell = null;
+                        }
+
+                        IsDeleteRollCallModalOpen = false;
+                        DeleteRollCallModal = null;
+                        
+                        await LoadAttendanceData(); 
+                        ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
                     }
-                    
-                    await LoadAttendanceData(); 
-                    ShowToastMessage?.Invoke($"Deleted roll call for {targetDate:MMM dd, yyyy}.");
+                    catch (Exception ex)
+                    {
+                        IsDeleteRollCallModalOpen = false;
+                        DeleteRollCallModal = null;
+                        ShowToastMessage?.Invoke($"Error deleting roll call: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _groupDbLock.Release();
+                    }
                 },
                 () => { IsDeleteRollCallModalOpen = false; DeleteRollCallModal = null; }
             );
@@ -145,7 +185,6 @@ namespace Centriku.ViewModels
          [ObservableProperty] public partial bool IsFdaModalOpen { get; set; } = false;
          [ObservableProperty] public partial TeacherClass? FdaSettingsClass { get; set; }
          
-         // Helper for UI Radio Buttons
          public bool IsFdaEquivalentRule 
          { 
              get => FdaSettingsClass?.FdaRuleType == "Equivalent";
@@ -176,19 +215,25 @@ namespace Centriku.ViewModels
              if (FdaSettingsClass != null)
              {
                  IsProcessing = true;
-                 var db = _dbService.GetConnection();
-                 await db.UpdateAsync(FdaSettingsClass);
-                 IsProcessing = false;
-                 IsFdaModalOpen = false;
-                 
-                 ShowToastMessage?.Invoke("Attendance FDA Rules updated.");
-                 RecalculateFinalGrades(); // Re-run the math engine!
+                 try
+                 {
+                     var db = _dbService.GetConnection();
+                     await db.UpdateAsync(FdaSettingsClass);
+                     _currentClass = FdaSettingsClass; // Update cached instance for MathEngine
+                     IsFdaModalOpen = false;
+                     
+                     ShowToastMessage?.Invoke("Attendance FDA Rules updated.");
+                     RecalculateFinalGrades();
+                 }
+                 finally
+                 {
+                     IsProcessing = false;
+                 }
              }
          }
+
          [RelayCommand] public void CloseFdaModal() => IsFdaModalOpen = false;
 
       #endregion
-
-      
    }
 }
