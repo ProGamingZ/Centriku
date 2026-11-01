@@ -35,22 +35,22 @@ namespace Centriku.ViewModels
         public bool HasNoClasses => ClassCards == null || ClassCards.Count == 0;
         partial void OnClassCardsChanged(ObservableCollection<DashboardClassCardViewModel> value) => OnPropertyChanged(nameof(HasNoClasses));
 
-        // GLOBAL FILTER PROPERTIES 
-        [ObservableProperty] public partial ObservableCollection<string> AvailableYears { get; set; } = new();
+        // GLOBAL FILTER PROPERTIES (Pre-seeded so ComboBoxes never render blank on startup)
+        [ObservableProperty] public partial ObservableCollection<string> AvailableYears { get; set; } = ["All Years"];
         [ObservableProperty] public partial string SelectedYear { get; set; } = "All Years";
         partial void OnSelectedYearChanged(string value)
         {
             if (!_isUpdatingFilters) _ = CalculateDashboardMetricsAsync();
         }
 
-        [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> AvailableTerms { get; set; } = ["All Terms"];
         [ObservableProperty] public partial string SelectedTerm { get; set; } = "All Terms";
         partial void OnSelectedTermChanged(string value)
         {
             if (!_isUpdatingFilters) _ = CalculateDashboardMetricsAsync();
         }
 
-        [ObservableProperty] public partial ObservableCollection<string> AvailablePrograms { get; set; } = new();
+        [ObservableProperty] public partial ObservableCollection<string> AvailablePrograms { get; set; } = ["All Programs"];
         [ObservableProperty] public partial string SelectedProgram { get; set; } = "All Programs";
         partial void OnSelectedProgramChanged(string value)
         {
@@ -106,27 +106,33 @@ namespace Centriku.ViewModels
             {
                 // 1. YEAR DROPDOWN
                 var years = activeDbClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
-                var prevYear = SelectedYear;
+                var prevYear = string.IsNullOrWhiteSpace(SelectedYear) ? "All Years" : SelectedYear;
                 AvailableYears.Clear(); 
                 AvailableYears.Add("All Years");
                 foreach (var y in years) AvailableYears.Add(y!);
-                SelectedYear = AvailableYears.Contains(prevYear) ? prevYear : "All Years";
+                string targetYear = AvailableYears.Contains(prevYear) ? prevYear : "All Years";
+                SelectedYear = string.Empty;
+                SelectedYear = targetYear;
 
                 // 2. TERM DROPDOWN
                 var terms = activeDbClasses.Select(c => c.Term).Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().OrderBy(t => t).ToList();
-                var prevTerm = SelectedTerm;
+                var prevTerm = string.IsNullOrWhiteSpace(SelectedTerm) ? "All Terms" : SelectedTerm;
                 AvailableTerms.Clear(); 
                 AvailableTerms.Add("All Terms");
                 foreach (var t in terms) AvailableTerms.Add(t!);
-                SelectedTerm = AvailableTerms.Contains(prevTerm) ? prevTerm : "All Terms";
+                string targetTerm = AvailableTerms.Contains(prevTerm) ? prevTerm : "All Terms";
+                SelectedTerm = string.Empty;
+                SelectedTerm = targetTerm;
 
                 // 3. PROGRAM DROPDOWN
                 var programs = activeDbClasses.Select(c => c.Program).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p).ToList();
-                var prevProgram = SelectedProgram;
+                var prevProgram = string.IsNullOrWhiteSpace(SelectedProgram) ? "All Programs" : SelectedProgram;
                 AvailablePrograms.Clear(); 
                 AvailablePrograms.Add("All Programs");
                 foreach (var p in programs) AvailablePrograms.Add(p!);
-                SelectedProgram = AvailablePrograms.Contains(prevProgram) ? prevProgram : "All Programs";
+                string targetProgram = AvailablePrograms.Contains(prevProgram) ? prevProgram : "All Programs";
+                SelectedProgram = string.Empty;
+                SelectedProgram = targetProgram;
             }
             finally
             {
@@ -275,7 +281,7 @@ namespace Centriku.ViewModels
                         if (midtermGrade < (template?.PassingGrade ?? 75.0))
                         {
                             isAtRisk = true;
-                            warningReason = "Warning: Failed Midterm Exam";
+                            warningReason = "Warning: Midterm Average Below Passing";
                         }
                     }
 

@@ -18,6 +18,8 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial ObservableCollection<StudentGradeRow> ChosenStudents { get; set; } = new();
         [ObservableProperty] public partial string RemainingCounterText { get; set; } = "Remaining (0)";
         [ObservableProperty] public partial string ChosenCounterText { get; set; } = "Chosen (0)";
+        public bool HasNoRemainingStudents => RemainingStudents == null || RemainingStudents.Count == 0;
+        public bool HasNoChosenStudents => ChosenStudents == null || ChosenStudents.Count == 0;
 
         // --- 2. QUESTION BANK STATE ---
         [ObservableProperty] public partial ObservableCollection<QuestionRowViewModel> QuestionBank { get; set; } = new();
@@ -25,7 +27,6 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool AllowRepeatQuestions { get; set; } = false;
         [ObservableProperty] public partial bool ShuffleQuestions { get; set; } = true;
         
-        // Tracks questions that haven't been asked yet (if Repeat is OFF)
         private List<RecitationQuestion> _availableQuestionsPool = new(); 
 
         // --- 3. MODAL STATE ---
@@ -35,7 +36,6 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool IsWinnerModalOpen { get; set; } = false;
         [ObservableProperty] public partial bool IsManageQuestionsModalOpen { get; set; } = false;
 
-        // Form Inputs
         [ObservableProperty] public partial string NewQuestionInput { get; set; } = string.Empty;
         [ObservableProperty] public partial string NewAnswerInput { get; set; } = string.Empty;
 
@@ -52,7 +52,6 @@ namespace Centriku.ViewModels
             await db.CreateTableAsync<ClassRoster>(); 
             await db.CreateTableAsync<RecitationQuestion>(); 
 
-            // Load Students
             var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
             var remaining = new List<StudentGradeRow>();
             var chosen = new List<StudentGradeRow>();
@@ -68,7 +67,6 @@ namespace Centriku.ViewModels
             ChosenStudents = new ObservableCollection<StudentGradeRow>(chosen);
             UpdateCounters();
 
-            // Load Questions
             var questions = await db.Table<RecitationQuestion>().Where(q => q.ClassID == ClassId).ToListAsync();
             QuestionBank = new ObservableCollection<QuestionRowViewModel>(questions.Select(q => new QuestionRowViewModel(q)));
             
@@ -82,9 +80,10 @@ namespace Centriku.ViewModels
         {
             RemainingCounterText = $"Remaining ({RemainingStudents.Count})";
             ChosenCounterText = $"Chosen ({ChosenStudents.Count})";
+            OnPropertyChanged(nameof(HasNoRemainingStudents));
+            OnPropertyChanged(nameof(HasNoChosenStudents));
         }
 
-        // Fills the "Deck" of active questions based on user settings
         private void BuildAvailableQuestionsPool()
         {
             TotalQuestionsCountText = $"Total Questions: {QuestionBank.Count}";
@@ -92,8 +91,7 @@ namespace Centriku.ViewModels
             
             if (ShuffleQuestions)
             {
-                var rng = new Random();
-                _availableQuestionsPool = activeQuestions.OrderBy(q => rng.Next()).ToList();
+                _availableQuestionsPool = activeQuestions.OrderBy(_ => Random.Shared.Next()).ToList();
             }
             else
             {
@@ -105,21 +103,31 @@ namespace Centriku.ViewModels
         [RelayCommand]
         public void SpinRecitation()
         {
-            if (IsSpinning || !RemainingStudents.Any()) return;
+            if (IsSpinning) return;
+            if (!RemainingStudents.Any())
+            {
+                ShowToastMessage?.Invoke("All students have recited! Click 'Reset Class' to start a new round.");
+                return;
+            }
+
             IsSpinning = true;
             RecitationWinnerName = "Spinning...";
 
-            var random = new Random();
-            int winnerIndex = random.Next(RemainingStudents.Count);
+            int winnerIndex = Random.Shared.Next(RemainingStudents.Count);
             OnSpinWheelRequested?.Invoke(winnerIndex);
         }
 
         [RelayCommand]
         public async Task SkipRecitationAsync()
         {
-            if (IsSpinning || !RemainingStudents.Any()) return;
-            var random = new Random();
-            int winnerIndex = random.Next(RemainingStudents.Count);
+            if (IsSpinning) return;
+            if (!RemainingStudents.Any())
+            {
+                ShowToastMessage?.Invoke("All students have recited! Click 'Reset Class' to start a new round.");
+                return;
+            }
+
+            int winnerIndex = Random.Shared.Next(RemainingStudents.Count);
             await ProcessWinnerAsync(RemainingStudents[winnerIndex]);
         }
 
@@ -134,9 +142,8 @@ namespace Centriku.ViewModels
 
         private async Task ProcessWinnerAsync(StudentGradeRow winner)
         {
-            RecitationWinnerName = $"Winner: {winner.FullName}!";
+            RecitationWinnerName = $"Selected: {winner.FullName}";
 
-            // 1. Move Student to Chosen List
             RemainingStudents.Remove(winner);
             ChosenStudents.Add(winner);
             UpdateCounters();
@@ -149,28 +156,22 @@ namespace Centriku.ViewModels
                 await db.UpdateAsync(rosterEntry);
             }
 
-            // 2. Determine Question
             RecitationQuestion? pickedQuestion = null;
 
             if (_availableQuestionsPool.Any())
             {
-                // Grab the first question from the deck
                 pickedQuestion = _availableQuestionsPool[0]; 
                 
                 if (!AllowRepeatQuestions)
                 {
-                    // Discard it if repeats are disabled
                     _availableQuestionsPool.RemoveAt(0); 
                 }
                 else if (ShuffleQuestions)
                 {
-                    // If repeating and shuffling, put it back and shuffle the whole deck again
                     BuildAvailableQuestionsPool(); 
                 }
-                // If repeating and NO shuffle, it naturally stays at index 0 and will be asked again!
             }
 
-            // 3. Populate & Open Modal
             string questionText = pickedQuestion != null ? pickedQuestion.QuestionText : "No questions available! You have run out of active questions.";
             string answerText = pickedQuestion != null ? pickedQuestion.AnswerText : string.Empty;
 
@@ -183,7 +184,6 @@ namespace Centriku.ViewModels
 
             IsWinnerModalOpen = true;
         }
-        
         
         // QUESTION MANAGER & RESET ACTIONS
         [RelayCommand]
@@ -199,7 +199,6 @@ namespace Centriku.ViewModels
             IsManageQuestionsModalOpen = true;
         }
 
-        // Call this directly from the XAML CheckBox Command to instantly save the IsIncluded state
         [RelayCommand]
         public async Task ToggleQuestionIncludedAsync(QuestionRowViewModel qRow)
         {
@@ -209,7 +208,6 @@ namespace Centriku.ViewModels
             BuildAvailableQuestionsPool(); 
         }
 
-        // Refreshes the pool if you change the Global Toggles (Shuffle/Repeat)
         partial void OnShuffleQuestionsChanged(bool value) => BuildAvailableQuestionsPool();
         partial void OnAllowRepeatQuestionsChanged(bool value) => BuildAvailableQuestionsPool();
 
@@ -221,17 +219,14 @@ namespace Centriku.ViewModels
             try 
             {
                 var db = _dbService.GetConnection();
+                await db.CreateTableAsync<ClassRoster>();
+                await db.CreateTableAsync<RecitationQuestion>();
 
                 // Single atomic SQL statement resets all students in < 1ms without savepoint locks
                 await db.ExecuteAsync("UPDATE ClassRoster SET HasRecited = 0 WHERE ClassID = ?", ClassId);
 
-                // Reset in-memory lists and question deck immediately
-                RemainingStudents = new ObservableCollection<StudentGradeRow>(
-                    GradebookRows.OrderBy(s => s.StudentInfo.LastName));
-                ChosenStudents.Clear();
-                UpdateCounters();
-                RecitationWinnerName = "Ready to Spin!";
-                BuildAvailableQuestionsPool();
+                // Reloads RemainingStudents, ChosenStudents, and QuestionBank from DB (< 1ms)
+                await LoadRecitationData();
 
                 OnWheelResetRequested?.Invoke();
                 ShowToastMessage?.Invoke("Class reset! All students returned to the wheel.");
@@ -263,6 +258,5 @@ namespace Centriku.ViewModels
                 await db.UpdateAsync(rosterEntry);
             }
         }
-
     }
 }

@@ -6,63 +6,103 @@
              x:Name="RecitationRoot">
 
     <Grid>
-        <!-- Responsive Outer ScrollViewer preventing layout clipping on smaller screens -->
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Grid ColumnDefinitions="260, *, 260" Margin="24,20,24,24" MinWidth="950" MinHeight="600">
-                
-                <!-- LEFT COLUMN: Remaining Students -->
-                <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" MinHeight="450" MaxHeight="650" VerticalAlignment="Top">
-                    <Grid RowDefinitions="Auto, *">
-                        <TextBlock Grid.Row="0" Text="{Binding RemainingCounterText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding RemainingStudents}" Background="Transparent" BorderThickness="0">
+        <!-- Pinned Responsive 3-Column Workspace (Scales cleanly from 1024x700 to Ultrawide) -->
+        <Grid ColumnDefinitions="1*, 1.6*, 1*" Margin="24,20,24,24">
+            
+            <!-- LEFT COLUMN: Remaining Students -->
+            <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="18" VerticalAlignment="Stretch">
+                <Grid RowDefinitions="Auto, Auto, *">
+                    <TextBlock Grid.Row="0" Text="{Binding RemainingCounterText}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <Border Grid.Row="1" Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10,0,10"/>
+
+                    <Panel Grid.Row="2">
+                        <TextBlock IsVisible="{Binding HasNoRemainingStudents}"
+                                   Text="All students have recited this round."
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   FontStyle="Italic"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   TextAlignment="Center"/>
+
+                        <ListBox IsVisible="{Binding !HasNoRemainingStudents}" ItemsSource="{Binding RemainingStudents}" Background="Transparent" BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding FullName}" Foreground="{DynamicResource TextMainBrush}" FontSize="14" Padding="0,5"/>
+                                    <TextBlock Text="{Binding FullName}" ToolTip.Tip="{Binding FullName}" Foreground="{DynamicResource TextMainBrush}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Padding="2,4"/>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </Grid>
-                </Border>
+                    </Panel>
+                </Grid>
+            </Border>
 
-                <!-- MIDDLE COLUMN: The Wheel & Controls -->
-                <Grid Grid.Column="1" RowDefinitions="*, Auto, Auto" Margin="30,0" MinWidth="380" VerticalAlignment="Top">
+            <!-- MIDDLE COLUMN: Status Banner, Responsive Wheel & Controls -->
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="18,0" VerticalAlignment="Stretch">
+                <Grid RowDefinitions="Auto, *, Auto">
                     
-                    <Viewbox Grid.Row="0" Stretch="Uniform" MinHeight="280" MaxHeight="450">
-                        <Grid Width="450" Height="400">
+                    <!-- Top Status & Question Counter Bar -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
+                        <Border Grid.Column="0" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding RecitationWinnerName}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource PrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TotalQuestionsCountText}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Responsive Wheel Viewbox (Scales automatically to available height/width) -->
+                    <Viewbox Grid.Row="1" Stretch="Uniform"  Margin="0,6">
+                        <Grid Width="445" Height="400">
                             <Canvas x:Name="WheelCanvas" Width="400" Height="400" RenderTransformOrigin="50%,50%" HorizontalAlignment="Left">
                                 <Canvas.RenderTransform>
                                     <RotateTransform Angle="0">
                                         <RotateTransform.Transitions>
                                             <Transitions>
-                                                <DoubleTransition Property="Angle" Duration="0:0:3" Easing="CubicEaseOut"/>
+                                                <DoubleTransition Property="Angle" Duration="0:0:5" Easing="QuinticEaseOut"/>
                                             </Transitions>
                                         </RotateTransform.Transitions>
                                     </RotateTransform>
                                 </Canvas.RenderTransform>
                             </Canvas>
-                            <Path Data="M 0,0 L 30,15 L 30,-15 Z" Fill="{DynamicResource DangerBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <!-- Pointer Arrow -->
+                            <Path Data="M 0,0 L 32,16 L 32,-16 Z" Fill="{DynamicResource DangerBrush}" Stroke="{DynamicResource SurfaceBrush}" StrokeThickness="2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         </Grid>
                     </Viewbox>
 
-                    <!-- Action Buttons -->
-                    <WrapPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,15">
-                        <Button Command="{Binding SpinRecitationCommand}" Content="SPIN WHEEL" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="25,12" CornerRadius="8" FontSize="15" Margin="0,0,10,10"/>
-                        <Button Command="{Binding SkipRecitationCommand}" Content="Skip Animation" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="18,12" CornerRadius="8" FontSize="13" Margin="0,0,10,10"/>
-                        
-                        <Button Command="{Binding OpenManageQuestionsModalCommand}" Content="Manage Questions" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="15,12" CornerRadius="8" FontSize="13" Margin="0,0,10,10"/>
-                        <Button Command="{Binding ResetRecitationCommand}" Content="Reset Class" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="Bold" Padding="15,12" Margin="0,0,0,10"/>
+                    <!-- Bottom Action Bar -->
+                    <WrapPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+                        <Button Command="{Binding SpinRecitationCommand}" Content="SPIN WHEEL" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="24,11" CornerRadius="8" FontSize="14" Margin="0,0,10,8"/>
+                        <Button Command="{Binding SkipRecitationCommand}" Content="Skip Animation" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="16,11" CornerRadius="8" FontSize="13" Margin="0,0,10,8"/>
+                        <Button Command="{Binding OpenManageQuestionsModalCommand}" Content="Manage Questions" Background="Transparent" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1.5" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Padding="16,11" CornerRadius="8" FontSize="13" Margin="0,0,10,8"/>
+                        <Button Command="{Binding ResetRecitationCommand}" Content="Reset Class" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" Padding="14,11" Margin="0,0,0,8"/>
                     </WrapPanel>
                 </Grid>
+            </Border>
 
-                <!-- RIGHT COLUMN: Chosen Students -->
-                <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20" MinHeight="450" MaxHeight="650" VerticalAlignment="Top">
-                    <Grid RowDefinitions="Auto, *">
-                        <TextBlock Grid.Row="0" Text="{Binding ChosenCounterText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
-                        <ListBox Grid.Row="1" ItemsSource="{Binding ChosenStudents}" Background="Transparent" BorderThickness="0">
+            <!-- RIGHT COLUMN: Chosen Students -->
+            <Border Grid.Column="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="18" VerticalAlignment="Stretch">
+                <Grid RowDefinitions="Auto, Auto, *">
+                    <TextBlock Grid.Row="0" Text="{Binding ChosenCounterText}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                    <Border Grid.Row="1" Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10,0,10"/>
+
+                    <Panel Grid.Row="2">
+                        <TextBlock IsVisible="{Binding HasNoChosenStudents}"
+                                   Text="No students chosen yet. Spin the wheel to begin!"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   FontStyle="Italic"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   TextAlignment="Center"/>
+
+                        <ListBox IsVisible="{Binding !HasNoChosenStudents}" ItemsSource="{Binding ChosenStudents}" Background="Transparent" BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid ColumnDefinitions="*, Auto" Margin="0,5">
-                                        <TextBlock Grid.Column="0" Text="{Binding FullName}" Foreground="{DynamicResource TextMutedBrush}" TextDecorations="Strikethrough" FontSize="14" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    <Grid ColumnDefinitions="*, Auto" Margin="0,2">
+                                        <TextBlock Grid.Column="0" Text="{Binding FullName}" ToolTip.Tip="{Binding FullName}" Foreground="{DynamicResource TextMutedBrush}" TextDecorations="Strikethrough" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                         <Button Grid.Column="1" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).RestoreStudentToWheelCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="5" ToolTip.Tip="Return to wheel">
                                             <TextBlock Classes="Icon" Text="{DynamicResource IconRestore}" Foreground="{DynamicResource PrimaryBrush}" FontSize="16"/>
                                         </Button>
@@ -70,120 +110,116 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                    </Grid>
-                </Border>
-            </Grid>
-        </ScrollViewer>   
-
-            <!-- 1. GAMIFIED FLASHCARD WINNER MODAL -->
-            <Border IsVisible="{Binding IsWinnerModalOpen}" Background="#E6000000" ZIndex="100">
-                <Border DataContext="{Binding WinnerModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="16" Padding="40" MaxWidth="700" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
-                    <StackPanel Spacing="20">
-                        
-                        <TextBlock Text="{Binding StudentName}" FontSize="42" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
-                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,10"/>
-                        <TextBlock Text="QUESTION:" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding QuestionText}" FontSize="26" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,20"/>
-                        <StackPanel Spacing="10" IsVisible="{Binding HasAnswer}">
-
-                            <Button Command="{Binding ToggleAnswerVisibilityCommand}" Content="Reveal Answer" IsVisible="{Binding !IsAnswerRevealed}" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" CornerRadius="8" HorizontalAlignment="Center"/>
-                            <Border IsVisible="{Binding IsAnswerRevealed}" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
-                                <StackPanel>
-                                    <TextBlock Text="ANSWER:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                                    <TextBlock Text="{Binding AnswerText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                        
-                        <Button Command="{Binding CloseCommand}" Content="Close &amp; Continue" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="30,15" CornerRadius="8" HorizontalAlignment="Center" Margin="0,20,0,0"/>
-                    </StackPanel>
-                </Border>
+                    </Panel>
+                </Grid>
             </Border>
+        </Grid>
 
-            <!-- 2. QUESTION MANAGER MODAL -->
-            <Border IsVisible="{Binding IsManageQuestionsModalOpen}" Background="#B3000000" ZIndex="100">
-                <!-- NEW: Set the DataContext to the extracted ManageQuestionsModal object -->
-                <Border DataContext="{Binding ManageQuestionsModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="700" MaxHeight="750" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
-                        
-                        <!-- Header -->
-                        <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
-                            <TextBlock Grid.Column="0" Text="Manage Recitation Questions" FontWeight="Bold" FontSize="20" Foreground="{DynamicResource TextMainBrush}"/>
-                            <!-- CHANGED: Bind to CloseCommand -->
-                            <Button Grid.Column="1" Command="{Binding CloseCommand}" Content="✕" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontSize="18" Padding="5"/>
-                        </Grid>
-                        
-                        <!-- Global Toggles -->
-                        <Border Grid.Row="1" Background="{DynamicResource AppBackground}" CornerRadius="8" Padding="15" Margin="0,15">
-                            <StackPanel Orientation="Horizontal" Spacing="30">
-                                <CheckBox IsChecked="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).AllowRepeatQuestions}">
-                                    <TextBlock Text="Allow Repeat Questions (Endless Mode)" FontWeight="SemiBold"/>
-                                </CheckBox>
-                                <CheckBox IsChecked="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ShuffleQuestions}">
-                                    <TextBlock Text="Shuffle Questions Randomly" FontWeight="SemiBold"/>
-                                </CheckBox>
+        <!-- 1. GAMIFIED FLASHCARD WINNER MODAL -->
+        <Border IsVisible="{Binding IsWinnerModalOpen}" Background="#E6000000" ZIndex="100">
+            <Border DataContext="{Binding WinnerModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="16" Padding="40" MaxWidth="700" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel Spacing="18">
+                    <TextBlock Text="{Binding StudentName}" FontSize="38" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,6"/>
+                    <TextBlock Text="QUESTION" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding QuestionText}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,15"/>
+                    
+                    <StackPanel Spacing="10" IsVisible="{Binding HasAnswer}">
+                        <Button Command="{Binding ToggleAnswerVisibilityCommand}" Content="Reveal Answer" IsVisible="{Binding !IsAnswerRevealed}" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" CornerRadius="8" HorizontalAlignment="Center"/>
+                        <Border IsVisible="{Binding IsAnswerRevealed}" Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="ANSWER" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <TextBlock Text="{Binding AnswerText}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
-                        
-                        <!-- Create Question Form -->
-                        <Grid Grid.Row="2" ColumnDefinitions="*,*,Auto" Margin="0,0,0,15">
-                            <TextBox Grid.Column="0" Text="{Binding NewQuestionInput}" PlaceholderText="Type a new question..." Background="{DynamicResource AppBackground}" Margin="0,0,10,0"/>
-                            <TextBox Grid.Column="1" Text="{Binding NewAnswerInput}" PlaceholderText="Type the answer (optional)..." Background="{DynamicResource AppBackground}" Margin="0,0,10,0"/>
-                            <Button Grid.Column="2" Command="{Binding SaveNewQuestionCommand}" Content="Add" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="15,8"/>
-                        </Grid>
-
-                        <!-- Question List -->
-                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15">
-                            <ItemsControl ItemsSource="{Binding QuestionBank}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                            <Grid ColumnDefinitions="Auto, *, Auto">
-                                                
-                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsIncluded}" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.ToggleQuestionIncludedCommand}" CommandParameter="{Binding}" Margin="0,0,15,0" ToolTip.Tip="Include in wheel spins"/>
-                                                
-                                                <!-- Text (Read Mode) -->
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}" Margin="0,0,15,0">
-                                                    <TextBlock Text="{Binding QuestionText}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
-                                                    <TextBlock Text="{Binding AnswerText}" Foreground="{DynamicResource SuccessBrush}" FontSize="12" TextWrapping="Wrap"/>
-                                                </StackPanel>
-
-                                                <!-- Form (Edit Mode) -->
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Spacing="5" Margin="0,0,15,0">
-                                                    <TextBox Text="{Binding QuestionText}" Background="{DynamicResource AppBackground}" TextWrapping="Wrap"/>
-                                                    <TextBox Text="{Binding AnswerText}" Background="{DynamicResource AppBackground}" TextWrapping="Wrap"/>
-                                                </StackPanel>
-                                                
-                                                <!-- Action Buttons -->
-                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="5">
-                                                    <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.EditOrSaveQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Edit/Save">
-                                                        <Panel>
-                                                            <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" FontSize="18" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsEditing}"/>
-                                                            <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" FontSize="18" Foreground="{DynamicResource PrimaryBrush}" IsVisible="{Binding IsEditing}"/>
-                                                        </Panel>
-                                                    </Button>
-                                                    
-                                                    <!-- Delete Button -->
-                                                    <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Delete Question">
-                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="20" Foreground="{DynamicResource DangerBrush}"/>
-                                                    </Button>
-                                                </StackPanel>
-
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                        
-                        <!-- Total Counter -->
-                        <TextBlock Grid.Row="4" Text="{Binding TotalQuestionsCountText}" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right"/>
-                    </Grid>
-                </Border>
+                    </StackPanel>
+                    
+                    <Button Command="{Binding CloseCommand}" Content="Close &amp; Continue" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="30,14" CornerRadius="8" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                </StackPanel>
             </Border>
+        </Border>
+
+        <!-- 2. QUESTION MANAGER MODAL -->
+        <Border IsVisible="{Binding IsManageQuestionsModalOpen}" Background="#B3000000" ZIndex="100">
+            <Border DataContext="{Binding ManageQuestionsModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="700" MaxHeight="640" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <Grid RowDefinitions="Auto, Auto, Auto, *, Auto">
+                    
+                    <!-- Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto">
+                        <TextBlock Grid.Column="0" Text="Manage Recitation Questions" FontWeight="Bold" FontSize="20" Foreground="{DynamicResource TextMainBrush}"/>
+                        <Button Grid.Column="1" Command="{Binding CloseCommand}" Content="✕" Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" FontSize="18" Padding="5"/>
+                    </Grid>
+                    
+                    <!-- Global Toggles -->
+                    <Border Grid.Row="1" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="15,12" Margin="0,15">
+                        <StackPanel Orientation="Horizontal" Spacing="30">
+                            <CheckBox IsChecked="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).AllowRepeatQuestions}">
+                                <TextBlock Text="Allow Repeat Questions (Endless Mode)" FontWeight="SemiBold" Margin="6,0,0,0"/>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ShuffleQuestions}">
+                                <TextBlock Text="Shuffle Questions Randomly" FontWeight="SemiBold" Margin="6,0,0,0"/>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- Create Question Form -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*, *, Auto" Margin="0,0,0,15">
+                        <TextBox Grid.Column="0" Text="{Binding NewQuestionInput}" PlaceholderText="Type a new question..." Margin="0,0,10,0"/>
+                        <TextBox Grid.Column="1" Text="{Binding NewAnswerInput}" PlaceholderText="Type the answer (optional)..." Margin="0,0,10,0"/>
+                        <Button Grid.Column="2" Command="{Binding SaveNewQuestionCommand}" Content="+ Add" Background="{DynamicResource PrimaryBrush}" Foreground="White" FontWeight="Bold" Padding="18,9"/>
+                    </Grid>
+
+                    <!-- Question List -->
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,15">
+                        <ItemsControl ItemsSource="{Binding QuestionBank}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,6,8">
+                                        <Grid ColumnDefinitions="Auto, *, Auto">
+                                            
+                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsIncluded}" Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.ToggleQuestionIncludedCommand}" CommandParameter="{Binding}" Margin="0,0,15,0" ToolTip.Tip="Include in wheel spins"/>
+                                            
+                                            <!-- Text (Read Mode) -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding !IsEditing}" Margin="0,0,15,0" Spacing="3">
+                                                <TextBlock Text="{Binding QuestionText}" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding AnswerText}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap"/>
+                                            </StackPanel>
+
+                                            <!-- Form (Edit Mode) -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" IsVisible="{Binding IsEditing}" Spacing="6" Margin="0,0,15,0">
+                                                <TextBox Text="{Binding QuestionText}" TextWrapping="Wrap"/>
+                                                <TextBox Text="{Binding AnswerText}" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Action Buttons -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="5">
+                                                <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.EditOrSaveQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Edit/Save">
+                                                    <Panel>
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconEdit}" FontSize="18" Foreground="{DynamicResource TextMainBrush}" IsVisible="{Binding !IsEditing}"/>
+                                                        <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" FontSize="18" Foreground="{DynamicResource PrimaryBrush}" IsVisible="{Binding IsEditing}"/>
+                                                    </Panel>
+                                                </Button>
+                                                
+                                                <Button Command="{Binding #RecitationRoot.((vm:GradebookViewModel)DataContext).ManageQuestionsModal.DeleteQuestionCommand}" CommandParameter="{Binding}" Background="Transparent" Padding="8" ToolTip.Tip="Delete Question">
+                                                    <TextBlock Classes="Icon" Text="{DynamicResource IconDelete}" FontSize="18" Foreground="{DynamicResource DangerBrush}"/>
+                                                </Button>
+                                            </StackPanel>
+
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <!-- Total Counter -->
+                    <TextBlock Grid.Row="4" Text="{Binding TotalQuestionsCountText}" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Right"/>
+                </Grid>
+            </Border>
+        </Border>
     
         <Border IsVisible="{Binding IsProcessing}" Background="#B3000000" ZIndex="999">
-           <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+           <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="40" HorizontalAlignment="Center" VerticalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
               <StackPanel Spacing="15" HorizontalAlignment="Center" VerticalAlignment="Center">
                  <ProgressBar IsIndeterminate="True" Width="150" Height="6" CornerRadius="3" Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource AppBackground}"/>
                  <TextBlock Text="Processing Action..." FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>

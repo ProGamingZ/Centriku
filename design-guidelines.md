@@ -61,7 +61,7 @@
   * `Grid.Row="1"` (`*`) holds the `DataGrid` so UI row virtualization stays active and vertical scrollbars remain inside the table.
 * **Responsive Breakpoints & Multi-Card Grids:**
   * Settings and configuration pages (`ImportSettingsView`, `ExportSettingsView`) use proportional star columns (`ColumnDefinitions="*, *, *"`) rather than fixed pixel widths so cards scale cleanly from `1024px` laptops to `2560px` ultrawide monitors.
-
+  * **Recitation 3-Column Workspace:** `RecitationTabView` uses a proportional `1* : 1.6* : 1*` grid without fixed `MinWidth` scroll wrappers so the student lists and `Viewbox` wheel scale fluidly down to `1024x700`.
 ---
 
 ## 3. Reusable Component Guidelines

@@ -322,6 +322,21 @@ namespace Centriku.ViewModels
                     await LoadAttendanceData();
                     await LoadRecitationData();
                     await LoadGroupsDataAsync();
+
+                    if (!string.IsNullOrWhiteSpace(_targetStudentId))
+                    {
+                        string targetId = _targetStudentId.Trim();
+                        _targetStudentId = string.Empty;
+
+                        var targetRow = GradebookRows.FirstOrDefault(r =>
+                            string.Equals((r.StudentID ?? string.Empty).Trim(), targetId, StringComparison.OrdinalIgnoreCase));
+
+                        if (targetRow != null)
+                        {
+                            SelectedGradebookRow = null;
+                            SelectedGradebookRow = targetRow;
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -418,12 +433,6 @@ namespace Centriku.ViewModels
                 }
                 OnSearchQueryChanged(SearchQuery); 
                 RecalculateFinalGrades();
-                
-                if (!string.IsNullOrEmpty(_targetStudentId))
-                {
-                    SelectedGradebookRow = GradebookRows.FirstOrDefault(r => r.StudentID == _targetStudentId);
-                    _targetStudentId = string.Empty; // Clear it so it doesn't fire again on a normal search
-                }
             }
             private async Task LoadAttendanceData()
             {

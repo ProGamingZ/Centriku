@@ -57,6 +57,8 @@ namespace Centriku.Views.Gradebook
          var grid = this.FindControl<DataGrid>("RosterGrid");
          if (grid == null) return;
 
+         // Preserve the highlighted student row before unbinding ItemsSource!
+         var preservedSelection = vm.SelectedGradebookRow;
          var backupData = grid.ItemsSource;
          grid.ItemsSource = null;
 
@@ -255,6 +257,16 @@ namespace Centriku.Views.Gradebook
          finally
          {
             grid.ItemsSource = backupData;
+
+            if (preservedSelection != null)
+            {
+               vm.SelectedGradebookRow = preservedSelection;
+               grid.SelectedItem = preservedSelection;
+               Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+               {
+                  grid.ScrollIntoView(preservedSelection, null);
+               }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
          }
       }    
    

@@ -136,7 +136,7 @@ namespace Centriku.Views.Gradebook
 
                 double textAngle = startAngle + (anglePerSlice / 2);
                 double textRad = (textAngle - 90) * Math.PI / 180.0;
-                double textRadius = radius * 0.55; 
+                double textRadius = radius * 0.97; 
 
                 var student = _vm.RemainingStudents[i].StudentInfo;
                 string lastInitial = !string.IsNullOrWhiteSpace(student.LastName) ? $" {student.LastName[0]}." : "";
@@ -179,15 +179,15 @@ namespace Centriku.Views.Gradebook
             int count = _vm.RemainingStudents.Count;
             double anglePerSlice = 360.0 / count;
 
-            double targetAngle = 450 - (winnerIndex * anglePerSlice + anglePerSlice / 2);
-
-            _currentAngle += 3600; 
+            _currentAngle += 1800; 
             double baseAngle = _currentAngle - (_currentAngle % 360);
+            double targetAngle = 450 - (winnerIndex * anglePerSlice + anglePerSlice / 2);
             _currentAngle = baseAngle + targetAngle;
 
             _wheelTransform.Angle = _currentAngle;
 
-            await Task.Delay(3100);
+            // Increase delay to 5.1 seconds to match the new XAML duration
+            await Task.Delay(5100); 
             await _vm.WheelAnimationCompletedAsync(winnerIndex);
         }
 
