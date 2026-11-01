@@ -102,8 +102,12 @@ namespace Centriku.ViewModels
         #endregion
 
         #region Grid Data Collections
+        
+            private TeacherClass? _currentClass;
             private System.Collections.Generic.List<StudentGradeRow> _allGradebookRows = new();
             [ObservableProperty] public partial string SearchQuery { get; set; } = string.Empty;
+            [ObservableProperty] public partial string DynamicGradesCounter { get; set; } = "Showing: 0 students";
+            [ObservableProperty] public partial string DynamicAttendanceCounter { get; set; } = "Showing: 0 students";
 
             partial void OnSearchQueryChanged(string value)
             {
@@ -113,10 +117,11 @@ namespace Centriku.ViewModels
                 }
                 else
                 {
-                    var query = value.ToLower() ?? "";
+                    var query = value.ToLower().Trim();
                     
-                    // Fixed: Added '?.' and '== true' to safely satisfy the compiler's strict null reference warnings
+                    // STICKY SELECTION: Keep checked students visible even when searching for another student!
                     var filtered = _allGradebookRows.Where(r => 
+                        r.IsSelected ||
                         (r.StudentID?.ToLower().Contains(query) == true) ||
                         (r.StudentInfo.LastName?.ToLower().Contains(query) == true) ||
                         (r.StudentInfo.FirstName?.ToLower().Contains(query) == true)
@@ -124,6 +129,7 @@ namespace Centriku.ViewModels
                     
                     GradebookRows = new ObservableCollection<StudentGradeRow>(filtered);
                 }
+                DynamicGradesCounter = $"Showing: {GradebookRows.Count} students";
                 TriggerGridRedraw(); 
             }
 
@@ -338,15 +344,15 @@ namespace Centriku.ViewModels
                     FileNamingFormat = "[Class]_[Section]_[Type]_[Date]";
                 }
 
-                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-                if (currentClass != null)
+                _currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                if (_currentClass != null)
                 {
-                    ShowStudentId = currentClass.ShowStudentId;
-                    ShowFirstName = currentClass.ShowFirstName;
-                    ShowLastName = currentClass.ShowLastName;
-                    ShowFinalGrade = currentClass.ShowFinalGrade;
+                    ShowStudentId = _currentClass.ShowStudentId;
+                    ShowFirstName = _currentClass.ShowFirstName;
+                    ShowLastName = _currentClass.ShowLastName;
+                    ShowFinalGrade = _currentClass.ShowFinalGrade;
                     
-                    var template = await db.Table<GradingTemplate>().Where(t => t.TemplateID == currentClass.GradingTemplateID).FirstOrDefaultAsync();
+                    var template = await db.Table<GradingTemplate>().Where(t => t.TemplateID == _currentClass.GradingTemplateID).FirstOrDefaultAsync();
                     if (template != null) 
                     {
                         NrfgBaseValue = template.NrfgBaseValue; 
@@ -413,12 +419,13 @@ namespace Centriku.ViewModels
                 var db = _dbService.GetConnection();
                 await db.CreateTableAsync<AttendanceRecord>(); 
                 
-                var currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
-                if (currentClass != null)
+                _currentClass = await db.Table<TeacherClass>().Where(c => c.ClassID == ClassId).FirstOrDefaultAsync();
+                if (_currentClass != null)
                 {
-                    ShowTotalP = currentClass.ShowTotalP;
-                    ShowTotalL = currentClass.ShowTotalL;
-                    ShowTotalA = currentClass.ShowTotalA;
+                    ShowTotalP = _currentClass.ShowTotalP;
+                    ShowTotalL = _currentClass.ShowTotalL;
+                    ShowTotalA = _currentClass.ShowTotalA;
+                    ShowTotalE = _currentClass.ShowTotalE;
                 }
 
                 var roster = await db.Table<ClassRoster>().Where(r => r.ClassID == ClassId).ToListAsync();
@@ -457,6 +464,7 @@ namespace Centriku.ViewModels
                     }
                     AttendanceGridRows.Add(row);
                 }
+                DynamicAttendanceCounter = $"Showing: {AttendanceGridRows.Count} students";
                 TriggerGridRedraw(); 
                 RecalculateFinalGrades();
             }

@@ -41,29 +41,31 @@ namespace Centriku.ViewModels.Modals
             {
                 var db = _dbService.GetConnection();
                 var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == _classId).ToListAsync();
-                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-                var studentIds = _studentsToRemove.Select(s => s.StudentID).ToList();
+                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToHashSet();
+                var studentIds = _studentsToRemove.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
 
-                var rostersToDelete = await db.Table<ClassRoster>()
-                    .Where(r => r.ClassID == _classId && studentIds.Contains(r.StudentID))
-                    .ToListAsync();
+                var rostersToDelete = (await db.Table<ClassRoster>().Where(r => r.ClassID == _classId).ToListAsync())
+                    .Where(r => studentIds.Contains(r.StudentID)).ToList();
 
+                var attendanceToDelete = (await db.Table<AttendanceRecord>().Where(a => a.ClassID == _classId).ToListAsync())
+                    .Where(a => a.StudentID != null && studentIds.Contains(a.StudentID)).ToList();
+
+                var scoresToDelete = new List<Score>();
                 var groupMembersToDelete = new List<AssessmentGroupMember>();
-                if (assessmentIds.Count != 0)
+
+                if (assessmentIds.Count > 0)
                 {
-                    // FIX: Query the DB for the Assessments, then filter the Students in-memory
-                    var membersInAssessments = await db.Table<AssessmentGroupMember>()
-                        .Where(m => assessmentIds.Contains(m.AssessmentID))
-                        .ToListAsync();
-                        
-                    groupMembersToDelete = [.. membersInAssessments.Where(m => studentIds.Contains(m.StudentID))];
+                    var allScores = await db.Table<Score>().ToListAsync();
+                    scoresToDelete = allScores.Where(s => assessmentIds.Contains(s.AssessmentID) && s.StudentID != null && studentIds.Contains(s.StudentID)).ToList();
+
+                    var allMembers = await db.Table<AssessmentGroupMember>().ToListAsync();
+                    groupMembersToDelete = allMembers.Where(m => assessmentIds.Contains(m.AssessmentID) && studentIds.Contains(m.StudentID)).ToList();
                 }
 
-                await db.RunInTransactionAsync(tran => 
-                {
-                    foreach (var r in rostersToDelete) tran.Delete(r);
-                    foreach (var m in groupMembersToDelete) tran.Delete(m);
-                });
+                foreach (var s in scoresToDelete) await db.DeleteAsync(s);
+                foreach (var m in groupMembersToDelete) await db.DeleteAsync(m);
+                foreach (var a in attendanceToDelete) await db.DeleteAsync(a);
+                foreach (var r in rostersToDelete) await db.DeleteAsync(r);
                 
                 int count = _studentsToRemove.Count;
                 _showToast?.Invoke(count == 1 

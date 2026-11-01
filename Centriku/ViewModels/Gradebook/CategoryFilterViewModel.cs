@@ -9,7 +9,6 @@ namespace Centriku.ViewModels
         public string CategoryName { get; }
         public int SequenceOrder { get; set; }
         public ObservableCollection<AssessmentFilterViewModel> Assessments { get; }
-
         public bool IsCategoryVisible
         {
             get => Assessments.Any(a => a.IsVisible); 
@@ -17,9 +16,11 @@ namespace Centriku.ViewModels
             {
                 foreach (var a in Assessments)
                 {
-                    a.IsVisible = value; 
+                    a.SetVisibilitySilently(value); 
                 }
                 OnPropertyChanged();
+                // Trigger a SINGLE DataGrid redraw after all child assessments are updated!
+                Assessments.FirstOrDefault()?.TriggerRedraw();
             }
         }
 

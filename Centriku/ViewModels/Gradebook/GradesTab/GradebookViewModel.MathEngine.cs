@@ -136,18 +136,23 @@ namespace Centriku.ViewModels
 
       public void RecalculateFinalGradesForList(System.Collections.Generic.IEnumerable<StudentGradeRow> targetGradeRows, System.Collections.Generic.IEnumerable<AttendanceGridRowViewModel> targetAttRows)
       {
+
+
          if (targetGradeRows == null || targetAttRows == null) return;
-         
-         // 1. Safely Fetch FDA Rules from Cache (Wrapped to protect Unit Tests!)
-         TeacherClass? currentClass = null;
-         try 
+        // 1. Use cached _currentClass first; only query DB in isolated unit tests where LoadGradebookData wasn't called
+         TeacherClass? currentClass = _currentClass;
+         if (currentClass == null || currentClass.ClassID != ClassId)
          {
-             if (_dbService?.GetConnection() != null)
+             try 
              {
-               currentClass = _dbService.GetConnection().Table<TeacherClass>().FirstOrDefaultAsync(c => c.ClassID == ClassId).Result;
+                 if (_dbService?.GetConnection() != null)
+                 {
+                     currentClass = _dbService.GetConnection().Table<TeacherClass>().FirstOrDefaultAsync(c => c.ClassID == ClassId).Result;
+                     _currentClass = currentClass;
+                 }
              }
+             catch { /* Silently ignore missing DB tables during isolated unit testing */ }
          }
-         catch { /* Silently ignore missing DB tables during isolated unit testing */ }
 
          bool isFdaEnabled = currentClass?.IsFdaEnabled ?? false;
 

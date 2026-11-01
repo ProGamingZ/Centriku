@@ -9,17 +9,21 @@ namespace Centriku.ViewModels
     public class SafeScoreDictionary : System.Collections.Generic.Dictionary<int, ScoreCellViewModel>
     {
         private readonly IDatabaseService _dbService;
-        
-        public SafeScoreDictionary(IDatabaseService dbService)
+        private readonly string _studentId;
+        public SafeScoreDictionary(IDatabaseService dbService, string studentId = "")
         {
             _dbService = dbService;
+            _studentId = studentId ?? string.Empty;
         }
-
         public new ScoreCellViewModel this[int key]
         {
             get
             {
-                if (!ContainsKey(key)) Add(key, new ScoreCellViewModel(_dbService, new Score(), 100, null!));
+                if (!ContainsKey(key))
+                {
+                    var fallbackScore = new Score { AssessmentID = key, StudentID = _studentId, PointsEarned = 0 };
+                    Add(key, new ScoreCellViewModel(_dbService, fallbackScore, 100, null!));
+                }
                 return base[key];
             }
             set => base[key] = value;
@@ -68,7 +72,7 @@ namespace Centriku.ViewModels
         public StudentGradeRow(IDatabaseService dbService, Student student)
         {
             StudentInfo = student;
-            Scores = new SafeScoreDictionary(dbService);
+            Scores = new SafeScoreDictionary(dbService, student.StudentID ?? string.Empty);
         }
     }
 

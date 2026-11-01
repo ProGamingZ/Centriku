@@ -40,7 +40,7 @@ namespace Centriku.ViewModels.Modals
         {
             var db = _dbService.GetConnection();
             var allClasses = await db.Table<TeacherClass>().ToListAsync();
-            AvailableTransferClasses = new ObservableCollection<TeacherClass>(allClasses.Where(c => c.ClassID != _classId));
+            AvailableTransferClasses = new ObservableCollection<TeacherClass>(allClasses.Where(c => c.ClassID != _classId && c.IsActive));
             SelectedTransferClass = AvailableTransferClasses.FirstOrDefault();
         }
 
@@ -52,33 +52,51 @@ namespace Centriku.ViewModels.Modals
             {
                 if (SelectedTransferClass == null) return;
                 var db = _dbService.GetConnection();
+                int targetClassId = SelectedTransferClass.ClassID;
+
                 var classAssessments = await db.Table<Assessment>().Where(a => a.ClassID == _classId).ToListAsync();
-                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToList();
-                var studentIds = _studentsToTransfer.Select(s => s.StudentID).ToList();
+                var assessmentIds = classAssessments.Select(a => a.AssessmentID).ToHashSet();
+                var studentIds = _studentsToTransfer.Select(s => s.StudentID).Where(id => !string.IsNullOrEmpty(id)).ToHashSet();
 
-                var rostersToUpdate = await db.Table<ClassRoster>()
-                    .Where(r => r.ClassID == _classId && studentIds.Contains(r.StudentID))
-                    .ToListAsync();
+                var rostersToUpdate = (await db.Table<ClassRoster>().Where(r => r.ClassID == _classId).ToListAsync())
+                    .Where(r => studentIds.Contains(r.StudentID)).ToList();
 
+                // Check if any student is already enrolled in the destination class to avoid duplicate roster rows
+                var existingTargetIds = (await db.Table<ClassRoster>().Where(r => r.ClassID == targetClassId).ToListAsync())
+                    .Select(r => r.StudentID).ToHashSet();
+
+                var attendanceToDelete = (await db.Table<AttendanceRecord>().Where(a => a.ClassID == _classId).ToListAsync())
+                    .Where(a => a.StudentID != null && studentIds.Contains(a.StudentID)).ToList();
+
+                var scoresToDelete = new List<Score>();
                 var groupMembersToDelete = new List<AssessmentGroupMember>();
-                if (assessmentIds.Count != 0)
+
+                if (assessmentIds.Count > 0)
                 {
-                    var membersInAssessments = await db.Table<AssessmentGroupMember>()
-                        .Where(m => assessmentIds.Contains(m.AssessmentID))
-                        .ToListAsync();
-                        
-                    groupMembersToDelete = [.. membersInAssessments.Where(m => studentIds.Contains(m.StudentID))];
+                    var allScores = await db.Table<Score>().ToListAsync();
+                    scoresToDelete = allScores.Where(s => assessmentIds.Contains(s.AssessmentID) && s.StudentID != null && studentIds.Contains(s.StudentID)).ToList();
+
+                    var allMembers = await db.Table<AssessmentGroupMember>().ToListAsync();
+                    groupMembersToDelete = allMembers.Where(m => assessmentIds.Contains(m.AssessmentID) && studentIds.Contains(m.StudentID)).ToList();
                 }
 
-                await db.RunInTransactionAsync(tran => 
+                foreach (var s in scoresToDelete) await db.DeleteAsync(s);
+                foreach (var m in groupMembersToDelete) await db.DeleteAsync(m);
+                foreach (var a in attendanceToDelete) await db.DeleteAsync(a);
+
+                foreach (var r in rostersToUpdate) 
                 {
-                    foreach (var r in rostersToUpdate) 
+                    if (existingTargetIds.Contains(r.StudentID))
                     {
-                        r.ClassID = SelectedTransferClass.ClassID;
-                        tran.Update(r);
+                        await db.DeleteAsync(r);
                     }
-                    foreach (var m in groupMembersToDelete) tran.Delete(m);
-                });
+                    else
+                    {
+                        r.ClassID = targetClassId;
+                        r.HasRecited = false;
+                        await db.UpdateAsync(r);
+                    }
+                }
 
                 int count = _studentsToTransfer.Count;
                 _showToast?.Invoke(count == 1 

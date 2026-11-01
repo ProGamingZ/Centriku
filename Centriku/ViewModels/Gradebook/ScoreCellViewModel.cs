@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Centriku.Models;
 using Centriku.Services;
@@ -7,6 +9,7 @@ namespace Centriku.ViewModels
     public partial class ScoreCellViewModel(IDatabaseService dbService, Score score, double maxScore, System.Action onScoreChanged) : ObservableObject
     {
         private readonly IDatabaseService _dbService = dbService;
+        private readonly SemaphoreSlim _saveLock = new(1, 1);
         public Score DbModel { get; } = score;
         public double MaxScore { get; } = maxScore;
         private readonly System.Action _onScoreChanged = onScoreChanged; 
@@ -25,38 +28,45 @@ namespace Centriku.ViewModels
                     DbModel.PointsEarned = finalValue;
                     OnPropertyChanged(); 
                     OnPropertyChanged(nameof(PointsEarnedDisplay));
-                    SaveScoreToDatabase(); 
+                    _ = SaveScoreToDatabaseAsync(); 
                     _onScoreChanged?.Invoke(); 
                 }
             }
         }
+
         public string PointsEarnedDisplay
         {
-            get => PointsEarned.ToString("0.##"); // Strips trailing decimals for a clean UI
+            get => PointsEarned.ToString("0.##");
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    PointsEarned = 0; // If they delete everything, safely treat it as a 0
+                    PointsEarned = 0;
                 }
                 else if (double.TryParse(value, out double numericValue))
                 {
-                    PointsEarned = numericValue; // If it's a valid number, save it!
+                    PointsEarned = numericValue;
                 }
                 else
                 {
-                    // If they typed letters (e.g., "abc"), reject it and revert the UI to the last valid number!
                     OnPropertyChanged(); 
                 }
             }
         }
 
-        private async void SaveScoreToDatabase()
+        private async Task SaveScoreToDatabaseAsync()
         {
-            // Use the injected service instead of instantiating a new one
-            var db = _dbService.GetConnection();
-            if (DbModel.ScoreID == 0) await db.InsertAsync(DbModel);
-            else await db.UpdateAsync(DbModel);
+            await _saveLock.WaitAsync();
+            try
+            {
+                var db = _dbService.GetConnection();
+                if (DbModel.ScoreID == 0) await db.InsertAsync(DbModel);
+                else await db.UpdateAsync(DbModel);
+            }
+            finally
+            {
+                _saveLock.Release();
+            }
         }
     }
 }
