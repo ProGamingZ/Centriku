@@ -51,7 +51,7 @@ namespace Centriku.ViewModels
                 existingCount = ClassAssessments.Count(a => MatchesCategory(a.Category, SelectedCategory.Name) && MatchesGradingPeriod(a.GradingPeriod, NewAssessmentPeriod) && a.AssessmentID != _editingAssessmentId.Value);
              }
 
-             int maxAllowed = SelectedCategory.SequenceOrder switch { 1 => 10, 2 => 5, 3 => 1, _ => 10 };
+             int maxAllowed = SelectedCategory.SequenceOrder switch { 0 => 10, 1 => 5, 2 => 1, _ => 10 };
 
              if (existingCount >= maxAllowed)
              {

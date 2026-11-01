@@ -36,6 +36,7 @@ namespace Centriku.ViewModels
         [ObservableProperty] public partial bool HasStagedStudents { get; set; } = false;
         [ObservableProperty] public partial bool HasImportError { get; set; } = false;
         [ObservableProperty] public partial string ImportSummaryMessage { get; set; } = string.Empty;
+        [ObservableProperty] public partial string DynamicImportCounter { get; set; } = "Showing: 0 students";
         [ObservableProperty] public partial bool IsLoading { get; set; } = false;
         
         [RelayCommand] public static void NavigateToSettings() => OnNavigateToSettingsBulkImportTab?.Invoke();
@@ -185,6 +186,8 @@ namespace Centriku.ViewModels
                     StagedStudents = new ObservableCollection<StagedStudent>(stagedList);
                     HasStagedStudents = true;
                     int errors = stagedList.Count(s => s.IsError);
+                    int valid = stagedList.Count - errors;
+                    DynamicImportCounter = $"Showing: {stagedList.Count} students ({valid} valid, {errors} errors)";
                     string dupMsg = stagedList.Any(s => s.IsDuplicate) ? $" ({stagedList.Count(s => s.IsDuplicate)} duplicates)" : "";
                     if (errors > 0) ImportSummaryMessage = $"Warning: Found {stagedList.Count} rows, but {errors} have missing information.";
                     else ImportSummaryMessage = $"Success! Read {stagedList.Count} valid students{dupMsg}.";
@@ -282,7 +285,9 @@ namespace Centriku.ViewModels
                     else { staged.IsDuplicate = false; ApplyStagedBadgeTheme(staged, "New Student", "New"); }
                 }
             }
-            int total = StagedStudents.Count; int dupes = StagedStudents.Count(s => s.IsDuplicate);
+            int total = StagedStudents.Count;
+            int dupes = StagedStudents.Count(s => s.IsDuplicate);
+            DynamicImportCounter = $"Showing: {total} students ({total - errorCount} valid, {errorCount} errors)";
             string dupMsg = dupes > 0 ? $" ({dupes} duplicates)" : "";
             if (errorCount > 0) ImportSummaryMessage = $"Warning: Found {total} rows, but {errorCount} still have missing information.";
             else ImportSummaryMessage = $"Success! All {total} students are valid{dupMsg}. Ready to save.";
@@ -326,7 +331,14 @@ namespace Centriku.ViewModels
         }
         
         [RelayCommand]
-        public void CancelBulkImport() { StagedStudents.Clear(); HasStagedStudents = false; HasImportError = false; ImportSummaryMessage = string.Empty; }
+        public void CancelBulkImport()
+        {
+            StagedStudents.Clear();
+            HasStagedStudents = false;
+            HasImportError = false;
+            ImportSummaryMessage = string.Empty;
+            DynamicImportCounter = "Showing: 0 students";
+        }
         
         private static Centriku.Models.Student ParseStudentRow(string[] cols, Centriku.Models.AppSettings settings)
         {

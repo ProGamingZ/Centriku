@@ -97,6 +97,42 @@ namespace Centriku.ViewModels
 
                 if (_editingTemplateId.HasValue)
                 {
+                    int templateId = _editingTemplateId.Value;
+                    var oldCategories = await db.Table<Centriku.Models.GradingCategory>()
+                        .Where(c => c.TemplateID == templateId)
+                        .OrderBy(c => c.SequenceOrder)
+                        .ToListAsync();
+
+                    var affectedClassIds = (await db.Table<Centriku.Models.TeacherClass>()
+                        .Where(c => c.GradingTemplateID == templateId)
+                        .ToListAsync())
+                        .Select(c => c.ClassID)
+                        .ToHashSet();
+
+                    // ON UPDATE CASCADE: If a category at the same SequenceOrder was renamed, update existing Assessments!
+                    if (affectedClassIds.Count > 0)
+                    {
+                        var allAssessments = (await db.Table<Centriku.Models.Assessment>().ToListAsync())
+                            .Where(a => affectedClassIds.Contains(a.ClassID))
+                            .ToList();
+                        var assessmentsToUpdate = new System.Collections.Generic.List<Centriku.Models.Assessment>();
+
+                        for (int i = 0; i < oldCategories.Count && i < Categories.Count; i++)
+                        {
+                            string oldName = (oldCategories[i].Name ?? string.Empty).Trim();
+                            string newName = (Categories[i].Name ?? "Unknown").Trim();
+                            if (!string.Equals(oldName, newName, System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                foreach (var a in allAssessments.Where(x => string.Equals((x.Category ?? "").Trim(), oldName, System.StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    a.Category = newName;
+                                    assessmentsToUpdate.Add(a);
+                                }
+                            }
+                        }
+                        if (assessmentsToUpdate.Count > 0)
+                            await db.UpdateAllAsync(assessmentsToUpdate, runInTransaction: false);
+                    }
                     // TRANSACTION: Protects against corruption if the app crashes halfway!
                     await db.RunInTransactionAsync(tran => 
                     {

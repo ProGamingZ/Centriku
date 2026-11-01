@@ -85,6 +85,10 @@ x:DataType="vm:DirectoryViewModel">
             </Border>
 
             <StackPanel IsVisible="{Binding HasStagedStudents}" Spacing="16">
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBlock Grid.Column="0" Text="{Binding ImportSummaryMessage}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Bottom"/>
+                    <TextBlock Grid.Column="1" Text="{Binding DynamicImportCounter}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                </Grid>
                 <DataGrid ItemsSource="{Binding StagedStudents}" AutoGenerateColumns="False" IsReadOnly="False" 
                           CanUserResizeColumns="False" CanUserReorderColumns="False"
                           GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" 

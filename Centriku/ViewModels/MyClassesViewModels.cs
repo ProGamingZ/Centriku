@@ -116,8 +116,16 @@ namespace Centriku.ViewModels
         {
             var db = _dbService.GetConnection();
             await db.CreateTableAsync<TeacherClass>();
+            await db.CreateTableAsync<Student>();
             _allClasses = await db.Table<TeacherClass>().ToListAsync();
-            _allRosters = await db.Table<ClassRoster>().ToListAsync();
+
+            var activeStudentIds = (await db.Table<Student>().ToListAsync())
+                .Where(s => !s.IsArchived && s.EnrollmentStatus != "Dropped")
+                .Select(s => s.StudentID)
+                .ToHashSet();
+
+            var rawRosters = await db.Table<ClassRoster>().ToListAsync();
+            _allRosters = rawRosters.Where(r => activeStudentIds.Contains(r.StudentID)).ToList();
             
             // Populate Dynamic Filter Dropdowns
             var years = _allClasses.Select(c => c.AcademicYear).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
@@ -422,7 +430,13 @@ namespace Centriku.ViewModels
                     AcademicYear = original.AcademicYear,
                     Term = original.Term,
                     GradingTemplateID = original.GradingTemplateID,
-                    IsActive = true
+                    IsActive = true,
+                    IsFdaEnabled = original.IsFdaEnabled,
+                    FdaRuleType = original.FdaRuleType,
+                    FdaMaxAbsenceHours = original.FdaMaxAbsenceHours,
+                    FdaLatePenaltyRatio = original.FdaLatePenaltyRatio,
+                    FdaMaxLateHours = original.FdaMaxLateHours,
+                    FdaDropGrade = original.FdaDropGrade
                 };
                 
                 await db.InsertAsync(newClass);

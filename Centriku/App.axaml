@@ -158,6 +158,19 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
         </Style>
 
+        <!-- Hide internal scrollbars inside single-line TextBoxes (removes the gray pill on cell edit) -->
+        <Style Selector="TextBox">
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
+        </Style>
+
+        <!-- Compact fit for inline DataGrid cell editing TextBoxes -->
+        <Style Selector="DataGridCell TextBox">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="MinHeight" Value="28"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
         <!-- 4. DROPDOWNS (COMBOBOX & COMBOBOXITEM)                -->
         <Style Selector="ComboBox">
             <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>

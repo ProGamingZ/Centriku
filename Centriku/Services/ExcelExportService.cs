@@ -110,7 +110,7 @@ namespace Centriku.Services
             .ToList();
 
          // 2. We loop through the 3 possible sequence categories
-         for (int sequence = 1; sequence <= 3; sequence++)
+         for (int sequence = 0; sequence < 3; sequence++)
          {
             // Find the category assigned to this sequence slot (1=Class Standing, 2=MCO, 3=Exam)
             var currentCategory = categories.FirstOrDefault(c => c.SequenceOrder == sequence);

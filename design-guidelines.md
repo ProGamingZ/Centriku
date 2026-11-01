@@ -75,6 +75,8 @@
 * **Column Sizing:** Use fixed widths for compact metadata (`Checkbox = 48px`, `Suffix = 75px`, `Section = 85px`, `Year = 95px`, `Status = 105px`, `Actions = 90px`) and star sizing (`Width="1.1*"` to `1.4*"`) with `MinWidth` guards for names and IDs.
 * **Truncation:** Every read-only text cell must include `TextTrimming="CharacterEllipsis"` and `ToolTip.Tip="{Binding Property}"`.
 * **Column Locking:** Set `CanUserResizeColumns="False"` and `CanUserReorderColumns="False"` on proportional star tables. Reserve `FrozenColumnCount="4"` strictly for wide horizontal-scrolling sheets (`GradesTabView`, `AttendanceTabView`).
+* **Dynamic Table Counter:** Every `DataGrid` view (`MasterRosterTab`, `ArchivesTab`, `BulkImportTab`) must display a right-aligned `SemiBold` counter (`DynamicStudentCounter`, `DynamicArchiveCounter`, `DynamicImportCounter`) using `Foreground="{DynamicResource TextMutedBrush}"` directly above the top-right corner of the table.
+* **Inline Cell TextBox Reset:** Single-line `TextBox` controls must globally set `ScrollViewer.VerticalScrollBarVisibility="Disabled"` and `ScrollViewer.HorizontalScrollBarVisibility="Hidden"` in `App.axaml` so inline editing inside `DataGridTextColumn` or `DataGridTemplateColumn` never renders an internal scrollbar thumb inside the cell.
 
 ### 3.4 Status Badges & Toast Notifications
 * **Badges:** Use translucent background tokens (`SuccessBgBrush`, `WarningBgBrush`, `DangerBgBrush`) with a `1px` matching border and bold semantic text (`FontSize="11"`, `CornerRadius="6"`, `Padding="10,4"`).
