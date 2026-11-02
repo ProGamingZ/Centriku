@@ -27,7 +27,7 @@
                BorderBrush="{DynamicResource BorderBrush}" 
                CornerRadius="8" Padding="15,10" Width="420" MaxWidth="450" HorizontalAlignment="Left"/>
             
-            <Button Grid.Column="1" Content="Columns ⚙️" 
+            <Button Grid.Column="1" Content="Columns" 
                Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                CornerRadius="8" Padding="15,10" Margin="0,0,12,0">
@@ -68,19 +68,19 @@
              <WrapPanel Grid.Column="0" Orientation="Horizontal">
                  <StackPanel Margin="0,0,12,8">
                      <TextBlock Text="Year" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                     <ComboBox ItemsSource="{Binding AvailableYears}" SelectedItem="{Binding SelectedYearFilter}" Background="{DynamicResource AppBackground}" MinWidth="135"/>
+                     <ComboBox ItemsSource="{Binding AvailableYears}" SelectedItem="{Binding SelectedYearFilter}" MinWidth="135"/>
                  </StackPanel>
                  <StackPanel Margin="0,0,12,8">
                      <TextBlock Text="Program" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                     <ComboBox ItemsSource="{Binding AvailablePrograms}" SelectedItem="{Binding SelectedProgramFilter}" Background="{DynamicResource AppBackground}" MinWidth="145"/>
+                     <ComboBox ItemsSource="{Binding AvailablePrograms}" SelectedItem="{Binding SelectedProgramFilter}"  MinWidth="145"/>
                  </StackPanel>
                  <StackPanel Margin="0,0,12,8">
                      <TextBlock Text="Section" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                     <ComboBox ItemsSource="{Binding AvailableSections}" SelectedItem="{Binding SelectedSectionFilter}" Background="{DynamicResource AppBackground}" MinWidth="145"/>
+                     <ComboBox ItemsSource="{Binding AvailableSections}" SelectedItem="{Binding SelectedSectionFilter}"  MinWidth="145"/>
                  </StackPanel>
                  <StackPanel Margin="0,0,0,8">
                      <TextBlock Text="Status" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                     <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding SelectedStatusFilter}" Background="{DynamicResource AppBackground}" MinWidth="145"/>
+                     <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding SelectedStatusFilter}"  MinWidth="145"/>
                  </StackPanel>
              </WrapPanel>
              
@@ -120,7 +120,7 @@
                   </StackPanel>
                   <StackPanel Margin="0,0,12,12">
                         <TextBlock Text="Gender" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                        <ComboBox SelectedItem="{Binding NewStudentGender}" Background="{DynamicResource AppBackground}" Width="100">
+                        <ComboBox SelectedItem="{Binding NewStudentGender}" Width="100">
                            <x:String>Male</x:String>
                            <x:String>Female</x:String>
                         </ComboBox>
@@ -139,7 +139,7 @@
                   </StackPanel>
                   <StackPanel Margin="0,0,12,12">
                         <TextBlock Text="Status" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4"/>
-                        <ComboBox SelectedItem="{Binding NewStudentEnrollmentStatus}" Background="{DynamicResource AppBackground}" Width="120">
+                        <ComboBox SelectedItem="{Binding NewStudentEnrollmentStatus}" Width="120">
                            <x:String>Regular</x:String>
                            <x:String>Irregular</x:String>
                            <x:String>Transferee</x:String>

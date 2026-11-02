@@ -4,127 +4,166 @@
              x:Class="Centriku.Views.Settings.SystemSettingsView"
              x:DataType="vm:SystemSettingsViewModel">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="0,0,25,0" Spacing="20">
-            
-            <!-- Header & Mode Toggle -->
-            <Grid ColumnDefinitions="*, Auto">
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Manage your database backups and system health." FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                </StackPanel>
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="14,10,24,24" Spacing="18">
                 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                    <TextBlock Text="Developer Diagnostics" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                    <ToggleSwitch IsChecked="{Binding IsDeveloperMode}" OnContent="" OffContent="" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
-
-            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
-
-            <!-- ========================================== -->
-            <!-- STANDARD MODE (Non-Technical Teachers)     -->
-            <!-- ========================================== -->
-            <StackPanel IsVisible="{Binding !IsDeveloperMode}" Spacing="20">
-                
-                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="25">
-                    <Grid ColumnDefinitions="*, Auto">
-                        <StackPanel Grid.Column="0" Spacing="10">
-                            <TextBlock Text="Database Health" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource PrimaryBrush}"/>
-                            <TextBlock Text="Centriku runs securely offline on your computer. Regular backups and maintenance keep your gradebooks fast and accurate." TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,0,20,0"/>
-                            
-                            <WrapPanel Orientation="Horizontal" Margin="0,15,0,0">
-                                <StackPanel Margin="0,0,30,10">
-                                    <TextBlock Text="STATUS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <TextBlock Text="{Binding DbStatus}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,0,30,10">
-                                    <TextBlock Text="LAST BACKUP" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <TextBlock Text="{Binding LastBackupDate}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,0,30,10">
-                                    <TextBlock Text="FILE SIZE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <TextBlock Text="{Binding DbSizeMb}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,0,0,10">
-                                    <TextBlock Text="SCHEMA VERSION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <TextBlock Text="{Binding SchemaVersionDisplay}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                </StackPanel>
-                            </WrapPanel>
-
-                            <TextBlock Text="{Binding StandardFeedbackMessage}" IsVisible="{Binding StandardFeedbackMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Foreground="{DynamicResource SuccessBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                <!-- Header & Mode Toggle -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock Text="System &amp; Storage Maintenance" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                        <TextBlock Text="Manage your offline SQLite database backups, storage compaction, and relational health." FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    
+                    <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="8" Padding="14,8" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Developer Diagnostics" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                            <ToggleSwitch IsChecked="{Binding IsDeveloperMode}" OnContent="" OffContent="" VerticalAlignment="Center"/>
                         </StackPanel>
+                    </Border>
+                </Grid>
 
-                        <!-- Friendly 1-Click Maintenance Button -->
-                        <Button Grid.Column="1" Command="{Binding OptimizeSystemCommand}" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18,12" VerticalAlignment="Center">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Optimize &amp; Clean" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Fix counts &amp; compact storage" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+
+                <!-- STANDARD MODE (Non-Technical Teachers)     -->
+                <StackPanel IsVisible="{Binding !IsDeveloperMode}" Spacing="18">
+                    
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="24">
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Spacing="12" Margin="0,0,24,0">
+                                <TextBlock Text="Database Health &amp; Telemetry" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource PrimaryBrush}"/>
+                                <TextBlock Text="Centriku runs securely offline on your computer. Regular backups and maintenance keep your gradebooks fast and accurate." TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                
+                                <!-- 4 Telemetry Mini-Cards -->
+                                <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Border Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" MinWidth="140" Margin="0,0,12,10">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="STATUS" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding DbStatus}" IsVisible="{Binding !IsStatusError}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                                            <TextBlock Text="{Binding DbStatus}" IsVisible="{Binding IsStatusError}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" MinWidth="150" Margin="0,0,12,10">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="LAST BACKUP" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding LastBackupDate}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" MinWidth="125" Margin="0,0,12,10">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="FILE SIZE" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                            <TextBlock Text="{Binding DbSizeMb}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- 10% Secondary Accent Callout on Schema Version -->
+                                    <Border Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" MinWidth="145" Margin="0,0,0,10">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="SCHEMA VERSION" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                            <TextBlock Text="{Binding SchemaVersionDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+
+                                <!-- Semantic Feedback Banner (Green on Success, Red on Error) -->
+                                <Panel IsVisible="{Binding StandardFeedbackMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0,4,0,0">
+                                    <Border IsVisible="{Binding !IsFeedbackError}" Background="{DynamicResource SuccessBgBrush}" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding StandardFeedbackMessage}" Foreground="{DynamicResource SuccessBrush}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    </Border>
+                                    <Border IsVisible="{Binding IsFeedbackError}" Background="{DynamicResource DangerBgBrush}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                                        <TextBlock Text="{Binding StandardFeedbackMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    </Border>
+                                </Panel>
+                            </StackPanel>
+
+                            <!-- Friendly 1-Click Maintenance Button -->
+                            <Button Grid.Column="1" Command="{Binding OptimizeSystemCommand}" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1.5" CornerRadius="10" Padding="20,14" VerticalAlignment="Center">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Optimize &amp; Clean" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Purge ghosts &amp; compact storage" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*, *">
+                        <!-- Backup Button -->
+                        <Button Grid.Column="0" Click="OnBackupClicked" Background="{DynamicResource PrimaryBrush}" Foreground="White" CornerRadius="10" Padding="22" HorizontalAlignment="Stretch" Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
+                                <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" FontSize="24" Foreground="White"/>
+                                <StackPanel>
+                                    <TextBlock Text="Create Backup" FontWeight="Bold" FontSize="16" Foreground="White"/>
+                                    <TextBlock Text="Save a secure copy of your database" FontSize="11" Foreground="White" Opacity="0.85"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        
+                        <!-- Restore Button -->
+                        <Button Grid.Column="1" Click="OnRestoreClicked" Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1.5" CornerRadius="10" Padding="22" HorizontalAlignment="Stretch" Margin="10,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
+                                <TextBlock Classes="Icon" Text="{DynamicResource IconRestore}" FontSize="24" Foreground="{DynamicResource AccentBrush}"/>
+                                <StackPanel>
+                                    <TextBlock Text="Restore from Backup" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <TextBlock Text="Replace current database with a backup file" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                                </StackPanel>
                             </StackPanel>
                         </Button>
                     </Grid>
-                </Border>
+                </StackPanel>
 
-                <Grid ColumnDefinitions="*, *" Margin="0,5,0,0">
-                    <!-- Backup Button -->
-                    <Button Grid.Column="0" Click="OnBackupClicked" Background="{DynamicResource PrimaryBrush}" Foreground="White" CornerRadius="8" Padding="20" HorizontalAlignment="Stretch" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
-                            <TextBlock Classes="Icon" Text="{DynamicResource IconSave}" FontSize="24"/>
-                            <StackPanel>
-                                <TextBlock Text="Create Backup" FontWeight="Bold" FontSize="16"/>
-                                <TextBlock Text="Save a secure copy of your database" FontSize="11" Opacity="0.8"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Button>
+                <!-- DEVELOPER MODE (Theme-Aware Console)       -->
+                <StackPanel IsVisible="{Binding IsDeveloperMode}" Spacing="16">
                     
-                    <!-- Restore Button -->
-                    <Button Grid.Column="1" Click="OnRestoreClicked" Background="{DynamicResource SurfaceVariantBrush}" Foreground="{DynamicResource TextMainBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" HorizontalAlignment="Stretch" Margin="10,0,0,0">
-                        <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
-                            <TextBlock Classes="Icon" Text="{DynamicResource IconRestore}" FontSize="24" Foreground="{DynamicResource TextMutedBrush}"/>
-                            <StackPanel>
-                                <TextBlock Text="Restore from Backup" FontWeight="Bold" FontSize="16"/>
-                                <TextBlock Text="Overwrite current system with an older file" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                            </StackPanel>
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Grid.Column="0" Text="SYSTEM DIAGNOSTICS &amp; RELATIONAL TELEMETRY" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource AccentBrush}"/>
+                                <Border Grid.Column="1" Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2">
+                                    <TextBlock Text="{Binding SchemaVersionDisplay}" FontWeight="Bold" FontSize="11" Foreground="{DynamicResource  AccentBrush}" FontFamily="Consolas, Courier New, monospace"/>
+                                </Border>
+                            </Grid>
+                            
+                            <TextBlock Text="{Binding TelemetrySummary}" Foreground="{DynamicResource TextMainBrush}" FontWeight="SemiBold" FontSize="12" FontFamily="Consolas, Courier New, monospace" Margin="0,4,0,0" TextWrapping="Wrap"/>
+
+                            <Grid ColumnDefinitions="Auto, *" Margin="0,6,0,0">
+                                <TextBlock Grid.Column="0" Text="DB Path: " FontWeight="Bold" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                <TextBlock Grid.Column="1" Text="{Binding AbsoluteFilePath}" Foreground="{DynamicResource InfoBrush}" FontWeight="SemiBold" FontSize="12" FontFamily="Consolas, Courier New, monospace" TextWrapping="Wrap"/>
+                            </Grid>
                         </StackPanel>
-                    </Button>
-                </Grid>
+                    </Border>
+
+                    <!-- Developer Command Toolbar (Fully Theme-Centralized) -->
+                    <WrapPanel Orientation="Horizontal">
+                        <Button Command="{Binding RunIntegrityCheckCommand}" Content="1. PRAGMA integrity_check" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" Foreground="{DynamicResource TextMainBrush}" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="14,9" CornerRadius="6" Margin="0,0,10,10"/>
+                        <Button Command="{Binding ScanOrphansCommand}" Content="2. Scan Ghost Records" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" Foreground="{DynamicResource WarningBrush}" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="14,9" CornerRadius="6" Margin="0,0,10,10"/>
+                        <Button Command="{Binding PurgeOrphansCommand}" Content="3. Purge Ghost Records" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" Foreground="{DynamicResource DangerBrush}" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="14,9" CornerRadius="6" Margin="0,0,10,10"/>
+                        <Button Command="{Binding RunVacuumCommand}" Content="4. Execute VACUUM" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource SuccessBrush}" BorderThickness="1" Foreground="{DynamicResource SuccessBrush}" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="14,9" CornerRadius="6" Margin="0,0,10,10"/>
+                        <Button Command="{Binding OpenDataFolderCommand}" Content="5. Open Data Folder" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource InfoBrush}" BorderThickness="1" Foreground="{DynamicResource InfoBrush}" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="14,9" CornerRadius="6" Margin="0,0,10,10"/>
+                    </WrapPanel>
+
+                    <!-- Console Output Box -->
+                    <Border Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1.5" CornerRadius="10" Padding="18" MinHeight="200">
+                        <TextBlock Text="{Binding DiagnosticOutput}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" FontFamily="Consolas, Courier New, monospace" FontSize="12" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+
             </StackPanel>
+        </ScrollViewer>
 
-            <!-- ========================================== -->
-            <!-- DEVELOPER MODE (Technical Console)         -->
-            <!-- ========================================== -->
-            <StackPanel IsVisible="{Binding IsDeveloperMode}" Spacing="15">
-                
-                <Border Background="#1E1E1E" BorderBrush="#333333" BorderThickness="1" CornerRadius="8" Padding="20">
-                    <StackPanel Spacing="8">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <TextBlock Grid.Column="0" Text="SYSTEM DIAGNOSTICS &amp; RELATIONAL TELEMETRY" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource WarningBrush}"/>
-                            <TextBlock Grid.Column="1" Text="{Binding SchemaVersionDisplay}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource SuccessBrush}" FontFamily="Consolas, Courier New, monospace"/>
-                        </Grid>
-                        
-                        <TextBlock Text="{Binding TelemetrySummary}" Foreground="#E4E4E7" FontSize="12" FontFamily="Consolas, Courier New, monospace" Margin="0,4,0,0"/>
-
-                        <Grid ColumnDefinitions="Auto, *" Margin="0,8,0,0">
-                            <TextBlock Grid.Column="0" Text="DB Path: " FontWeight="Bold" Foreground="#A1A1AA" FontSize="12"/>
-                            <TextBlock Grid.Column="1" Text="{Binding AbsoluteFilePath}" Foreground="#60A5FA" FontSize="12" FontFamily="Consolas, Courier New, monospace" TextWrapping="Wrap"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <!-- Developer Command Toolbar -->
-                <WrapPanel Orientation="Horizontal">
-                    <Button Command="{Binding RunIntegrityCheckCommand}" Content="1. PRAGMA integrity_check" Background="#374151" Foreground="White" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="12,8" CornerRadius="4" Margin="0,0,10,10"/>
-                    <Button Command="{Binding ScanOrphansCommand}" Content="2. Scan Ghost Records" Background="#374151" Foreground="#FBBF24" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="12,8" CornerRadius="4" Margin="0,0,10,10"/>
-                    <Button Command="{Binding PurgeOrphansCommand}" Content="3. Purge Ghost Records" Background="#374151" Foreground="#F87171" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="12,8" CornerRadius="4" Margin="0,0,10,10"/>
-                    <Button Command="{Binding RunVacuumCommand}" Content="4. Execute VACUUM" Background="#374151" Foreground="#34D399" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="12,8" CornerRadius="4" Margin="0,0,10,10"/>
-                    <Button Command="{Binding OpenDataFolderCommand}" Content="5. Open Data Folder" Background="#374151" Foreground="#60A5FA" FontFamily="Consolas, Courier New, monospace" FontSize="12" Padding="12,8" CornerRadius="4" Margin="0,0,10,10"/>
-                </WrapPanel>
-
-                <!-- Console Output Box -->
-                <Border Background="#000000" BorderBrush="#333333" BorderThickness="1" CornerRadius="6" Padding="15" MinHeight="180">
-                    <TextBlock Text="{Binding DiagnosticOutput}" Foreground="{DynamicResource SuccessBrush}" FontFamily="Consolas, Courier New, monospace" FontSize="12" TextWrapping="Wrap"/>
-                </Border>
-            </StackPanel>
-
-        </StackPanel>
-    </ScrollViewer>
+        <!-- RESTORE CONFIRMATION MODAL -->
+        <Border IsVisible="{Binding IsRestoreModalOpen}" Background="#B3000000" ZIndex="100">
+            <Border DataContext="{Binding RestoreModal}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Width="460" VerticalAlignment="Center" HorizontalAlignment="Center" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" Margin="0,0,0,15"/>
+                    <TextBlock Text="{Binding Message}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,30"/>
+                    <Grid ColumnDefinitions="*, Auto, Auto">
+                        <Button Grid.Column="1" Command="{Binding CancelCommand}" Content="Cancel" Background="Transparent" Foreground="{DynamicResource TextMainBrush}" FontWeight="Bold" Padding="20,10" Margin="0,0,15,0"/>
+                        <Button Grid.Column="2" Command="{Binding ConfirmCommand}" Content="Restore Database" Background="{DynamicResource DangerBrush}" Foreground="White" FontWeight="Bold" CornerRadius="8" Padding="20,10"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
 </UserControl>

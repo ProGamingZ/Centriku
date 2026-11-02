@@ -35,43 +35,43 @@
                         <UniformGrid Columns="2" Rows="5">
                             <StackPanel Margin="0,0,10,10">
                                 <TextBlock Text="Column 1 (A)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col1Options}" SelectedItem="{Binding Col1Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col1Options}" SelectedItem="{Binding Col1Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                             <StackPanel Margin="10,0,0,10">
                                 <TextBlock Text="Column 2 (B)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col2Options}" SelectedItem="{Binding Col2Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col2Options}" SelectedItem="{Binding Col2Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,10,10">
                                 <TextBlock Text="Column 3 (C)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col3Options}" SelectedItem="{Binding Col3Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col3Options}" SelectedItem="{Binding Col3Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                             <StackPanel Margin="10,0,0,10">
                                 <TextBlock Text="Column 4 (D)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col4Options}" SelectedItem="{Binding Col4Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col4Options}" SelectedItem="{Binding Col4Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,10,10">
                                 <TextBlock Text="Column 5 (E)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col5Options}" SelectedItem="{Binding Col5Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col5Options}" SelectedItem="{Binding Col5Selected}" HorizontalAlignment="Stretch" />
                             </StackPanel>
                             <StackPanel Margin="10,0,0,10">
                                 <TextBlock Text="Column 6 (F)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col6Options}" SelectedItem="{Binding Col6Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col6Options}" SelectedItem="{Binding Col6Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,10,10">
                                 <TextBlock Text="Column 7 (G)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col7Options}" SelectedItem="{Binding Col7Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col7Options}" SelectedItem="{Binding Col7Selected}" HorizontalAlignment="Stretch" />
                             </StackPanel>
                             <StackPanel Margin="10,0,0,10">
                                 <TextBlock Text="Column 8 (H)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col8Options}" SelectedItem="{Binding Col8Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col8Options}" SelectedItem="{Binding Col8Selected}" HorizontalAlignment="Stretch" />
                             </StackPanel>
                             <StackPanel Margin="0,0,10,0">
                                 <TextBlock Text="Column 9 (I)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col9Options}" SelectedItem="{Binding Col9Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col9Options}" SelectedItem="{Binding Col9Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                             <StackPanel Margin="10,0,0,0">
                                 <TextBlock Text="Column 10 (J)" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding Col10Options}" SelectedItem="{Binding Col10Selected}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding Col10Options}" SelectedItem="{Binding Col10Selected}" HorizontalAlignment="Stretch"/>
                             </StackPanel>
                         </UniformGrid>
                     </StackPanel>
@@ -92,11 +92,11 @@
                         <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto, Auto">
                             <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,12">
                                 <TextBlock Text="Default Gender" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding AvailableGenders}" SelectedItem="{Binding DefaultGender}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding AvailableGenders}" SelectedItem="{Binding DefaultGender}" HorizontalAlignment="Stretch" />
                             </StackPanel>
                             <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,12">
                                 <TextBlock Text="Default Status" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,4" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding DefaultEnrollmentStatus}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding AvailableStatuses}" SelectedItem="{Binding DefaultEnrollmentStatus}" HorizontalAlignment="Stretch" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,12">
@@ -144,7 +144,7 @@
                             
                             <StackPanel Margin="0,6,0,0">
                                 <TextBlock Text="Duplicate Student Handling:" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding AvailableDuplicateRules}" SelectedItem="{Binding SelectedDuplicateRule}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding AvailableDuplicateRules}" SelectedItem="{Binding SelectedDuplicateRule}" HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </StackPanel>
 

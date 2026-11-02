@@ -107,7 +107,7 @@
 ### 3.5 Forms & Inputs
 * Always pair inputs with a top-aligned muted label (`FontSize="11"`, `FontWeight="SemiBold"`, `Foreground="{DynamicResource TextMutedBrush}"`, `Margin="0,0,0,4"`).
 * Bind all `NumericUpDown.Value` properties through `{StaticResource SafeDoubleConverter}` with `ShowButtonSpinner="False"` to prevent `null` cast crashes on backspace.
-
+* **Popups (`FlyoutPresenter`) & Dropdowns (`ComboBox`):** `App.axaml` and `ThemeService.cs` style `FlyoutPresenter` (`Background="{DynamicResource SurfaceBrush}"`, `BorderBrush="{DynamicResource BorderStrongBrush}"`, `CornerRadius="12"`) and override Avalonia `FluentTheme`'s internal `ComboBox*`, `CheckBox*`, `ToggleSwitch*`, and `Slider*` resource keys so all popups and dropdown menus dynamically adapt to every theme preset.
 ---
 
 ## 4. Accessibility & Interaction Checklists

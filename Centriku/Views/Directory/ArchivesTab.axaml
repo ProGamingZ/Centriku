@@ -20,7 +20,7 @@
                      BorderBrush="{DynamicResource BorderBrush}" 
                      CornerRadius="8" Padding="15,10" Width="430" MaxWidth="460" HorizontalAlignment="Left"/>
             
-            <Button Grid.Column="1" Content="Columns ⚙️" 
+            <Button Grid.Column="1" Content="Columns" 
                      Background="Transparent" Foreground="{DynamicResource TextMutedBrush}" 
                      BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                      CornerRadius="8" Padding="15,10" Margin="0,0,12,0">

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -37,7 +38,6 @@ namespace Centriku.ViewModels
                 return;
             }
 
-            // Batch-load related tables once to prevent N+1 query lag
             var classIds = rosters.Select(r => r.ClassID).ToHashSet();
             var allClasses = (await db.Table<Centriku.Models.TeacherClass>().ToListAsync()).Where(c => classIds.Contains(c.ClassID)).ToList();
             var allTemplates = await db.Table<Centriku.Models.GradingTemplate>().ToListAsync();
@@ -53,20 +53,22 @@ namespace Centriku.ViewModels
                 var classAssessments = allAssessments.Where(a => a.ClassID == tClass.ClassID).ToList();
                 var classAtt = studentAttendance.Where(a => a.ClassID == tClass.ClassID).ToList();
 
-                // Sum actual SessionHours instead of raw row counts
-                double absentHours = System.Math.Round(classAtt.Where(a => a.Status == "Absent" || a.Status == "A").Sum(a => a.SessionHours), 2);
-                double lateHours = System.Math.Round(classAtt.Where(a => a.Status == "Late" || a.Status == "L").Sum(a => a.SessionHours), 2);
+                double absentHours = Math.Round(classAtt.Where(a => a.Status == "Absent" || a.Status == "A").Sum(a => a.SessionHours), 2);
+                double lateHours = Math.Round(classAtt.Where(a => a.Status == "Late" || a.Status == "L").Sum(a => a.SessionHours), 2);
 
-                var midAssessments = classAssessments.Where(a => a.GradingPeriod == "Midterm").ToList();
-                var finAssessments = classAssessments.Where(a => a.GradingPeriod == "Final").ToList();
+                var midAssessments = classAssessments.Where(a => string.Equals((a.GradingPeriod ?? "").Trim(), "Midterm", StringComparison.OrdinalIgnoreCase)).ToList();
+                var finAssessments = classAssessments.Where(a => string.Equals((a.GradingPeriod ?? "").Trim(), "Final", StringComparison.OrdinalIgnoreCase)).ToList();
 
                 string midDisplay = "--";
                 string finDisplay = "--";
                 string semDisplay = "--";
 
-                bool isMidComplete = midAssessments.Any() && classCategories.All(c => midAssessments.Any(a => a.Category == c.Name)) &&
+                bool isMidComplete = midAssessments.Any() &&
+                                     classCategories.All(c => midAssessments.Any(a => string.Equals((a.Category ?? "").Trim(), (c.Name ?? "").Trim(), StringComparison.OrdinalIgnoreCase))) &&
                                      midAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID));
-                bool isFinComplete = finAssessments.Any() && classCategories.All(c => finAssessments.Any(a => a.Category == c.Name)) &&
+
+                bool isFinComplete = finAssessments.Any() &&
+                                     classCategories.All(c => finAssessments.Any(a => string.Equals((a.Category ?? "").Trim(), (c.Name ?? "").Trim(), StringComparison.OrdinalIgnoreCase))) &&
                                      finAssessments.All(a => studentScores.Any(s => s.AssessmentID == a.AssessmentID));
 
                 var midResult = Centriku.Services.GradeCalculationService.EvaluateFinalGrade(classCategories, midAssessments, studentScores, template, tClass, classAtt);
@@ -81,7 +83,7 @@ namespace Centriku.ViewModels
                 }
                 else if (isMidComplete && isFinComplete)
                 {
-                    double semAvg = System.Math.Round((midResult.TermNumericGrade + finResult.TermNumericGrade) / 2.0, 0, System.MidpointRounding.AwayFromZero);
+                    double semAvg = Math.Round((midResult.TermNumericGrade + finResult.TermNumericGrade) / 2.0, 0, MidpointRounding.AwayFromZero);
                     semDisplay = $"{semAvg}%";
                 }
 
@@ -102,39 +104,6 @@ namespace Centriku.ViewModels
             SelectedStudentClasses = new ObservableCollection<StudentClassPerformanceViewModel>(performanceList);
             SelectedStudentClassPerformance = performanceList.FirstOrDefault();
             HasEnrolledClasses = performanceList.Any();
-        }
-
-        private async Task<double?> CalculateTermGradeRawAsync(SQLite.SQLiteAsyncConnection db, string studentId, int classId, int templateId, string term)
-        {
-            var categories = await db.Table<Centriku.Models.GradingCategory>().Where(c => c.TemplateID == templateId).ToListAsync();
-            var assessments = await db.Table<Centriku.Models.Assessment>().Where(a => a.ClassID == classId && a.GradingPeriod == term).ToListAsync();
-            if (!assessments.Any()) return null;
-
-            double totalWeightedScore = 0; double totalCategoryWeight = 0; bool hasAnyAssessments = false;
-
-            foreach (var category in categories)
-            {
-                double weightDecimal = category.Weight / 100.0;
-                totalCategoryWeight += weightDecimal;
-                double catEarned = 0; double catMax = 0;
-
-                var catAssessments = assessments.Where(a => a.Category == category.Name).ToList();
-                foreach (var assessment in catAssessments)
-                {
-                    var score = await db.Table<Centriku.Models.Score>().Where(s => s.AssessmentID == assessment.AssessmentID && s.StudentID == studentId).FirstOrDefaultAsync();
-                    if (score != null && !score.IsExcused && assessment.MaxScore > 0)
-                    {
-                        catEarned += score.PointsEarned; catMax += assessment.MaxScore;
-                    }
-                }
-                if (catMax > 0)
-                {
-                    hasAnyAssessments = true;
-                    totalWeightedScore += ((catEarned / catMax) * 100.0 * weightDecimal);
-                }
-            }
-            if (!hasAnyAssessments || totalCategoryWeight == 0) return null;
-            return totalWeightedScore / totalCategoryWeight;
         }
     }
 }

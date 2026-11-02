@@ -99,7 +99,7 @@ MainWindow (MainWindowViewModel)
 ### 2.5 `DirectoryView` (`Nav: Directory`)
 * **Purpose:** Central student information system (SIS) and bulk roster ingestion.
 * **Key Components & Actions by Sub-Tab:**
-  * **`MasterRosterTab` (`Tab 0`):** Search bar, 4 cohort filters (`Year`, `Program`, `Section`, `Status`), `Columns ⚙️` visibility flyout, `Archive` bulk action button, `Add New Student` drawer, `DynamicStudentCounter`, and sticky-selection `DataGrid` with inline editing (`ON UPDATE CASCADE` for `StudentID`) and `View Full Profile`.
+  * **`MasterRosterTab` (`Tab 0`):** Search bar, 4 cohort filters (`Year`, `Program`, `Section`, `Status`), `Columns` visibility flyout, `Archive` bulk action button, `Add New Student` drawer, `DynamicStudentCounter`, and sticky-selection `DataGrid` with inline editing (`ON UPDATE CASCADE` for `StudentID`) and `View Full Profile`.
   * **`BulkImportTab` (`Tab 1`):** Shortcut to `Import Settings`, read-only `Auto-Fill Summary` pill bar, 10-column configuration preview, CSV/Excel file picker, editable `StagedStudents` review grid with semantic status badges (`New Student`, `Will Update`, `Will Skip`, `Error`), `DynamicImportCounter`, `Re-Check Data`, and `Confirm & Save`.
   * **`ArchivesTab` (`Tab 2`):** Archive search bar, `Restore` and `Delete` bulk toolbar buttons, `DynamicArchiveCounter`, and sticky-selection `DataGrid`.
   * **`StudentProfileOverlay`:** Full-screen overlay showing student demographics and cross-subject grades/attendance computed via `GradeCalculationService`.
@@ -107,7 +107,7 @@ MainWindow (MainWindowViewModel)
 ### 2.6 `SettingsView` (`Nav: Settings`)
 * **Purpose:** Database maintenance, developer diagnostics, and global import/export rules.
 * **Key Components & Actions by Sub-Tab:**
-  * **`SystemSettingsView` (`Tab 0`):** Dual-mode screen. **Standard Mode** provides health telemetry, 1-click `Optimize & Clean`, `Create Backup` (`VACUUM INTO`), and `Restore from Backup` (with `.failsafe.bak` rollback). **Developer Diagnostics Mode** provides table row counts, `PRAGMA integrity_check`, `Scan Ghost Records`, `Purge Ghost Records`, `Execute VACUUM`, and `Open Data Folder`.
+  * **`SystemSettingsView` (`Tab 0`):** Dual-mode screen. **Standard Mode** provides health telemetry, 1-click `Optimize & Clean`, `Create Backup` (`VACUUM INTO`), and `Restore from Backup` (guarded by `RestoreModal` confirmation and `.failsafe.bak` rollback). **Developer Diagnostics Mode** provides theme-aware table row counts, `PRAGMA integrity_check`, `Scan Ghost Records`, `Purge Ghost Records`, `Execute VACUUM`, and `Open Data Folder`.
   * **`ImportSettingsView` (`Tab 1`):** 3-column layout mapping Excel Columns `A–J`, setting fallback Auto-Fill defaults, configuring duplicate rules, and displaying a live preview row.
   * **`ExportSettingsView` (`Tab 2`):** 3-column layout configuring default export folder, file naming tokens, privacy toggles, and live Semestral/Attendance preview grids.
 

@@ -42,7 +42,7 @@
 
                         <StackPanel Spacing="5" Margin="0,4,0,0">
                             <TextBlock Text="File Naming Format" FontWeight="SemiBold" FontSize="13"/>
-                            <ComboBox ItemsSource="{Binding NamingFormats}" SelectedItem="{Binding FileNamingFormat}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                            <ComboBox ItemsSource="{Binding NamingFormats}" SelectedItem="{Binding FileNamingFormat}" HorizontalAlignment="Stretch" />
                             <TextBlock Text="{Binding ExampleFileName}" FontSize="11" Foreground="{DynamicResource AccentBrush}" FontStyle="Italic" TextWrapping="Wrap" Margin="0,2,0,0"/>
                         </StackPanel>
                     </StackPanel>
@@ -84,20 +84,20 @@
                             <StackPanel Grid.Column="0" Spacing="5" Margin="0,0,8,0">
                                 <TextBlock Text="Missing Scores" FontWeight="SemiBold" FontSize="12"/>
                                 <TextBlock Text="Blank cell output:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding MissingScoreRules}" SelectedItem="{Binding ExportMissingScoreRule}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding MissingScoreRules}" SelectedItem="{Binding ExportMissingScoreRule}" HorizontalAlignment="Stretch" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Spacing="5" Margin="8,0,0,0">
                                 <TextBlock Text="Decimal Precision" FontWeight="SemiBold" FontSize="12"/>
                                 <TextBlock Text="Exact vs Rounded:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                                <ComboBox ItemsSource="{Binding DecimalPrecisions}" SelectedItem="{Binding ExportDecimalPrecision}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                                <ComboBox ItemsSource="{Binding DecimalPrecisions}" SelectedItem="{Binding ExportDecimalPrecision}" HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </Grid>
 
                         <StackPanel Spacing="5" Margin="0,6,0,0">
                             <TextBlock Text="Attendance Export Depth" FontWeight="SemiBold" FontSize="12"/>
                             <TextBlock Text="Choose between a daily breakdown or summary totals:" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                            <ComboBox ItemsSource="{Binding AttendanceDetails}" SelectedItem="{Binding ExportAttendanceDetail}" HorizontalAlignment="Stretch" Background="{DynamicResource AppBackground}"/>
+                            <ComboBox ItemsSource="{Binding AttendanceDetails}" SelectedItem="{Binding ExportAttendanceDetail}" HorizontalAlignment="Stretch" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

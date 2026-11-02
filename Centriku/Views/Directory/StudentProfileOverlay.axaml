@@ -5,91 +5,106 @@
             x:Name="ProfileRootControl"
             x:DataType="vm:DirectoryViewModel">
             
-    <Border IsVisible="{Binding IsProfileOpen}" Background="{DynamicResource AppBackground}" ZIndex="100">
+    <Border IsVisible="{Binding IsProfileOpen}" Background="{DynamicResource AppBackground}" ZIndex="150">
         <Grid RowDefinitions="Auto, Auto, *">
             
-            <!-- ROW 0: Back Button -->
-            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20">
+            <!-- ROW 0: Navigation Header Bar -->
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="0,0,0,1" Padding="24,16">
                 <Grid ColumnDefinitions="Auto, *, Auto">
-                    <Button Grid.Column="0" Command="{Binding CloseProfileCommand}" Content="← Back to Directory" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold"/>
-                    <TextBlock Grid.Column="1" Text="Student Profile" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button Grid.Column="0" Command="{Binding CloseProfileCommand}" Content="← Back to Directory" Background="{DynamicResource SurfaceVariantBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" Padding="14,8" CornerRadius="8"/>
+                    <TextBlock Grid.Column="1" Text="Student Academic Profile" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
 
-            <!-- ROW 1: Student Profile Info -->
-            <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="40,30">
+            <!-- ROW 1: Student Identity Banner -->
+            <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="0,0,0,1" Padding="36,24">
                 <Grid ColumnDefinitions="Auto, *">
-                    <Border Grid.Column="0" Width="100" Height="100" CornerRadius="50" Background="{DynamicResource AppBackground}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,25,0">
-                        <TextBlock Text="👤" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Grid.Column="0" Width="88" Height="88" CornerRadius="44" Background="{DynamicResource PrimaryBgBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" Margin="0,0,24,0">
+                        <TextBlock Classes="Icon" Text="{DynamicResource IconPerson}" FontSize="42" Foreground="{DynamicResource PrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8">
                         <WrapPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding SelectedProfile.LastName, StringFormat='{}{0}, '}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
-                            <TextBlock Text="{Binding SelectedProfile.FirstName, StringFormat='{}{0} '}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
-                            <TextBlock Text="{Binding SelectedProfile.MiddleName}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
+                            <TextBlock Text="{Binding SelectedProfile.LastName, StringFormat='{}{0}, '}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
+                            <TextBlock Text="{Binding SelectedProfile.FirstName, StringFormat='{}{0} '}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
+                            <TextBlock Text="{Binding SelectedProfile.MiddleName}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" />
                         </WrapPanel>
                         
-                        <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,5,0,0">
-                            <TextBlock Text="{Binding SelectedProfile.StudentID, StringFormat='{}{0}'}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold"/>
-                            <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                            <TextBlock Text="{Binding SelectedProfile.Gender}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold"/>
-                            <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                            <TextBlock Text="{Binding SelectedProfile.GradeYearLevel}" Foreground="{DynamicResource TextMutedBrush}"/>
-                            <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                            <TextBlock Text="{Binding SelectedProfile.Program}" Foreground="{DynamicResource TextMutedBrush}"/>
-                            <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                            <TextBlock Text="{Binding SelectedProfile.SectionName}" Foreground="{DynamicResource TextMutedBrush}"/>
-                            <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                            <TextBlock Text="{Binding SelectedProfile.EnrollmentStatus}" Foreground="{DynamicResource TextMutedBrush}"/>
-                        </StackPanel>
+                        <WrapPanel Orientation="Horizontal">
+                            <!-- Primary Badge for Student ID -->
+                            <Border Background="{DynamicResource PrimaryBgBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="6" Padding="10,3" Margin="0,0,12,4">
+                                <TextBlock Text="{Binding SelectedProfile.StudentID}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="Bold" FontSize="12"/>
+                            </Border>
+
+                            <!-- 10% Secondary Accent Badge for Enrollment Status -->
+                            <Border Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="10,3" Margin="0,0,16,4">
+                                <TextBlock Text="{Binding SelectedProfile.EnrollmentStatus}" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="12"/>
+                            </Border>
+
+                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="0,0,0,4">
+                                <TextBlock Text="{Binding SelectedProfile.Program}" Foreground="{DynamicResource TextMainBrush}" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="•" Foreground="{DynamicResource BorderStrongBrush}"/>
+                                <TextBlock Text="{Binding SelectedProfile.GradeYearLevel}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="•" Foreground="{DynamicResource BorderStrongBrush}"/>
+                                <TextBlock Text="{Binding SelectedProfile.SectionName, StringFormat='Section {0}'}" Foreground="{DynamicResource TextMutedBrush}" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="•" Foreground="{DynamicResource BorderStrongBrush}"/>
+                                <TextBlock Text="{Binding SelectedProfile.Gender}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
+                            </StackPanel>
+                        </WrapPanel>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ROW 2: The Tabs -->
-            <ScrollViewer Grid.Row="2" Margin="30,10,30,30" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="20" Margin="10,20,10,10">
-                    <TextBlock Text="Performance in Your Subjects" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                    <TextBlock Text="This data is pulled directly from your active gradebooks." Foreground="{DynamicResource TextMutedBrush}" Margin="0,-15,0,0"/>
+            <!-- ROW 2: Cross-Subject Performance List -->
+            <ScrollViewer Grid.Row="2" Margin="24,16,24,24" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16" Margin="12,8,12,12">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Performance Across Enrolled Subjects" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                        <TextBlock Text="Live grades and contact-hour attendance records aggregated from your class gradebooks." FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    </StackPanel>
 
                     <ItemsControl ItemsSource="{Binding SelectedStudentClasses}" IsVisible="{Binding HasEnrolledClasses}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,15">
+                                <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,0,14">
                                     <Grid ColumnDefinitions="*, Auto">
                                         
                                         <!-- Subject Info -->
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding SubjectName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
-                                            <TextBlock Text="{Binding Term, StringFormat='Term: {0}'}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold"/>
-                                            <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,10,0,0">
-                                                <TextBlock Text="{Binding GradedTasksCount, StringFormat='Tasks Graded: {0}'}" Foreground="{DynamicResource TextMutedBrush}"/>
-                                                <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                                                <TextBlock Text="{Binding Absences, StringFormat='Absences: {0}'}" Foreground="#EF4444"/>
-                                                <TextBlock Text="|" Foreground="{DynamicResource BorderBrush}"/>
-                                                <TextBlock Text="{Binding Lates, StringFormat='Lates: {0}'}" Foreground="#F59E0B"/>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="{Binding SubjectName}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
+                                                <Border Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="8,2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Term}" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold" FontSize="11"/>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Spacing="15" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding GradedTasksCount, StringFormat='Assessments: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                <TextBlock Text="|" Foreground="{DynamicResource BorderStrongBrush}"/>
+                                                <TextBlock Text="{Binding Absences, StringFormat='Absent: {0}h'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}"/>
+                                                <TextBlock Text="|" Foreground="{DynamicResource BorderStrongBrush}"/>
+                                                <TextBlock Text="{Binding Lates, StringFormat='Late: {0}h'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}"/>
                                             </StackPanel>
                                         </StackPanel>
 
                                         <!-- THE GRADE TRACKER -->
                                         <Grid Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+                                                <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="16,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" MinWidth="82">
                                                     <StackPanel>
-                                                        <TextBlock Text="{Binding MidtermGrade}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                        <TextBlock Text="Midterm" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding MidtermGrade}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Midterm" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
-                                                <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="6" Padding="15,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+                                                <Border Background="{DynamicResource SurfaceVariantBrush}" CornerRadius="8" Padding="16,10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" MinWidth="82">
                                                     <StackPanel>
-                                                        <TextBlock Text="{Binding FinalTermGrade}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
-                                                        <TextBlock Text="Final" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding FinalTermGrade}" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Final" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
-                                                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="6" Padding="15,10">
+                                                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="8" Padding="16,10" MinWidth="88">
                                                     <StackPanel>
-                                                        <TextBlock Text="{Binding SemesterAverage}" FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                        <TextBlock Text="Sem Avg" FontSize="10" Foreground="White" Opacity="0.8" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding SemesterAverage}" FontSize="17" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Sem Avg" FontSize="10" FontWeight="SemiBold" Foreground="White" Opacity="0.85" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                             </StackPanel>
@@ -101,10 +116,11 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     
-                    <Border IsVisible="{Binding !HasEnrolledClasses}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="40" Margin="0,20,0,0">
-                        <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="ℹ️" FontSize="32" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Student not enrolled in any of your classes." FontWeight="Bold" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                    <Border IsVisible="{Binding !HasEnrolledClasses}" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="12" Padding="40" Margin="0,10,0,0">
+                        <StackPanel Spacing="10" HorizontalAlignment="Center">
+                            <TextBlock Classes="Icon" Text="{DynamicResource IconEmptyState}" FontSize="36" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Not Enrolled in Any Classes" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Enroll this student into a class from the Gradebook tab to view their academic performance." FontSize="12" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

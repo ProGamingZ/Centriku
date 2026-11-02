@@ -41,9 +41,7 @@ namespace Centriku.Services
 
                using (var workbook = new XLWorkbook(templatePath))
                {
-                  // ==========================================
                   // STEP A: INJECT DATA SHEET (Master Info)
-                  // ==========================================
                   var wsData = workbook.Worksheet("DATA");
 
                   wsData.Cell("D5").Value = currentClass.SubjectName ?? "";
@@ -74,9 +72,7 @@ namespace Centriku.Services
                         currentRow++;
                   }
 
-                  // ==========================================
                   // STEP B: INJECT MIDTERM & FINAL TERM SHEETS
-                  // ==========================================
                   var wsMidterm = workbook.Worksheet("MIDTERM");
                   var wsFinal = workbook.Worksheet("FINAL TERM");
 
@@ -184,9 +180,7 @@ namespace Centriku.Services
 
                using (var workbook = new XLWorkbook(templatePath))
                {
-                  // ==========================================
                   // STEP A: INJECT DATA SHEET
-                  // ==========================================
                   var wsData = workbook.Worksheet("DATA");
                   
                   int currentRow = 4; // Starts below the header row
@@ -208,9 +202,7 @@ namespace Centriku.Services
                      currentRow++;
                   }
 
-                  // ==========================================
                   // STEP B: BUILD DYNAMIC ATTENDANCE SHEET
-                  // ==========================================
                   var wsAtt = workbook.Worksheet("ATTENDANCE");
                   var sortedDates = uniqueDates.OrderBy(d => d).ToList();
                   

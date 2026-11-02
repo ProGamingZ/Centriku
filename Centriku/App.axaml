@@ -185,7 +185,16 @@
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
-        <!-- 4. DROPDOWNS (COMBOBOX & COMBOBOXITEM)                -->
+        <!-- 4. POPUPS (FLYOUTS) & DROPDOWNS (COMBOBOX)            -->
+        <Style Selector="FlyoutPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
         <Style Selector="ComboBox">
             <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
@@ -194,38 +203,59 @@
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="12,7"/>
         </Style>
+        <Style Selector="ComboBox /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+        </Style>
         <Style Selector="ComboBox:pointerover /template/ Border#Background">
             <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHoverBrush}"/>
         </Style>
-        <Style Selector="ComboBox:focus /template/ Border#Background, ComboBox:pressed /template/ Border#Background">
+        <Style Selector="ComboBox:focus /template/ Border#Background,
+                         ComboBox:focus-within /template/ Border#Background,
+                         ComboBox:pressed /template/ Border#Background,
+                         ComboBox:dropdownopen /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource InputFocusBgBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="ComboBox /template/ PathIcon#DropDownGlyph">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
         </Style>
         <Style Selector="ComboBox /template/ Border#PopupBorder">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="4"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="6"/>
         </Style>
+
+        <!-- ComboBoxItem with #PART_ContentPresenter specificity to override FluentTheme -->
         <Style Selector="ComboBoxItem">
             <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Margin" Value="2,1"/>
             <Setter Property="Padding" Value="10,7"/>
         </Style>
-        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource DataGridHoverBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
         </Style>
-        <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
+        <Style Selector="ComboBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DataGridSelectedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="ComboBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter,
+                         ComboBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter,
+                         ComboBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter,
+                         ComboBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource DataGridSelectedBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
 
-        <!-- 5. BUTTONS, RADIOBUTTONS, CHECKBOXES, TOGGLESWITCHES  -->
+        <!-- 5. BUTTONS, RADIOBUTTONS, CHECKBOXES, TOGGLES, SLIDERS -->
         <Style Selector="Button">
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -244,7 +274,7 @@
             <Setter Property="Opacity" Value="0.86"/>
         </Style>
 
-        <!-- RadioButton (Radial Buttons) -->
+        <!-- RadioButton -->
         <Style Selector="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -260,11 +290,8 @@
             <Setter Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="Fill" Value="{DynamicResource SurfaceVariantBrush}"/>
         </Style>
-        <Style Selector="RadioButton:checked /template/ Ellipse#OuterEllipse">
-            <Setter Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
-            <Setter Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
-        </Style>
-        <Style Selector="RadioButton:checked /template/ Ellipse#CheckOuterEllipse">
+        <Style Selector="RadioButton:checked /template/ Ellipse#OuterEllipse,
+                         RadioButton:checked /template/ Ellipse#CheckOuterEllipse">
             <Setter Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
         </Style>
@@ -307,11 +334,29 @@
 
         <!-- ToggleSwitch -->
         <Style Selector="ToggleSwitch">
+            <Setter Property="Foreground" Value="{DynamicResource TextMainBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
             <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="ToggleSwitch:unchecked /template/ Border#SwitchKnobBounds">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+        </Style>
+
+        <!-- Slider (Appearance Brightness Slider) -->
+        <Style Selector="Slider /template/ RepeatButton#PART_DecreaseButton">
+            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+        <Style Selector="Slider /template/ RepeatButton#PART_IncreaseButton">
+            <Setter Property="Background" Value="{DynamicResource SurfaceVariantBrush}"/>
+        </Style>
+        <Style Selector="Slider /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
         </Style>
 
         <!-- 6. NON-OVERLAPPING, THEME-STYLIZED SCROLLBARS         -->

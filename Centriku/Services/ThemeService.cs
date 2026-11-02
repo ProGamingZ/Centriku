@@ -35,9 +35,7 @@ namespace Centriku.Services
 
     public static class ThemeService
     {
-        // =========================================================================
         // TO ADD OR REMOVE THEMES IN THE FUTURE, SIMPLY EDIT THIS LIST!
-        // =========================================================================
         public static readonly IReadOnlyList<ThemePalette> Palettes =
         [
             new ThemePalette(
@@ -288,9 +286,11 @@ namespace Centriku.Services
             ApplyTokensToDictionary(app.Resources, ThemeVariant.Light, palette.Light);
             ApplyTokensToDictionary(app.Resources, ThemeVariant.Dark, palette.Dark);
 
-            // Switch theme variant cleanly to force all DynamicResources to refresh
-            app.RequestedThemeVariant = isDark ? ThemeVariant.Light : ThemeVariant.Dark;
-            app.RequestedThemeVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+            var targetVariant = isDark ? ThemeVariant.Dark : ThemeVariant.Light;
+            if (app.RequestedThemeVariant != targetVariant)
+            {
+                app.RequestedThemeVariant = targetVariant;
+            }
         }
 
         private static void ApplyTokensToDictionary(IResourceDictionary rootResources, ThemeVariant variant, ThemeModeTokens t)
@@ -298,8 +298,21 @@ namespace Centriku.Services
             if (!rootResources.ThemeDictionaries.TryGetValue(variant, out var provider) || provider is not IResourceDictionary dict)
                 return;
 
-            void SetBrush(string key, string hex) => dict[key] = new SolidColorBrush(Color.Parse(hex));
+            // Mutate existing SolidColorBrush instances in-place so open Flyouts and Popups update instantaneously!
+            void SetBrush(string key, string hex)
+            {
+                var color = Color.Parse(hex);
+                if (dict.TryGetValue(key, out var existing) && existing is SolidColorBrush mutableBrush)
+                {
+                    mutableBrush.Color = color;
+                }
+                else
+                {
+                    dict[key] = new SolidColorBrush(color);
+                }
+            }
 
+            // 1. Core Centriku Design Tokens
             SetBrush("AppBackground", t.AppBackground);
             SetBrush("SurfaceBrush", t.SurfaceBrush);
             SetBrush("SurfaceVariantBrush", t.SurfaceVariantBrush);
@@ -321,9 +334,78 @@ namespace Centriku.Services
             SetBrush("DataGridSelectedBrush", t.DataGridSelectedBrush);
             SetBrush("ScrollBarThumbBrush", t.ScrollBarThumbBrush);
             SetBrush("ScrollBarThumbHoverBrush", t.ScrollBarThumbHoverBrush);
+
+            // 2. Native Avalonia FluentTheme Keys for ScrollBars
             SetBrush("ScrollBarThumbFill", t.ScrollBarThumbBrush);
             SetBrush("ScrollBarThumbFillPointerOver", t.ScrollBarThumbHoverBrush);
             SetBrush("ScrollBarThumbFillPressed", t.PrimaryBrush);
+
+            // 3. Native Avalonia FluentTheme Keys for Flyout Popups
+            SetBrush("FlyoutPresenterBackground", t.SurfaceBrush);
+            SetBrush("FlyoutBorderThemeBrush", t.BorderStrongBrush);
+
+            // 4. Native Avalonia FluentTheme Keys for ComboBox & Dropdown Popups
+            SetBrush("ComboBoxBackground", t.InputBgBrush);
+            SetBrush("ComboBoxBackgroundPointerOver", t.SurfaceVariantBrush);
+            SetBrush("ComboBoxBackgroundPressed", t.DataGridHoverBrush);
+            SetBrush("ComboBoxBackgroundFocused", t.InputFocusBgBrush);
+            SetBrush("ComboBoxForeground", t.TextMainBrush);
+            SetBrush("ComboBoxForegroundPointerOver", t.TextMainBrush);
+            SetBrush("ComboBoxForegroundPressed", t.TextMainBrush);
+            SetBrush("ComboBoxForegroundFocused", t.TextMainBrush);
+            SetBrush("ComboBoxPlaceHolderForeground", t.TextMutedBrush);
+            SetBrush("ComboBoxBorderBrush", t.BorderStrongBrush);
+            SetBrush("ComboBoxBorderBrushPointerOver", t.PrimaryHoverBrush);
+            SetBrush("ComboBoxBorderBrushPressed", t.PrimaryBrush);
+            SetBrush("ComboBoxBorderBrushFocused", t.PrimaryBrush);
+            SetBrush("ComboBoxDropDownBackground", t.SurfaceBrush);
+            SetBrush("ComboBoxDropDownBorderBrush", t.BorderStrongBrush);
+            SetBrush("ComboBoxDropDownGlyphForeground", t.PrimaryBrush);
+
+            SetBrush("ComboBoxItemBackground", "#00000000");
+            SetBrush("ComboBoxItemBackgroundPointerOver", t.DataGridHoverBrush);
+            SetBrush("ComboBoxItemBackgroundPressed", t.DataGridSelectedBrush);
+            SetBrush("ComboBoxItemBackgroundSelected", t.DataGridSelectedBrush);
+            SetBrush("ComboBoxItemBackgroundSelectedPointerOver", t.DataGridSelectedBrush);
+            SetBrush("ComboBoxItemBackgroundSelectedPressed", t.DataGridSelectedBrush);
+            SetBrush("ComboBoxItemForeground", t.TextMainBrush);
+            SetBrush("ComboBoxItemForegroundPointerOver", t.TextMainBrush);
+            SetBrush("ComboBoxItemForegroundPressed", t.PrimaryBrush);
+            SetBrush("ComboBoxItemForegroundSelected", t.PrimaryBrush);
+            SetBrush("ComboBoxItemForegroundSelectedPointerOver", t.PrimaryBrush);
+            SetBrush("ComboBoxItemForegroundSelectedPressed", t.PrimaryBrush);
+
+            // 5. Native Avalonia FluentTheme Keys for CheckBox, ToggleSwitch & Slider inside Popups
+            SetBrush("CheckBoxCheckBackgroundFillUnchecked", t.InputBgBrush);
+            SetBrush("CheckBoxCheckBackgroundFillUncheckedPointerOver", t.SurfaceVariantBrush);
+            SetBrush("CheckBoxCheckBackgroundStrokeUnchecked", t.BorderStrongBrush);
+            SetBrush("CheckBoxCheckBackgroundStrokeUncheckedPointerOver", t.PrimaryBrush);
+            SetBrush("CheckBoxCheckBackgroundFillChecked", t.PrimaryBrush);
+            SetBrush("CheckBoxCheckBackgroundFillCheckedPointerOver", t.PrimaryHoverBrush);
+            SetBrush("CheckBoxCheckBackgroundFillCheckedPressed", t.PrimaryBrush);
+            SetBrush("CheckBoxCheckBackgroundStrokeChecked", t.PrimaryBrush);
+            SetBrush("CheckBoxCheckBackgroundStrokeCheckedPointerOver", t.PrimaryHoverBrush);
+
+            SetBrush("ToggleSwitchFillOn", t.PrimaryBrush);
+            SetBrush("ToggleSwitchFillOnPointerOver", t.PrimaryHoverBrush);
+            SetBrush("ToggleSwitchFillOnPressed", t.PrimaryBrush);
+            SetBrush("ToggleSwitchStrokeOn", t.PrimaryBrush);
+            SetBrush("ToggleSwitchStrokeOnPointerOver", t.PrimaryHoverBrush);
+            SetBrush("ToggleSwitchFillOff", t.InputBgBrush);
+            SetBrush("ToggleSwitchFillOffPointerOver", t.SurfaceVariantBrush);
+            SetBrush("ToggleSwitchStrokeOff", t.BorderStrongBrush);
+            SetBrush("ToggleSwitchStrokeOffPointerOver", t.PrimaryBrush);
+            SetBrush("ToggleSwitchKnobFillOff", t.TextMutedBrush);
+            SetBrush("ToggleSwitchKnobFillOffPointerOver", t.PrimaryBrush);
+
+            SetBrush("SliderTrackValueFill", t.PrimaryBrush);
+            SetBrush("SliderTrackValueFillPointerOver", t.PrimaryHoverBrush);
+            SetBrush("SliderTrackValueFillPressed", t.PrimaryBrush);
+            SetBrush("SliderTrackFill", t.SurfaceVariantBrush);
+            SetBrush("SliderTrackFillPointerOver", t.BorderStrongBrush);
+            SetBrush("SliderThumbBackground", t.AccentBrush);
+            SetBrush("SliderThumbBackgroundPointerOver", t.PrimaryHoverBrush);
+            SetBrush("SliderThumbBackgroundPressed", t.PrimaryBrush);
         }
     }
 }

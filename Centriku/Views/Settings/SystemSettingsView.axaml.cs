@@ -55,7 +55,7 @@ namespace Centriku.Views.Settings
 
             if (files.Count >= 1 && DataContext is SystemSettingsViewModel vm)
             {
-                await vm.ProcessRestoreAsync(files[0].Path.LocalPath);
+                vm.PromptRestore(files[0].Path.LocalPath);
             }
         }
     }
