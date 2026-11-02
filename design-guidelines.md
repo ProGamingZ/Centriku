@@ -2,31 +2,30 @@
 
 ## 1. Design Tokens (CSS & Avalonia XAML Reference)
 
-### 1.1 Color Palette Tokens
-| Token Name (Avalonia Key) | CSS Variable Equivalent | Dark Theme (Obsidian Slate) | Light Theme (Soft Alabaster) | Usage |
+### 1.1 Color Palette Tokens (NwSSU Institutional Green, Orange & White)
+| Token Name (Avalonia Key) | CSS Variable Equivalent | Dark Theme (Forest Obsidian) | Light Theme (NwSSU Alabaster & Green) | Usage |
 | :--- | :--- | :--- | :--- | :--- |
-| `AppBackground` | `--bg-canvas` | `#0F172A` | `#EDF2F7` | Root window background (eye-strain safe) |
-| `SurfaceBrush` | `--bg-surface` | `#1E293B` | `#F8FAFC` | Cards, panels, modals, table base |
-| `SurfaceVariantBrush` | `--bg-surface-alt` | `#26334D` | `#E2E8F0` | Table headers, secondary buttons, pill bars |
-| `InputBgBrush` | `--bg-input` | `#131C2E` | `#FFFFFF` | TextBox, NumericUpDown, ComboBox rest background |
-| `InputFocusBgBrush` | `--bg-input-focus` | `#1A2540` | `#F5F3FF` | Active/focused input field and table cell tint |
-| `TextMainBrush` | `--text-primary` | `#F8FAFC` | `#0F172A` | Headings, table body text, primary labels |
-| `TextMutedBrush` | `--text-secondary` | `#94A3B8` | `#475569` | Subtitles, field labels, secondary metadata |
-| `BorderBrush` | `--border-subtle` | `#334155` | `#CBD5E1` | Internal table row dividers, section rules |
-| `BorderStrongBrush` | `--border-strong` | `#475569` | `#94A3B8` | Outer card borders, input borders, header dividers |
-| `PrimaryBrush` | `--accent-primary` | `#7C3AED` | `#6D28D9` | Primary CTAs, active tabs, focus rings, checked states |
-| `PrimaryHoverBrush` | `--accent-primary-hover` | `#8B5CF6` | `#7C3AED` | Pointer-over state for interactive controls |
-| `DataGridAltRowBrush` | `--table-row-alt` | `#172033` | `#F1F5F9` | Odd-numbered zebra striping in DataGrids |
-| `DataGridHoverBrush` | `--table-row-hover` | `#28354E` | `#E2E8F0` | Row and dropdown item hover highlight |
-| `DataGridSelectedBrush` | `--table-row-selected` | `#3B276B` | `#DDD6FE` | Selected table row and active dropdown item |
-| `SuccessBrush` / `SuccessBgBrush` | `--status-success` | `#10B981` / `#2210B981` | `#059669` / `#1F059669` | Passing grades, Restore actions, Healthy status |
-| `WarningBrush` / `WarningBgBrush` | `--status-warning` | `#F59E0B` / `#22F59E0B` | `#D97706` / `#1FD97706` | At-Risk alerts, Archive actions, Duplicate warnings |
-| `DangerBrush` / `DangerBgBrush` | `--status-danger` | `#F43F5E` / `#22F43F5E` | `#E11D48` / `#1FE11D48` | Critical/FDA failures, Delete/Unenroll actions |
-| `PrimaryBgBrush` | `--accent-primary-bg` | `#227C3AED` | `#1F6D28D9` | Tinted primary badges (e.g., Student Count pill on Class Cards) |
-| `InfoBrush` / `InfoBgBrush` | `--status-info` | `#3B82F6` / `#223B82F6` | `#2563EB` / `#1F2563EB` | Transfer actions and informational category badges |
-| `TsColumnBrush` | `--table-col-ts` | `#A78BFA` | `#7C3AED` | Transmuted Score (`TS`) calculated column header and cells |
-| `WsColumnBrush` | `--table-col-ws` | `#FBBF24` | `#D97706` | Weighted Score (`WS`) calculated column header and cells |
-
+| `AppBackground` | `--bg-canvas` | `#09140E` | `#EFF5F1` | Root window background (eye-strain safe sage-alabaster / deep forest) |
+| `SurfaceBrush` | `--bg-surface` | `#112218` | `#FFFFFF` | Cards, panels, modals, table base |
+| `SurfaceVariantBrush` | `--bg-surface-alt` | `#193124` | `#E3EFE7` | Table headers, secondary buttons, pill bars |
+| `InputBgBrush` | `--bg-input` | `#0C1A12` | `#FFFFFF` | TextBox, NumericUpDown, ComboBox rest background |
+| `InputFocusBgBrush` | `--bg-input-focus` | `#142E20` | `#F0FDF4` | Active/focused input field and table cell tint |
+| `TextMainBrush` | `--text-primary` | `#F2F9F5` | `#0D1F14` | Headings, table body text, primary labels |
+| `TextMutedBrush` | `--text-secondary` | `#86A895` | `#3F5A49` | Subtitles, field labels, secondary metadata |
+| `BorderBrush` | `--border-subtle` | `#234231` | `#C5D8CC` | Internal table row dividers, section rules |
+| `BorderStrongBrush` | `--border-strong` | `#346148` | `#86A893` | Outer card borders, input borders, header dividers |
+| `PrimaryBrush` | `--accent-primary` | `#16A34A` | `#166534` | NwSSU Forest Green: Primary CTAs, active tabs, focus rings, checked states |
+| `PrimaryHoverBrush` | `--accent-primary-hover` | `#22C55E` | `#15803D` | Pointer-over state for interactive controls |
+| `PrimaryBgBrush` | `--accent-primary-bg` | `#2616A34A` | `#1F166534` | Tinted primary badges (e.g., Student Count pill on Class Cards) |
+| `DataGridAltRowBrush` | `--table-row-alt` | `#0D1B13` | `#F4F9F5` | Odd-numbered zebra striping in DataGrids |
+| `DataGridHoverBrush` | `--table-row-hover` | `#1C3829` | `#E3EFE7` | Row and dropdown item hover highlight |
+| `DataGridSelectedBrush` | `--table-row-selected` | `#1E4631` | `#DCFCE7` | Selected table row and active dropdown item |
+| `SuccessBrush` / `SuccessBgBrush` | `--status-success` | `#22C55E` / `#2222C55E` | `#15803D` / `#1F15803D` | Passing grades, Restore actions, Healthy status |
+| `WarningBrush` / `WarningBgBrush` | `--status-warning` | `#F97316` / `#24F97316` | `#EA580C` / `#1FEA580C` | NwSSU Vibrant Orange: At-Risk alerts, Archive actions, Leader badges |
+| `DangerBrush` / `DangerBgBrush` | `--status-danger` | `#F43F5E` / `#22F43F5E` | `#DC2626` / `#1FDC2626` | Critical/FDA failures, Delete/Unenroll actions |
+| `InfoBrush` / `InfoBgBrush` | `--status-info` | `#38BDF8` / `#2238BDF8` | `#0284C7` / `#1F0284C7` | Transfer actions and informational category badges |
+| `TsColumnBrush` | `--table-col-ts` | `#2DD4BF` | `#0F766E` | Transmuted Score (`TS`) calculated column header and cells |
+| `WsColumnBrush` | `--table-col-ws` | `#FB923C` | `#EA580C` | NwSSU Orange Weighted Score (`WS`) calculated column header and cells |
 
 ### 1.2 Typography Scale
 * **Font Family:** `Inter` (UI Body/Headings), `FluentSystemIcons-Regular` (Icons), `Consolas, Courier New, monospace` (Developer Diagnostics).

@@ -3,7 +3,7 @@
              xmlns:local="using:Centriku"
              xmlns:conv="using:Centriku.Converters"
              x:Class="Centriku.App"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Light">
 
     <Application.DataTemplates>
         <local:ViewLocator/>
@@ -340,85 +340,98 @@
             <ResourceDictionary.ThemeDictionaries>
 
                 <!-- DARK THEME: Deep Obsidian-Slate (Rich, Non-Neon, Pronounced Edges) -->
+                <!-- DARK THEME: NwSSU Deep Forest-Obsidian & Warm Amber-Orange -->
                 <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="AppBackground">#0F172A</SolidColorBrush>
-                    <SolidColorBrush x:Key="SurfaceBrush">#1E293B</SolidColorBrush>
-                    <SolidColorBrush x:Key="SurfaceVariantBrush">#26334D</SolidColorBrush>
+                    <SolidColorBrush x:Key="AppBackground">#09140E</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceBrush">#112218</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceVariantBrush">#193124</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="InputBgBrush">#131C2E</SolidColorBrush>
-                    <SolidColorBrush x:Key="InputFocusBgBrush">#1A2540</SolidColorBrush>
+                    <SolidColorBrush x:Key="InputBgBrush">#0C1A12</SolidColorBrush>
+                    <SolidColorBrush x:Key="InputFocusBgBrush">#142E20</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="TextMainBrush">#F8FAFC</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextMutedBrush">#94A3B8</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMainBrush">#F2F9F5</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMutedBrush">#86A895</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="BorderBrush">#334155</SolidColorBrush>
-                    <SolidColorBrush x:Key="BorderStrongBrush">#475569</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderBrush">#234231</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderStrongBrush">#346148</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="PrimaryBrush">#7C3AED</SolidColorBrush>
-                    <SolidColorBrush x:Key="PrimaryHoverBrush">#8B5CF6</SolidColorBrush>
-                    <SolidColorBrush x:Key="PrimaryBgBrush">#227C3AED</SolidColorBrush>
-                    <SolidColorBrush x:Key="InfoBrush">#3B82F6</SolidColorBrush>
-                    <SolidColorBrush x:Key="InfoBgBrush">#223B82F6</SolidColorBrush>
-                    <SolidColorBrush x:Key="TsColumnBrush">#A78BFA</SolidColorBrush>
-                    <SolidColorBrush x:Key="WsColumnBrush">#FBBF24</SolidColorBrush>
+                    <!-- NwSSU Emerald-Green Primary & Tinted Badges -->
+                    <SolidColorBrush x:Key="PrimaryBrush">#16A34A</SolidColorBrush>
+                    <SolidColorBrush x:Key="PrimaryHoverBrush">#22C55E</SolidColorBrush>
+                    <SolidColorBrush x:Key="PrimaryBgBrush">#2616A34A</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="DataGridAltRowBrush">#172033</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridHoverBrush">#28354E</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridSelectedBrush">#3B276B</SolidColorBrush>
+                    <!-- NwSSU Calculated Columns: Teal (TS) & NwSSU Orange-Gold (WS) -->
+                    <SolidColorBrush x:Key="TsColumnBrush">#2DD4BF</SolidColorBrush>
+                    <SolidColorBrush x:Key="WsColumnBrush">#FB923C</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#475569</SolidColorBrush>
-                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#8B5CF6</SolidColorBrush>
+                    <SolidColorBrush x:Key="InfoBrush">#38BDF8</SolidColorBrush>
+                    <SolidColorBrush x:Key="InfoBgBrush">#2238BDF8</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="SuccessBrush">#10B981</SolidColorBrush>
-                    <SolidColorBrush x:Key="SuccessBgBrush">#2210B981</SolidColorBrush>
+                    <!-- Table Row States (Zebra, Hover, Selected) -->
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#0D1B13</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridHoverBrush">#1C3829</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridSelectedBrush">#1E4631</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#346148</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#22C55E</SolidColorBrush>
+
+                    <!-- Semantic Status Tokens (Warning uses NwSSU Orange) -->
+                    <SolidColorBrush x:Key="SuccessBrush">#22C55E</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessBgBrush">#2222C55E</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="WarningBrush">#F59E0B</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningTextBrush">#FBBF24</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningBgBrush">#22F59E0B</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBrush">#F97316</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningTextBrush">#FB923C</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBgBrush">#24F97316</SolidColorBrush>
                     
                     <SolidColorBrush x:Key="DangerBrush">#F43F5E</SolidColorBrush>
                     <SolidColorBrush x:Key="DangerBgBrush">#22F43F5E</SolidColorBrush>
                 </ResourceDictionary> 
 
-                <!-- LIGHT THEME: Soft Alabaster-Slate (Low Glare, Eye-Safe, Crisp Borders) -->
+                <!-- LIGHT THEME: NwSSU Institutional Forest Green, Vibrant Orange & Crisp White -->
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppBackground">#EDF2F7</SolidColorBrush>
-                    <SolidColorBrush x:Key="SurfaceBrush">#F8FAFC</SolidColorBrush>
-                    <SolidColorBrush x:Key="SurfaceVariantBrush">#E2E8F0</SolidColorBrush>
+                    <SolidColorBrush x:Key="AppBackground">#EFF5F1</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceBrush">#FFFFFF</SolidColorBrush>
+                    <SolidColorBrush x:Key="SurfaceVariantBrush">#E3EFE7</SolidColorBrush>
                     
                     <SolidColorBrush x:Key="InputBgBrush">#FFFFFF</SolidColorBrush>
-                    <SolidColorBrush x:Key="InputFocusBgBrush">#F5F3FF</SolidColorBrush>
+                    <SolidColorBrush x:Key="InputFocusBgBrush">#F0FDF4</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="TextMainBrush">#0F172A</SolidColorBrush>
-                    <SolidColorBrush x:Key="TextMutedBrush">#475569</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMainBrush">#0D1F14</SolidColorBrush>
+                    <SolidColorBrush x:Key="TextMutedBrush">#3F5A49</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="BorderBrush">#CBD5E1</SolidColorBrush>
-                    <SolidColorBrush x:Key="BorderStrongBrush">#94A3B8</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderBrush">#C5D8CC</SolidColorBrush>
+                    <SolidColorBrush x:Key="BorderStrongBrush">#86A893</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="PrimaryBrush">#6D28D9</SolidColorBrush>
-                    <SolidColorBrush x:Key="PrimaryHoverBrush">#7C3AED</SolidColorBrush>
-                    <SolidColorBrush x:Key="PrimaryBgBrush">#1F6D28D9</SolidColorBrush>
-                    <SolidColorBrush x:Key="InfoBrush">#2563EB</SolidColorBrush>
-                    <SolidColorBrush x:Key="InfoBgBrush">#1F2563EB</SolidColorBrush>
-                    <SolidColorBrush x:Key="TsColumnBrush">#7C3AED</SolidColorBrush>
-                    <SolidColorBrush x:Key="WsColumnBrush">#D97706</SolidColorBrush>
-                    
-                    <SolidColorBrush x:Key="DataGridAltRowBrush">#F1F5F9</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridHoverBrush">#E2E8F0</SolidColorBrush>
-                    <SolidColorBrush x:Key="DataGridSelectedBrush">#DDD6FE</SolidColorBrush>
+                    <!-- NwSSU Institutional Forest Green Primary -->
+                    <SolidColorBrush x:Key="PrimaryBrush">#166534</SolidColorBrush>
+                    <SolidColorBrush x:Key="PrimaryHoverBrush">#15803D</SolidColorBrush>
+                    <SolidColorBrush x:Key="PrimaryBgBrush">#1F166534</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#94A3B8</SolidColorBrush>
-                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#6D28D9</SolidColorBrush>
+                    <!-- NwSSU Calculated Columns: Deep Teal (TS) & NwSSU Vibrant Orange (WS) -->
+                    <SolidColorBrush x:Key="TsColumnBrush">#0F766E</SolidColorBrush>
+                    <SolidColorBrush x:Key="WsColumnBrush">#EA580C</SolidColorBrush>
 
-                    <SolidColorBrush x:Key="SuccessBrush">#059669</SolidColorBrush>
-                    <SolidColorBrush x:Key="SuccessBgBrush">#1F059669</SolidColorBrush>
+                    <SolidColorBrush x:Key="InfoBrush">#0284C7</SolidColorBrush>
+                    <SolidColorBrush x:Key="InfoBgBrush">#1F0284C7</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="WarningBrush">#D97706</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningTextBrush">#B45309</SolidColorBrush>
-                    <SolidColorBrush x:Key="WarningBgBrush">#1FD97706</SolidColorBrush>
+                    <!-- Table Row States (Zebra, Hover, Selected) -->
+                    <SolidColorBrush x:Key="DataGridAltRowBrush">#F4F9F5</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridHoverBrush">#E3EFE7</SolidColorBrush>
+                    <SolidColorBrush x:Key="DataGridSelectedBrush">#DCFCE7</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="ScrollBarThumbBrush">#86A893</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#166534</SolidColorBrush>
+
+                    <!-- Semantic Status Tokens (Warning uses NwSSU Orange) -->
+                    <SolidColorBrush x:Key="SuccessBrush">#15803D</SolidColorBrush>
+                    <SolidColorBrush x:Key="SuccessBgBrush">#1F15803D</SolidColorBrush>
                     
-                    <SolidColorBrush x:Key="DangerBrush">#E11D48</SolidColorBrush>
-                    <SolidColorBrush x:Key="DangerBgBrush">#1FE11D48</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBrush">#EA580C</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningTextBrush">#C2410C</SolidColorBrush>
+                    <SolidColorBrush x:Key="WarningBgBrush">#1FEA580C</SolidColorBrush>
+                    
+                    <SolidColorBrush x:Key="DangerBrush">#DC2626</SolidColorBrush>
+                    <SolidColorBrush x:Key="DangerBgBrush">#1FDC2626</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries> 
 
