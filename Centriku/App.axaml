@@ -133,6 +133,9 @@
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}"/>
             <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="SelectionForegroundBrush" Value="White"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
         </Style>
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryHoverBrush}"/>
@@ -164,11 +167,22 @@
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
         </Style>
 
-        <!-- Compact fit for inline DataGrid cell editing TextBoxes -->
+        <!-- Frameless Inline Cell Editor (Eliminates curved inner box inside DataGrid cells) -->
         <Style Selector="DataGridCell TextBox">
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="MinHeight" Value="28"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="DataGridCell TextBox:pointerover /template/ Border#PART_BorderElement,
+                         DataGridCell TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
         <!-- 4. DROPDOWNS (COMBOBOX & COMBOBOXITEM)                -->
@@ -324,7 +338,14 @@
             <Setter Property="Background" Value="{DynamicResource ScrollBarThumbBrush}"/>
             <Setter Property="CornerRadius" Value="5"/>
         </Style>
-        <Style Selector="ScrollBar:pointerover /template/ Thumb">
+        <Style Selector="ScrollBar:pointerover /template/ Thumb,
+                         ScrollBar /template/ Thumb:pointerover,
+                         ScrollBar /template/ Thumb:pressed">
+            <Setter Property="Background" Value="{DynamicResource ScrollBarThumbHoverBrush}"/>
+        </Style>
+        <Style Selector="ScrollBar:pointerover /template/ Thumb /template/ Border,
+                         ScrollBar /template/ Thumb:pointerover /template/ Border,
+                         ScrollBar /template/ Thumb:pressed /template/ Border">
             <Setter Property="Background" Value="{DynamicResource ScrollBarThumbHoverBrush}"/>
         </Style>
         <Style Selector="ScrollBar /template/ RepeatButton">
@@ -374,6 +395,9 @@
 
                     <SolidColorBrush x:Key="ScrollBarThumbBrush">#346148</SolidColorBrush>
                     <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#22C55E</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbFill">#346148</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver">#22C55E</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbFillPressed">#16A34A</SolidColorBrush>
 
                     <!-- Semantic Status Tokens (Warning uses NwSSU Orange) -->
                     <SolidColorBrush x:Key="SuccessBrush">#22C55E</SolidColorBrush>
@@ -421,6 +445,9 @@
 
                     <SolidColorBrush x:Key="ScrollBarThumbBrush">#86A893</SolidColorBrush>
                     <SolidColorBrush x:Key="ScrollBarThumbHoverBrush">#166534</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbFill">#86A893</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver">#15803D</SolidColorBrush>
+                    <SolidColorBrush x:Key="ScrollBarThumbFillPressed">#166534</SolidColorBrush>
 
                     <!-- Semantic Status Tokens (Warning uses NwSSU Orange) -->
                     <SolidColorBrush x:Key="SuccessBrush">#15803D</SolidColorBrush>
