@@ -168,7 +168,112 @@ namespace Centriku.Services
                     DataGridAltRowBrush: "#1E0E14", DataGridHoverBrush: "#381A25", DataGridSelectedBrush: "#881337",
                     ScrollBarThumbBrush: "#6E3248", ScrollBarThumbHoverBrush: "#FB7185"
                 )
+            ),
+
+            new ThemePalette(
+                "Sakura Blossom",
+                Light: new(
+                    AppBackground: "#FDF4F7", SurfaceBrush: "#FFFFFF", SurfaceVariantBrush: "#FCE7F3",
+                    InputBgBrush: "#FFFFFF", InputFocusBgBrush: "#FDF2F8",
+                    TextMainBrush: "#2A121C", TextMutedBrush: "#6E4658",
+                    BorderBrush: "#FBCFE8", BorderStrongBrush: "#F472B6",
+                    PrimaryBrush: "#DB2777", PrimaryHoverBrush: "#EC4899", PrimaryBgBrush: "#1FDB2777",
+                    AccentBrush: "#D97706", AccentBgBrush: "#1FD97706",
+                    TsColumnBrush: "#9333EA", WsColumnBrush: "#D97706",
+                    DataGridAltRowBrush: "#FEF7FA", DataGridHoverBrush: "#FCE7F3", DataGridSelectedBrush: "#FBCFE8",
+                    ScrollBarThumbBrush: "#F472B6", ScrollBarThumbHoverBrush: "#DB2777"
+                ),
+                Dark: new(
+                    AppBackground: "#160C12", SurfaceBrush: "#23141D", SurfaceVariantBrush: "#331D2B",
+                    InputBgBrush: "#1B0F16", InputFocusBgBrush: "#2C1824",
+                    TextMainBrush: "#FDF2F8", TextMutedBrush: "#D8A8C0",
+                    BorderBrush: "#47283B", BorderStrongBrush: "#693B58",
+                    PrimaryBrush: "#EC4899", PrimaryHoverBrush: "#F472B6", PrimaryBgBrush: "#26EC4899",
+                    AccentBrush: "#FBBF24", AccentBgBrush: "#24FBBF24",
+                    TsColumnBrush: "#C084FC", WsColumnBrush: "#FBBF24",
+                    DataGridAltRowBrush: "#1C1017", DataGridHoverBrush: "#331D2B", DataGridSelectedBrush: "#501A37",
+                    ScrollBarThumbBrush: "#693B58", ScrollBarThumbHoverBrush: "#F472B6"
+                )
+            ),
+
+            new ThemePalette(
+                "Imperial Gold",
+                Light: new(
+                    AppBackground: "#FAF7F0", SurfaceBrush: "#FFFFFF", SurfaceVariantBrush: "#F3ECE0",
+                    InputBgBrush: "#FFFFFF", InputFocusBgBrush: "#FEFCE8",
+                    TextMainBrush: "#1C1917", TextMutedBrush: "#57534E",
+                    BorderBrush: "#E7DEC8", BorderStrongBrush: "#C6B38E",
+                    PrimaryBrush: "#B45309", PrimaryHoverBrush: "#D97706", PrimaryBgBrush: "#1FB45309",
+                    AccentBrush: "#7C3AED", AccentBgBrush: "#1F7C3AED",
+                    TsColumnBrush: "#0F766E", WsColumnBrush: "#B45309",
+                    DataGridAltRowBrush: "#FCF9F2", DataGridHoverBrush: "#F3ECE0", DataGridSelectedBrush: "#FEF08A",
+                    ScrollBarThumbBrush: "#C6B38E", ScrollBarThumbHoverBrush: "#B45309"
+                ),
+                Dark: new(
+                    AppBackground: "#110F0A", SurfaceBrush: "#1C1810", SurfaceVariantBrush: "#292317",
+                    InputBgBrush: "#16130C", InputFocusBgBrush: "#262014",
+                    TextMainBrush: "#FEFCE8", TextMutedBrush: "#C4B59B",
+                    BorderBrush: "#383020", BorderStrongBrush: "#574A31",
+                    PrimaryBrush: "#D97706", PrimaryHoverBrush: "#F59E0B", PrimaryBgBrush: "#26D97706",
+                    AccentBrush: "#FACC15", AccentBgBrush: "#24FACC15",
+                    TsColumnBrush: "#2DD4BF", WsColumnBrush: "#FACC15",
+                    DataGridAltRowBrush: "#16130D", DataGridHoverBrush: "#292317", DataGridSelectedBrush: "#422E0B",
+                    ScrollBarThumbBrush: "#574A31", ScrollBarThumbHoverBrush: "#F59E0B"
+                )
+            ),
+
+            new ThemePalette(
+                "Sunset Terracotta",
+                Light: new(
+                    AppBackground: "#FFF7ED", SurfaceBrush: "#FFFFFF", SurfaceVariantBrush: "#FFEDD5",
+                    InputBgBrush: "#FFFFFF", InputFocusBgBrush: "#FFF7ED",
+                    TextMainBrush: "#1F1612", TextMutedBrush: "#61473B",
+                    BorderBrush: "#FED7AA", BorderStrongBrush: "#FDBA74",
+                    PrimaryBrush: "#C2410C", PrimaryHoverBrush: "#EA580C", PrimaryBgBrush: "#1FC2410C",
+                    AccentBrush: "#0F766E", AccentBgBrush: "#1F0F766E",
+                    TsColumnBrush: "#0F766E", WsColumnBrush: "#C2410C",
+                    DataGridAltRowBrush: "#FFFBF5", DataGridHoverBrush: "#FFEDD5", DataGridSelectedBrush: "#FED7AA",
+                    ScrollBarThumbBrush: "#FDBA74", ScrollBarThumbHoverBrush: "#C2410C"
+                ),
+                Dark: new(
+                    AppBackground: "#140D09", SurfaceBrush: "#21150F", SurfaceVariantBrush: "#301F16",
+                    InputBgBrush: "#1A100B", InputFocusBgBrush: "#2B1B13",
+                    TextMainBrush: "#FFF7ED", TextMutedBrush: "#D6B09A",
+                    BorderBrush: "#452C20", BorderStrongBrush: "#66412F",
+                    PrimaryBrush: "#EA580C", PrimaryHoverBrush: "#FB923C", PrimaryBgBrush: "#26EA580C",
+                    AccentBrush: "#2DD4BF", AccentBgBrush: "#242DD4BF",
+                    TsColumnBrush: "#2DD4BF", WsColumnBrush: "#FDBA74",
+                    DataGridAltRowBrush: "#1A110C", DataGridHoverBrush: "#301F16", DataGridSelectedBrush: "#5C2410",
+                    ScrollBarThumbBrush: "#66412F", ScrollBarThumbHoverBrush: "#FB923C"
+                )
+            ),
+
+            new ThemePalette(
+                "Nordic Slate",
+                Light: new(
+                    AppBackground: "#F1F5F9", SurfaceBrush: "#FFFFFF", SurfaceVariantBrush: "#E2E8F0",
+                    InputBgBrush: "#FFFFFF", InputFocusBgBrush: "#F8FAFC",
+                    TextMainBrush: "#0F172A", TextMutedBrush: "#475569",
+                    BorderBrush: "#CBD5E1", BorderStrongBrush: "#94A3B8",
+                    PrimaryBrush: "#334155", PrimaryHoverBrush: "#1E293B", PrimaryBgBrush: "#1F334155",
+                    AccentBrush: "#0284C7", AccentBgBrush: "#1F0284C7",
+                    TsColumnBrush: "#0284C7", WsColumnBrush: "#D97706",
+                    DataGridAltRowBrush: "#F8FAFC", DataGridHoverBrush: "#E2E8F0", DataGridSelectedBrush: "#CBD5E1",
+                    ScrollBarThumbBrush: "#94A3B8", ScrollBarThumbHoverBrush: "#334155"
+                ),
+                Dark: new(
+                    AppBackground: "#0B0F17", SurfaceBrush: "#151C28", SurfaceVariantBrush: "#1E293B",
+                    InputBgBrush: "#0F1520", InputFocusBgBrush: "#1B2536",
+                    TextMainBrush: "#F8FAFC", TextMutedBrush: "#94A3B8",
+                    BorderBrush: "#283548", BorderStrongBrush: "#3E506B",
+                    PrimaryBrush: "#38BDF8", PrimaryHoverBrush: "#7DD3FC", PrimaryBgBrush: "#2638BDF8",
+                    AccentBrush: "#FBBF24", AccentBgBrush: "#24FBBF24",
+                    TsColumnBrush: "#38BDF8", WsColumnBrush: "#FBBF24",
+                    DataGridAltRowBrush: "#101620", DataGridHoverBrush: "#1E293B", DataGridSelectedBrush: "#1E3A5F",
+                    ScrollBarThumbBrush: "#3E506B", ScrollBarThumbHoverBrush: "#38BDF8"
+                )
             )
+
         ];
 
         public static IReadOnlyList<string> GetThemeNames() => Palettes.Select(p => p.Name).ToList();

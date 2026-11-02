@@ -56,7 +56,7 @@ MainWindow (MainWindowViewModel)
  │          └── 3-Column Config (Folder/Naming, Privacy Toggles, Formatting, Live Sheet Previews)
  │           
  └── [Sidebar Footer] Appearance & Display Flyout
-       ├── Color Theme Preset Selector (NwSSU Forest, Royal Purple, Ocean Blue, Teal & Slate, Crimson Rose)
+       ├── Color Theme Preset Selector (NwSSU Forest, Royal Purple, Ocean Blue, Teal & Slate, Crimson Rose, Sakura Blossom, Imperial Gold, Sunset Terracotta, Nordic Slate)
        ├── Dark Mode ToggleSwitch (Light / Dark Variant)
        └── Screen Brightness Slider (50%–100% Eye-Comfort Dimmer + Reset)
 ```

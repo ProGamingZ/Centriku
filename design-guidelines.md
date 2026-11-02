@@ -58,6 +58,10 @@
   3. `Ocean Blue` (Corporate Blue `#2563EB` & Teal `#0D9488`)
   4. `Teal & Slate` (Deep Teal `#0F766E` & Coral Orange `#EA580C`)
   5. `Crimson Rose` (Crimson `#BE123C` & Warm Gold `#D97706`)
+  6. `Sakura Blossom` (Cherry Blossom Pink `#DB2777` & Warm Gold `#D97706`)
+  7. `Imperial Gold` (Burnished Luxury Gold `#B45309` / `#D97706` & Royal Amethyst / Champagne Accents)
+  8. `Sunset Terracotta` (Warm Espresso-Terracotta `#C2410C` & Teal `#0F766E`)
+  9. `Nordic Slate` (Minimalist Graphite `#334155` / `#38BDF8` & Sky Blue / Amber Accents)
 * **Adding/Removing Themes:** Edit the `ThemeService.Palettes` collection in `Centriku/Services/ThemeService.cs`; the sidebar Appearance Flyout populates options dynamically.
 * **Screen Brightness Dimmer:** `MainWindow.axaml` hosts a top-level non-interactive overlay (`IsHitTestVisible="False"`, `ZIndex="9999"`) controlled by `ScreenBrightness` (`50%–100%`) to reduce glare without lowering text-to-background contrast ratios.
 ---
