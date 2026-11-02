@@ -27,7 +27,7 @@
             <Border Margin="0,0,15,10" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="8" Padding="15,9" VerticalAlignment="Bottom" IsVisible="{Binding SelectedGroupAssessment, Converter={x:Static ObjectConverters.IsNotNull}}">
                <TextBlock Foreground="{DynamicResource TextMainBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center">
                   <Run Text="Max Score: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
-                  <Run Text="{Binding SelectedGroupAssessment.MaxScore}" Foreground="{DynamicResource PrimaryBrush}"/>
+                  <Run Text="{Binding SelectedGroupAssessment.MaxScore}" Foreground="{DynamicResource AccentBrush}" FontWeight="Bold"/>
                   <Run Text="   |   " Foreground="{DynamicResource BorderStrongBrush}" FontWeight="Normal"/>
                   <Run Text="Formula: " Foreground="{DynamicResource TextMutedBrush}" FontWeight="Normal"/>
                   <Run Text="Group Score + Individual Score" Foreground="{DynamicResource PrimaryBrush}" />

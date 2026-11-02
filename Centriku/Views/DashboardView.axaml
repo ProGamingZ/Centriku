@@ -147,8 +147,8 @@
                                                 
                                                 <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
                                                     <TextBlock Grid.Column="0" Text="{Binding ProgramSectionDisplay}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                    <Border Grid.Column="1" Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2">
-                                                        <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource PrimaryBrush}" FontSize="10" FontWeight="Bold"/>
+                                                    <Border Grid.Column="1" Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                                                        <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource AccentBrush}" FontSize="10" FontWeight="Bold"/>
                                                     </Border>
                                                 </Grid>
 

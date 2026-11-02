@@ -380,6 +380,8 @@
                     <SolidColorBrush x:Key="PrimaryBrush">#16A34A</SolidColorBrush>
                     <SolidColorBrush x:Key="PrimaryHoverBrush">#22C55E</SolidColorBrush>
                     <SolidColorBrush x:Key="PrimaryBgBrush">#2616A34A</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentBrush">#FB923C</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentBgBrush">#24FB923C</SolidColorBrush>
 
                     <!-- NwSSU Calculated Columns: Teal (TS) & NwSSU Orange-Gold (WS) -->
                     <SolidColorBrush x:Key="TsColumnBrush">#2DD4BF</SolidColorBrush>
@@ -430,6 +432,8 @@
                     <SolidColorBrush x:Key="PrimaryBrush">#166534</SolidColorBrush>
                     <SolidColorBrush x:Key="PrimaryHoverBrush">#15803D</SolidColorBrush>
                     <SolidColorBrush x:Key="PrimaryBgBrush">#1F166534</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentBrush">#EA580C</SolidColorBrush>
+                    <SolidColorBrush x:Key="AccentBgBrush">#1FEA580C</SolidColorBrush>
 
                     <!-- NwSSU Calculated Columns: Deep Teal (TS) & NwSSU Vibrant Orange (WS) -->
                     <SolidColorBrush x:Key="TsColumnBrush">#0F766E</SolidColorBrush>

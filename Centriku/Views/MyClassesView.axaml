@@ -64,8 +64,8 @@
                             </Grid>
                         </Border>
                         
-                        <Border Grid.Column="1" Background="{DynamicResource PrimaryBgBrush}" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
-                            <TextBlock Text="{Binding StudentCountDisplay}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border Grid.Column="1" Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                            <TextBlock Text="{Binding StudentCountDisplay}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
                         </Border>
                     </Grid>
 

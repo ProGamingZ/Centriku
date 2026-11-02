@@ -46,14 +46,19 @@ MainWindow (MainWindowViewModel)
  │     ├── [Overlay] StudentProfileOverlay (Cross-Subject Performance & Attendance)
  │     └── [Modal] Shared Bulk Confirmation Modal (Archive / Restore / Delete)
  │
- └── [Nav 5] SettingsView (SettingsViewModel)
-       ├── [Tab 0] SystemSettingsView (SystemSettingsViewModel)
-       │     ├── Standard Mode (Teacher Health Card, 1-Click Optimize, Backup & Restore)
-       │     └── Developer Diagnostics Mode (Telemetry, PRAGMA, Orphan Scan/Purge, VACUUM)
-       ├── [Tab 1] ImportSettingsView (ImportSettingsViewModel)
-       │     └── 3-Column Mapper (Columns A–J, Auto-Fill Defaults, Validation Rules, Live Preview)
-       └── [Tab 2] ExportSettingsView (ExportSettingsViewModel)
-             └── 3-Column Config (Folder/Naming, Privacy Toggles, Formatting, Live Sheet Previews)
+ ├── [Nav 5] SettingsView (SettingsViewModel)
+ │     ├── [Tab 0] SystemSettingsView (SystemSettingsViewModel)
+ │     │     ├── Standard Mode (Teacher Health Card, 1-Click Optimize, Backup & Restore)
+ │     │     └── Developer Diagnostics Mode (Telemetry, PRAGMA, Orphan Scan/Purge, VACUUM)
+ │     ├── [Tab 1] ImportSettingsView (ImportSettingsViewModel)
+ │     │     └── 3-Column Mapper (Columns A–J, Auto-Fill Defaults, Validation Rules, Live Preview)
+ │     └── [Tab 2] ExportSettingsView (ExportSettingsViewModel)
+ │          └── 3-Column Config (Folder/Naming, Privacy Toggles, Formatting, Live Sheet Previews)
+ │           
+ └── [Sidebar Footer] Appearance & Display Flyout
+       ├── Color Theme Preset Selector (NwSSU Forest, Royal Purple, Ocean Blue, Teal & Slate, Crimson Rose)
+       ├── Dark Mode ToggleSwitch (Light / Dark Variant)
+       └── Screen Brightness Slider (50%–100% Eye-Comfort Dimmer + Reset)
 ```
 
 ---

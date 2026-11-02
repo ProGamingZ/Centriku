@@ -47,8 +47,8 @@
                             <TextBlock Text="{Binding RecitationWinnerName}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource PrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                         </Border>
 
-                        <Border Grid.Column="1" Background="{DynamicResource InputBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding TotalQuestionsCountText}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                        <Border Grid.Column="1" Background="{DynamicResource AccentBgBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="12,8" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TotalQuestionsCountText}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}"/>
                         </Border>
                     </Grid>
 

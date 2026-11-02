@@ -35,7 +35,7 @@
 
 ---
 
-## 3. Complete Database Schema (Target Schema Version: v6)
+## 3. Complete Database Schema (Target Schema Version: v7)
 
 Centriku uses `sqlite-net-pcl` with explicit schema migrations managed by `DatabaseMigrationService`.
 
@@ -54,7 +54,10 @@ Centriku uses `sqlite-net-pcl` with explicit schema migrations managed by `Datab
 | Column | Type | Constraints / Default | Purpose |
 | :--- | :--- | :--- | :--- |
 | `Id` | `int` | `PK` (`1`) | Singleton primary key |
-| `DatabaseSchemaVersion` | `int` | Default `6` | Tracks executed migrations (`DatabaseMigrationService`) |
+| `DatabaseSchemaVersion` | `int` | Default `7` | Tracks executed migrations (`DatabaseMigrationService`) |
+| `SelectedThemeName` | `string` | Default `"NwSSU Forest"` | Persists active color palette preset from `ThemeService` |
+| `IsDarkMode` | `bool` | Default `false` | Persists Light (`false`) vs. Dark (`true`) theme variant |
+| `ScreenBrightness` | `double` | Default `100.0` (`50..100`) | Persists eye-comfort screen brightness percentage |
 | `StudentIdColumnIndex` .. `EnrollmentStatusColumnIndex` | `int` | `0..9` or `-1` | Maps CSV/Excel column indices (`A..J`) to `Student` fields |
 | `SkipFirstRow` | `bool` | Default `true` | Skips header row during bulk import |
 | `DuplicateHandlingRule` | `string` | `"Update"` / `"Skip"` | Governs collision resolution during bulk import |

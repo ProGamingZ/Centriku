@@ -55,5 +55,9 @@ namespace Centriku.Models
         public string DefaultProgram { get; set; } = string.Empty;
         public string DefaultSectionName { get; set; } = string.Empty;
         public int DatabaseSchemaVersion { get; set; } = 2;
+
+        public string SelectedThemeName { get; set; } = "NwSSU Forest";
+        public bool IsDarkMode { get; set; } = false;
+        public double ScreenBrightness { get; set; } = 100.0;
     }
 }

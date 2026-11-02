@@ -17,6 +17,7 @@
 | `PrimaryBrush` | `--accent-primary` | `#16A34A` | `#166534` | NwSSU Forest Green: Primary CTAs, active tabs, focus rings, checked states |
 | `PrimaryHoverBrush` | `--accent-primary-hover` | `#22C55E` | `#15803D` | Pointer-over state for interactive controls |
 | `PrimaryBgBrush` | `--accent-primary-bg` | `#2616A34A` | `#1F166534` | Tinted primary badges (e.g., Student Count pill on Class Cards) |
+| `AccentBrush` / `AccentBgBrush` | `--accent-secondary` | `#FB923C` / `#24FB923C` | `#EA580C` / `#1FEA580C` | 10% Secondary Brand Callout: Brand badge, Student Count pills, Step numbers, Question counter |
 | `DataGridAltRowBrush` | `--table-row-alt` | `#0D1B13` | `#F4F9F5` | Odd-numbered zebra striping in DataGrids |
 | `DataGridHoverBrush` | `--table-row-hover` | `#1C3829` | `#E3EFE7` | Row and dropdown item hover highlight |
 | `DataGridSelectedBrush` | `--table-row-selected` | `#1E4631` | `#DCFCE7` | Selected table row and active dropdown item |
@@ -26,6 +27,7 @@
 | `InfoBrush` / `InfoBgBrush` | `--status-info` | `#38BDF8` / `#2238BDF8` | `#0284C7` / `#1F0284C7` | Transfer actions and informational category badges |
 | `TsColumnBrush` | `--table-col-ts` | `#2DD4BF` | `#0F766E` | Transmuted Score (`TS`) calculated column header and cells |
 | `WsColumnBrush` | `--table-col-ws` | `#FB923C` | `#EA580C` | NwSSU Orange Weighted Score (`WS`) calculated column header and cells |
+
 
 ### 1.2 Typography Scale
 * **Font Family:** `Inter` (UI Body/Headings), `FluentSystemIcons-Regular` (Icons), `Consolas, Courier New, monospace` (Developer Diagnostics).
@@ -48,6 +50,16 @@
   * Floating Modals: `BoxShadow="0 10 30 0 #40000000"`
   * Bottom-Right Toast Notifications: `BoxShadow="0 10 25 0 #66000000"`
 
+### 1.4 Multi-Theme Architecture & Eye-Comfort Dimmer (`ThemeService`)
+* **60–30–10 Color Rule:** Every theme preset balances **60% Neutral Surfaces** (`AppBackground`, `SurfaceBrush`), **30% Primary Brand Identity** (`PrimaryBrush`), and **10% Secondary Callout Accents** (`AccentBrush`, `AccentBgBrush`).
+* **Built-In Theme Presets (`ThemeService.cs`):**
+  1. `NwSSU Forest` (Default Institutional Green `#166534` & Vibrant Orange `#EA580C`)
+  2. `Royal Purple` (Classic Centriku Violet `#6D28D9` & Amber Gold `#D97706`)
+  3. `Ocean Blue` (Corporate Blue `#2563EB` & Teal `#0D9488`)
+  4. `Teal & Slate` (Deep Teal `#0F766E` & Coral Orange `#EA580C`)
+  5. `Crimson Rose` (Crimson `#BE123C` & Warm Gold `#D97706`)
+* **Adding/Removing Themes:** Edit the `ThemeService.Palettes` collection in `Centriku/Services/ThemeService.cs`; the sidebar Appearance Flyout populates options dynamically.
+* **Screen Brightness Dimmer:** `MainWindow.axaml` hosts a top-level non-interactive overlay (`IsHitTestVisible="False"`, `ZIndex="9999"`) controlled by `ScreenBrightness` (`50%–100%`) to reduce glare without lowering text-to-background contrast ratios.
 ---
 
 ## 2. Layout Architecture

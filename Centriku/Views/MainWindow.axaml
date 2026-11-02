@@ -38,95 +38,142 @@
         </Style>
     </Window.Styles>
 
-    <SplitView IsPaneOpen="{Binding IsSidebarOpen}"
-               DisplayMode="CompactOverlay"
-               CompactPaneLength="70"
-               OpenPaneLength="180"
-               Background="{DynamicResource AppBackground}"
-               PaneBackground="{DynamicResource SurfaceBrush}">
-        
-        <SplitView.Pane>
-            <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                <!-- Changed to 3 Rows: Header, Main Nav, Footer Nav -->
-                <Grid RowDefinitions="Auto, *, Auto">
-                    
-                    <!-- ROW 0: Expand/Collapse Button & Logo -->
-                    <Button Grid.Row="0" Command="{Binding ToggleSidebarCommand}" 
-                            Background="Transparent" 
-                            Padding="15,10" 
-                            Margin="10,15,10,25" 
-                            CornerRadius="8" 
-                            HorizontalAlignment="Stretch"
-                            ToolTip.Tip="Expand / Collapse Sidebar">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <!-- The 'C' Icon (Always Visible) -->
-                            <TextBlock Text="C" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
-                            <!-- The App Name (Visible only when expanded) -->
-                            <TextBlock Text="Centriku" FontSize="20" FontWeight="Bold" Margin="15,0,0,0" VerticalAlignment="Center" IsVisible="{Binding IsSidebarOpen}"/>
-                        </StackPanel>
-                    </Button>
-
-                    <!-- ROW 1: Main Navigation Links -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel Spacing="10" Margin="10,0">
-                            
-                            <Button Classes="NavButton" Classes.active="{Binding IsDashboardActive}" Command="{Binding NavigateToDashboardCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="15">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconDashboard}"/>
-                                    <TextBlock Text="Dashboard" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
-                                </StackPanel>
-                            </Button>
-
-                            <Button Classes="NavButton" Classes.active="{Binding IsMyClassesActive}" Command="{Binding NavigateToMyClassesCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="15">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconClasses}"/>
-                                    <TextBlock Text="My Classes" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
-                                </StackPanel>
-                            </Button>
-
-                            <Button Classes="NavButton" Classes.active="{Binding IsPoliciesActive}" Command="{Binding NavigateToPoliciesCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="15">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconPolicies}"/>
-                                    <TextBlock Text="Policies" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
-                                </StackPanel>
-                            </Button>
-
-                            <Button Classes="NavButton" Classes.active="{Binding IsDirectoryActive}" Command="{Binding NavigateToDirectoryCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="15">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
-                                    <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
-                                </StackPanel>
-                            </Button>
-                            
-                            <Button Classes="NavButton" Classes.active="{Binding IsSettingsActive}" Command="{Binding NavigateToSettingsCommand}">
-                                <StackPanel Orientation="Horizontal" Spacing="15">
-                                    <TextBlock Classes="Icon" Text="{DynamicResource IconSettings}"/>
-                                    <TextBlock Text="Settings" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
-                                </StackPanel>
-                            </Button>
-
-                        </StackPanel>
-                    </ScrollViewer>
-
-                    <!-- ROW 2: Footer / Utility Navigation -->
-                    <StackPanel Grid.Row="2" Margin="10,20,10,20" Spacing="10">
-                        <!-- Moved the Theme Toggle here! -->
-                        <Button Classes="NavButton" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Switch Color Mode">
-                            <StackPanel Orientation="Horizontal" Spacing="15">
-                                <TextBlock Classes="Icon" Text="{DynamicResource IconTheme}"/>
-                                <TextBlock Text="Toggle Theme" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+    <Panel>
+        <SplitView IsPaneOpen="{Binding IsSidebarOpen}"
+                   DisplayMode="CompactOverlay"
+                   CompactPaneLength="70"
+                   OpenPaneLength="190"
+                   Background="{DynamicResource AppBackground}"
+                   PaneBackground="{DynamicResource SurfaceBrush}">
+            
+            <SplitView.Pane>
+                <Border BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="0,0,1,0">
+                    <Grid RowDefinitions="Auto, *, Auto">
+                        
+                        <!-- ROW 0: Expand/Collapse Button & 60-30-10 Brand Logo -->
+                        <Button Grid.Row="0" Command="{Binding ToggleSidebarCommand}" 
+                                Background="Transparent" 
+                                Padding="10,10" 
+                                Margin="10,15,10,20" 
+                                CornerRadius="8" 
+                                HorizontalAlignment="Stretch"
+                                ToolTip.Tip="Expand / Collapse Sidebar">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                                <!-- 10% Secondary Brand Accent Callout ('C' Badge in NwSSU Orange) -->
+                                <Border Background="{DynamicResource AccentBgBrush}"
+                                        BorderBrush="{DynamicResource AccentBrush}"
+                                        BorderThickness="1.5"
+                                        CornerRadius="8"
+                                        Width="32" Height="32"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="C" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <!-- The App Name (Visible only when expanded) -->
+                                <TextBlock Text="Centriku" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" IsVisible="{Binding IsSidebarOpen}"/>
                             </StackPanel>
                         </Button>
-                    </StackPanel>
 
-                </Grid>
-            </Border>
-        </SplitView.Pane>
+                        <!-- ROW 1: Main Navigation Links -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Spacing="10" Margin="10,0">
+                                
+                                <Button Classes="NavButton" Classes.active="{Binding IsDashboardActive}" Command="{Binding NavigateToDashboardCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDashboard}"/>
+                                        <TextBlock Text="Dashboard" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+                                    </StackPanel>
+                                </Button>
 
-        <SplitView.Content>
-            <!-- RECLAIMED SPACE: No more Grid rows or Borders at the top. The Current Page gets 100% of the screen! -->
-            <ContentControl Content="{Binding CurrentPage}" />
-        </SplitView.Content>
+                                <Button Classes="NavButton" Classes.active="{Binding IsMyClassesActive}" Command="{Binding NavigateToMyClassesCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <TextBlock Classes="Icon" Text="{DynamicResource IconClasses}"/>
+                                        <TextBlock Text="My Classes" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+                                    </StackPanel>
+                                </Button>
 
-    </SplitView>
+                                <Button Classes="NavButton" Classes.active="{Binding IsPoliciesActive}" Command="{Binding NavigateToPoliciesCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <TextBlock Classes="Icon" Text="{DynamicResource IconPolicies}"/>
+                                        <TextBlock Text="Policies" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Classes="NavButton" Classes.active="{Binding IsDirectoryActive}" Command="{Binding NavigateToDirectoryCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <TextBlock Classes="Icon" Text="{DynamicResource IconDirectory}"/>
+                                        <TextBlock Text="Directory" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button Classes="NavButton" Classes.active="{Binding IsSettingsActive}" Command="{Binding NavigateToSettingsCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="15">
+                                        <TextBlock Classes="Icon" Text="{DynamicResource IconSettings}"/>
+                                        <TextBlock Text="Settings" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+                                    </StackPanel>
+                                </Button>
+
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- ROW 2: Appearance & Eye-Comfort Flyout Button -->
+                        <StackPanel Grid.Row="2" Margin="10,20,10,20" Spacing="10">
+                            <Button Classes="NavButton" ToolTip.Tip="Customize Theme, Mode &amp; Brightness">
+                                <StackPanel Orientation="Horizontal" Spacing="15">
+                                    <TextBlock Classes="Icon" Text="{DynamicResource IconTheme}" Foreground="{DynamicResource AccentBrush}"/>
+                                    <TextBlock Text="Appearance" VerticalAlignment="Center" FontWeight="SemiBold" IsVisible="{Binding IsSidebarOpen}"/>
+                                </StackPanel>
+                                <Button.Flyout>
+                                    <Flyout Placement="TopEdgeAlignedLeft">
+                                        <StackPanel Width="250" Spacing="14" Margin="8">
+                                            <TextBlock Text="Appearance &amp; Display" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextMainBrush}"/>
+                                            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+
+                                            <!-- 1. Color Theme Preset -->
+                                            <StackPanel Spacing="5">
+                                                <TextBlock Text="Color Theme" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                <ComboBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}" HorizontalAlignment="Stretch"/>
+                                            </StackPanel>
+
+                                            <!-- 2. Light / Dark Mode Switch -->
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                    <TextBlock Text="Dark Mode" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextMainBrush}"/>
+                                                    <TextBlock Text="Switch between Light &amp; Dark" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                </StackPanel>
+                                                <ToggleSwitch Grid.Column="1" IsChecked="{Binding IsDarkTheme}" OnContent="" OffContent="" VerticalAlignment="Center"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
+
+                                            <!-- 3. Eye-Comfort Brightness Slider -->
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="*, Auto, Auto">
+                                                    <TextBlock Grid.Column="0" Text="Screen Brightness" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding BrightnessDisplayText}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <Button Grid.Column="2" Command="{Binding ResetBrightnessCommand}" Content="Reset" Background="Transparent" Foreground="{DynamicResource PrimaryBrush}" FontSize="11" Padding="4,2"/>
+                                                </Grid>
+                                                <Slider Minimum="50" Maximum="100" Value="{Binding ScreenBrightness}" Foreground="{DynamicResource PrimaryBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Flyout>
+                                </Button.Flyout>
+                            </Button>
+                        </StackPanel>
+
+                    </Grid>
+                </Border>
+            </SplitView.Pane>
+
+            <SplitView.Content>
+                <ContentControl Content="{Binding CurrentPage}" />
+            </SplitView.Content>
+
+        </SplitView>
+
+        <!-- Non-Interactive Eye-Comfort Brightness Overlay -->
+        <Border Background="#000000"
+                Opacity="{Binding ScreenDimmerOpacity}"
+                IsHitTestVisible="False"
+                ZIndex="9999"/>
+    </Panel>
 </Window>

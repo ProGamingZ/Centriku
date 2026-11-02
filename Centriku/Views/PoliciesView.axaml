@@ -36,7 +36,7 @@
                                                     <StackPanel Orientation="Horizontal" Spacing="10">
                                                         <TextBlock Text="{Binding PassingGrade, StringFormat='Passing: {0}%'}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
                                                         <TextBlock Text="•" Foreground="{DynamicResource BorderStrongBrush}" FontSize="12"/>
-                                                        <TextBlock Text="{Binding NrfgBaseValue, StringFormat='Base: {0}'}" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" FontSize="12"/>
+                                                        <TextBlock Text="{Binding NrfgBaseValue, StringFormat='Base: {0}'}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" FontSize="12"/>
                                                     </StackPanel>
                                                 </StackPanel>
                                                 
@@ -139,7 +139,7 @@
                                 
                                 <!-- Live Validation Text -->
                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding TotalWeight, StringFormat='Total Weight: {0}%'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}"/>
+                                    <TextBlock Text="{Binding TotalWeight, StringFormat='Total Weight: {0}%'}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                                     <TextBlock IsVisible="{Binding !IsValidPolicy}" Text="Total weight must equal 100% to save." Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,4,0,0"/>
                                     <TextBlock IsVisible="{Binding IsValidPolicy}" Text="Weights are perfectly balanced (100%)!" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" FontSize="12" Margin="0,4,0,0"/>
                                 </StackPanel>

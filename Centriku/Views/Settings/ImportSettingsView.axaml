@@ -25,7 +25,7 @@
                 <Border Grid.Column="0" Margin="0,0,16,0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="14">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
+                            <Border Background="{DynamicResource AccentBrush}" CornerRadius="100" Width="24" Height="24">
                                 <TextBlock Text="1" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Match Your Excel Columns" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
@@ -81,7 +81,7 @@
                 <Border Grid.Column="1" Margin="0,0,16,0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="20">
                     <StackPanel Spacing="12">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
+                            <Border Background="{DynamicResource AccentBrush}" CornerRadius="100" Width="24" Height="24">
                                 <TextBlock Text="2" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Auto-Fill Information" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>
@@ -121,7 +121,7 @@
                     <Grid RowDefinitions="Auto, *, Auto">
                         <StackPanel Grid.Row="0" Spacing="12">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="100" Width="24" Height="24">
+                                <Border Background="{DynamicResource AccentBrush}" CornerRadius="100" Width="24" Height="24">
                                     <TextBlock Text="3" Foreground="White" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <TextBlock Text="Validation &amp; Rules" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextMainBrush}" VerticalAlignment="Center"/>

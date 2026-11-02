@@ -9,7 +9,7 @@ namespace Centriku.Services
 {
     public class DatabaseMigrationService
     {
-        public const int TARGET_SCHEMA_VERSION = 6;
+        public const int TARGET_SCHEMA_VERSION = 7;
 
         private readonly Dictionary<int, Func<SQLiteAsyncConnection, Task>> _migrationScripts = new()
         {
@@ -17,7 +17,8 @@ namespace Centriku.Services
             { 3, MigrateToVersion3Async },
             { 4, MigrateToVersion4Async },
             { 5, MigrateToVersion5Async },
-            { 6, MigrateToVersion6Async }
+            { 6, MigrateToVersion6Async },
+            { 7, MigrateToVersion7Async }
         };
 
         public async Task RunMigrationsAsync(SQLiteAsyncConnection db)
@@ -170,6 +171,26 @@ namespace Centriku.Services
                 if (changed) classesToUpdate.Add(c);
             }
             if (classesToUpdate.Count > 0) await db.UpdateAllAsync(classesToUpdate);
+        }
+
+        private static async Task MigrateToVersion7Async(SQLiteAsyncConnection db)
+        {
+            var settings = await db.Table<AppSettings>().FirstOrDefaultAsync();
+            if (settings != null)
+            {
+                bool changed = false;
+                if (string.IsNullOrWhiteSpace(settings.SelectedThemeName))
+                {
+                    settings.SelectedThemeName = "NwSSU Forest";
+                    changed = true;
+                }
+                if (settings.ScreenBrightness <= 0 || settings.ScreenBrightness > 100)
+                {
+                    settings.ScreenBrightness = 100.0;
+                    changed = true;
+                }
+                if (changed) await db.UpdateAsync(settings);
+            }
         }
 
 
